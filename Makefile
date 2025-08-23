@@ -10,13 +10,18 @@
 # - zlib (-dev)
 # - curl (bin, for downloading libstd source)
 
+$(info $(OS))
 ifeq ($(OS),Windows_NT)
   EXESUF ?= .exe
 else
   EXESUF ?=
 endif
 # CXX : C++ compiler
+ifeq ($(OS),NONSTOP_KERNEL)
+CXX ?= c11
+else
 CXX ?= g++
+endif
 # V (or VERBOSE) : If set, prints all important commands
 V ?= !
 # GPROF : If set, enables the generation of a gprof annotated executable
@@ -43,15 +48,21 @@ TAIL_COUNT ?= 10
 
 LINKFLAGS := -g
 LIBS := -lz
+ifeq ($(OS),NONSTOP_KERNEL)
+CXXFLAGS := -g
+CXXFLAGS += -O2
+else
 CXXFLAGS := -g -Wall
 CXXFLAGS += -std=c++14
 #CXXFLAGS += -Wextra
 CXXFLAGS += -O2
 CXXFLAGS += $(CXXFLAGS_EXTRA)
+endif
 
 CPPFLAGS := -I src/include/ -I src/
 CPPFLAGS += -I tools/common/
 
+ifneq ($(OS),NONSTOP_KERNEL)
 CXXFLAGS += -Wno-pessimizing-move
 CXXFLAGS += -Wno-misleading-indentation
 #CXXFLAGS += -Wno-unused-private-field
@@ -60,6 +71,13 @@ CXXFLAGS += -Wno-misleading-indentation
 
 CXXFLAGS += -Werror=return-type
 CXXFLAGS += -Werror=switch
+endif
+
+ifneq ($(OS),NONSTOP_KERNEL)
+CPREPFLAGS = -MMD -MP -MF
+else
+CPREPFLAGS = -WMMD -WF
+endif
 
 # Force the use of `bash` as the shell
 SHELL = bash
@@ -183,17 +201,17 @@ endif
 $(OBJDIR)%.o: src/%.cpp
 	@+mkdir -p $(dir $@)
 	@echo [CXX] -o $@
-	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) -MMD -MP -MF $@.dep
+	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(CPREPFLAGS) $@.dep
 $(OBJDIR)version.o: $(OBJDIR)%.o: src/%.cpp $(filter-out $(OBJDIR)version.o,$(OBJ)) Makefile
 	@+mkdir -p $(dir $@)
 	@echo [CXX] -o $@
-	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) -MMD -MP -MF $@.dep -D VERSION_GIT_FULLHASH=\"$(shell git show --pretty=%H -s --no-show-signature)\" -D VERSION_GIT_BRANCH="\"$(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)\"" -D VERSION_GIT_SHORTHASH=\"$(shell git show -s --pretty=%h --no-show-signature)\" -D VERSION_BUILDTIME="\"$(shell env LC_TIME=C date -u +"%a, %e %b %Y %T +0000")\"" -D VERSION_GIT_ISDIRTY=$(shell git diff-index --quiet HEAD; echo $$?)
+	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(CPREPFLAGS) $@.dep -D VERSION_GIT_FULLHASH=\"$(shell git show --pretty=%H -s --no-show-signature)\" -D VERSION_GIT_BRANCH="\"$(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)\"" -D VERSION_GIT_SHORTHASH=\"$(shell git show -s --pretty=%h --no-show-signature)\" -D VERSION_BUILDTIME="\"$(shell env LC_TIME=C date -u +"%a, %e %b %Y %T +0000")\"" -D VERSION_GIT_ISDIRTY=$(shell git diff-index --quiet HEAD; echo $$?)
 
 src/main.cpp: $(PCHS:%=src/%.gch)
 
 %.hpp.gch: %.hpp
 	@echo [CXX] -o $@
-	$V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) -MMD -MP -MF $@.dep
+	$V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) $(CPREPFLAGS) $@.dep
 
 bin/common_lib.a: $(wildcard tools/common/*)
 	$(MAKE) -C tools/common
