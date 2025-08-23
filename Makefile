@@ -18,9 +18,9 @@ else
 endif
 # CXX : C++ compiler
 ifeq ($(OS),NONSTOP_KERNEL)
-CXX ?= c11
+  CXX = c11
 else
-CXX ?= g++
+  CXX ?= g++
 endif
 # V (or VERBOSE) : If set, prints all important commands
 V ?= !
@@ -49,8 +49,7 @@ TAIL_COUNT ?= 10
 LINKFLAGS := -g
 LIBS := -lz
 ifeq ($(OS),NONSTOP_KERNEL)
-CXXFLAGS := -g
-CXXFLAGS += -O2
+  CXXFLAGS := -g -O2 -Wsystype=oss -Wthread -Wlp64 -Wcplusplus
 else
 CXXFLAGS := -g -Wall
 CXXFLAGS += -std=c++14
@@ -74,13 +73,13 @@ CXXFLAGS += -Werror=switch
 endif
 
 ifneq ($(OS),NONSTOP_KERNEL)
-CPREPFLAGS = -MMD -MP -MF
+  DEPFLAGS = -MMD -MP -MF $@.dep
 else
-CPREPFLAGS = -WMMD -WF
+  DEPFLAGS = 
 endif
 
 # Force the use of `bash` as the shell
-SHELL = bash
+SHELL = /usr/coreutils/bin/bash
 
 OBJDIR = .obj/
 
@@ -201,17 +200,23 @@ endif
 $(OBJDIR)%.o: src/%.cpp
 	@+mkdir -p $(dir $@)
 	@echo [CXX] -o $@
-	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(CPREPFLAGS) $@.dep
+	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(DEPFLAGS) 
 $(OBJDIR)version.o: $(OBJDIR)%.o: src/%.cpp $(filter-out $(OBJDIR)version.o,$(OBJ)) Makefile
 	@+mkdir -p $(dir $@)
 	@echo [CXX] -o $@
-	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(CPREPFLAGS) $@.dep -D VERSION_GIT_FULLHASH=\"$(shell git show --pretty=%H -s --no-show-signature)\" -D VERSION_GIT_BRANCH="\"$(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)\"" -D VERSION_GIT_SHORTHASH=\"$(shell git show -s --pretty=%h --no-show-signature)\" -D VERSION_BUILDTIME="\"$(shell env LC_TIME=C date -u +"%a, %e %b %Y %T +0000")\"" -D VERSION_GIT_ISDIRTY=$(shell git diff-index --quiet HEAD; echo $$?)
+	$V$(CXX) -o $@ -c $< $(CXXFLAGS) $(CPPFLAGS) $(DEPFLAGS) -D VERSION_GIT_FULLHASH=\"$(shell git show --pretty=%H -s --no-show-signature)\" -D VERSION_GIT_BRANCH="\"$(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)\"" -D VERSION_GIT_SHORTHASH=\"$(shell git show -s --pretty=%h --no-show-signature)\" -D VERSION_BUILDTIME="\"$(shell env LC_TIME=C date -u +"%a, %e %b %Y %T +0000")\"" -D VERSION_GIT_ISDIRTY=$(shell git diff-index --quiet HEAD; echo $$?)
 
 src/main.cpp: $(PCHS:%=src/%.gch)
 
+ifeq ($(OS),NONSTOP_KERNEL)
 %.hpp.gch: %.hpp
 	@echo [CXX] -o $@
-	$V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) $(CPREPFLAGS) $@.dep
+	  $V$(CXX) -Wcplusplus -o $@ $< $(CPPFLAGS) $(CPREPFLAGS)
+else
+%.hpp.gch: %.hpp
+        @echo [CXX] -o $@
+	  $V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) $(CPREPFLAGS) $@.dep
+endif
 
 bin/common_lib.a: $(wildcard tools/common/*)
 	$(MAKE) -C tools/common
