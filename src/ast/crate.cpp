@@ -276,7 +276,7 @@ RcString Crate::load_extern_crate(Span sp, const RcString& name, const ::std::st
     auto ec = ExternCrate { name, path };
     auto real_name = ec.m_hir->m_crate_name;
     assert(real_name != "");
-    auto res = m_extern_crates.insert(::std::make_pair( real_name, mv$(ec) ));
+    auto res = m_extern_crates.insert(::std::make_pair( real_name, mv_str(ec) ));
     if( !res.second ) {
         // Crate already loaded?
         DEBUG("Duplicate load of '" << real_name);
@@ -286,7 +286,7 @@ RcString Crate::load_extern_crate(Span sp, const RcString& name, const ::std::st
     }
     auto& ext_crate = res.first->second;
     // Move the external list out (doesn't need to be kept in the nested crate)
-    //auto crate_ext_list = mv$( ext_crate.m_hir->m_ext_crates );
+    //auto crate_ext_list = mv_str( ext_crate.m_hir->m_ext_crates );
     const auto& crate_ext_list = ext_crate.m_hir->m_ext_crates;
 
     // Load referenced crates

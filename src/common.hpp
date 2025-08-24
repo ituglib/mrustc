@@ -21,43 +21,43 @@
 #endif
 
 #define FMT(ss)    (static_cast<::std::ostringstream&&>(::std::ostringstream() << ss).str())
-// XXX: Evil hack - Define 'mv$' to be ::std::move, so there's a shorter name for it
-#define mv$(...) ::std::move(__VA_ARGS__)
-#define box$(...) ::make_unique_ptr(::std::move(__VA_ARGS__))
-#define rc_new$(...) ::make_shared_ptr(::std::move(__VA_ARGS__))
+// XXX: Evil hack - Define 'mv_str' to be ::std::move, so there's a shorter name for it
+#define mv_str(...) ::std::move(__VA_ARGS__)
+#define box_str(...) ::make_unique_ptr(::std::move(__VA_ARGS__))
+#define rc_new_str(...) ::make_shared_ptr(::std::move(__VA_ARGS__))
 
 #include "include/debug.hpp"
 #include "include/compile_error.hpp"
 
 template<typename T>
 ::std::unique_ptr<T> make_unique_ptr(T&& v) {
-    return ::std::unique_ptr<T>(new T(mv$(v)));
+    return ::std::unique_ptr<T>(new T(mv_str(v)));
 }
 template<typename T>
 ::std::shared_ptr<T> make_shared_ptr(T&& v) {
-    return ::std::shared_ptr<T>(new T(mv$(v)));
+    return ::std::shared_ptr<T>(new T(mv_str(v)));
 }
 template<typename T>
 ::std::vector<T> make_vec1(T&& v) {
     ::std::vector<T>    rv;
-    rv.push_back( mv$(v) );
+    rv.push_back( mv_str(v) );
     return rv;
 }
 template<typename T>
 ::std::vector<T> make_vec2(T v1, T v2) {
     ::std::vector<T>    rv;
     rv.reserve(2);
-    rv.push_back( mv$(v1) );
-    rv.push_back( mv$(v2) );
+    rv.push_back( mv_str(v1) );
+    rv.push_back( mv_str(v2) );
     return rv;
 }
 template<typename T>
 ::std::vector<T> make_vec3(T v1, T v2, T v3) {
     ::std::vector<T>    rv;
     rv.reserve(3);
-    rv.push_back( mv$(v1) );
-    rv.push_back( mv$(v2) );
-    rv.push_back( mv$(v3) );
+    rv.push_back( mv_str(v1) );
+    rv.push_back( mv_str(v2) );
+    rv.push_back( mv_str(v3) );
     return rv;
 }
 

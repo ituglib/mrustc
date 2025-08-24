@@ -12,7 +12,7 @@
 #include "main_bindings.hpp"
 
 namespace {
-    inline HIR::ExprNodeP mk_exprnodep(HIR::ExprNode* en, ::HIR::TypeRef ty){ en->m_res_type = mv$(ty); return HIR::ExprNodeP(en); }
+    inline HIR::ExprNodeP mk_exprnodep(HIR::ExprNode* en, ::HIR::TypeRef ty){ en->m_res_type = mv_str(ty); return HIR::ExprNodeP(en); }
 }
 #define NEWNODE(TY, CLASS, ...)  mk_exprnodep(new HIR::ExprNode_##CLASS(__VA_ARGS__), TY)
 
@@ -38,7 +38,7 @@ namespace {
             // 1. Convert into an ExprNodeP
             auto np = root.into_unique();
             // 2. Pass to do_reborrow
-            np = do_reborrow(mv$(np));
+            np = do_reborrow(mv_str(np));
             // 3. Convert back
             root.reset( np.release() );
         }
@@ -71,8 +71,8 @@ namespace {
                         auto sp = node_ptr->span();
                         auto ty_mut = node_ptr->m_res_type.clone();
                         auto ty = e->inner.clone();
-                        node_ptr = NEWNODE(mv$(ty_mut), Borrow, sp, ::HIR::BorrowType::Unique,
-                            NEWNODE(mv$(ty), Deref, sp,  mv$(node_ptr))
+                        node_ptr = NEWNODE(mv_str(ty_mut), Borrow, sp, ::HIR::BorrowType::Unique,
+                            NEWNODE(mv_str(ty), Deref, sp,  mv_str(node_ptr))
                             );
                     }
                     // Recurse into blocks - Neater this way
@@ -80,7 +80,7 @@ namespace {
                     {
                         if( p->m_value_node )
                         {
-                            p->m_value_node = do_reborrow(mv$(p->m_value_node));
+                            p->m_value_node = do_reborrow(mv_str(p->m_value_node));
                         }
                         else
                         {
@@ -101,67 +101,67 @@ namespace {
 
         void visit(::HIR::ExprNode_Cast& node) override {
             ::HIR::ExprVisitorDef::visit(node);
-            node.m_value = do_reborrow(mv$(node.m_value));
+            node.m_value = do_reborrow(mv_str(node.m_value));
         }
         void visit(::HIR::ExprNode_Emplace& node) override {
             ::HIR::ExprVisitorDef::visit(node);
-            node.m_value = do_reborrow(mv$(node.m_value));
+            node.m_value = do_reborrow(mv_str(node.m_value));
         }
         void visit(::HIR::ExprNode_Assign& node) override {
             ::HIR::ExprVisitorDef::visit(node);
-            node.m_value = do_reborrow(mv$(node.m_value));
+            node.m_value = do_reborrow(mv_str(node.m_value));
         }
         void visit(::HIR::ExprNode_CallPath& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_args) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
         void visit(::HIR::ExprNode_CallValue& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_args) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
         void visit(::HIR::ExprNode_CallMethod& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_args) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
 
         void visit(::HIR::ExprNode_ArrayList& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_vals) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
         void visit(::HIR::ExprNode_Tuple& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_vals) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
         void visit(::HIR::ExprNode_TupleVariant& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_args) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
         void visit(::HIR::ExprNode_StructLiteral& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_values) {
-                arg.second = do_reborrow(mv$(arg.second));
+                arg.second = do_reborrow(mv_str(arg.second));
             }
         }
         void visit(::HIR::ExprNode_Unsize& node) override {
             ::HIR::ExprVisitorDef::visit(node);
-            node.m_value = do_reborrow(mv$(node.m_value));
+            node.m_value = do_reborrow(mv_str(node.m_value));
         }
         void visit(::HIR::ExprNode_Closure& node) override {
             ::HIR::ExprVisitorDef::visit(node);
             for(auto& arg : node.m_captures) {
-                arg = do_reborrow(mv$(arg));
+                arg = do_reborrow(mv_str(arg));
             }
         }
     };

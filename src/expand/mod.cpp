@@ -62,10 +62,10 @@ void Expand_Expr(const ExpandState& es, ::std::shared_ptr<AST::ExprNode>& node);
 void Expand_Path(const ExpandState& es, ::AST::Module& mod, ::AST::Path& p);
 
 void Register_Synext_Decorator(::std::string name, ::std::unique_ptr<ExpandDecorator> handler) {
-    g_decorators.insert(::std::make_pair( RcString::new_interned(name), mv$(handler) )); 
+    g_decorators.insert(::std::make_pair( RcString::new_interned(name), mv_str(handler) )); 
 }
 void Register_Synext_Macro(::std::string name, ::std::unique_ptr<ExpandProcMacro> handler) {
-    g_macros.insert(::std::make_pair( RcString::new_interned(name), mv$(handler) ));
+    g_macros.insert(::std::make_pair( RcString::new_interned(name), mv_str(handler) ));
 }
 void Register_Synext_Decorator_Static(DecoratorDef* def) {
     def->prev = g_decorators_list;
@@ -86,12 +86,12 @@ void Expand_Init()
     // Fill macro/decorator map from init list
     while(g_decorators_list)
     {
-        g_decorators.insert(::std::make_pair( RcString::new_interned(g_decorators_list->name), mv$(g_decorators_list->def) ));
+        g_decorators.insert(::std::make_pair( RcString::new_interned(g_decorators_list->name), mv_str(g_decorators_list->def) ));
         g_decorators_list = g_decorators_list->prev;
     }
     while(g_macros_list)
     {
-        g_macros.insert(::std::make_pair(RcString::new_interned(g_macros_list->name), mv$(g_macros_list->def)));
+        g_macros.insert(::std::make_pair(RcString::new_interned(g_macros_list->name), mv_str(g_macros_list->def)));
         g_macros_list = g_macros_list->prev;
     }
 }
@@ -438,7 +438,7 @@ MacroRef Expand_LookupMacro(const Span& mi_span, const ::AST::Crate& crate, LLis
             ERROR(mi_span, E0000, "macro_rules! macros can't take an ident");
 
         DEBUG("Invoking macro_rules " << path << " " << mr_ptr);
-        rv = Macro_InvokeRules(path.is_trivial() ? path.as_trivial() : RcString::new_interned(FMT(path).c_str()), *mr_ptr, mi_span, mv$(input_tt), crate, mod);
+        rv = Macro_InvokeRules(path.is_trivial() ? path.as_trivial() : RcString::new_interned(FMT(path).c_str()), *mr_ptr, mi_span, mv_str(input_tt), crate, mod);
         input_tt = TokenTree();
         }
     }
@@ -493,7 +493,7 @@ void Expand_Pattern(const ExpandState& es, ::AST::Module& mod, ::AST::Pattern& p
                 newpat.bindings().push_back( std::move(b) );
             }
 
-            pat = mv$(newpat);
+            pat = mv_str(newpat);
             Expand_Pattern(es, mod, pat, is_refutable);
         }
         }
@@ -572,7 +572,7 @@ void Expand_Type(const ExpandState& es, ::AST::Module& mod, ::TypeRef& ty)
             auto new_ty = Parse_Type(*tt);
             if( tt->lookahead(0) != TOK_EOF )
                 ERROR(e.inv->span(), E0000, "Extra tokens after parsed type");
-            ty = mv$(new_ty);
+            ty = mv_str(new_ty);
 
             Expand_Type(es, mod,  ty);
         }
@@ -737,11 +737,11 @@ struct CExpandExpr:
     void visit(::AST::ExprNodeP& cnode) {
         if(cnode.get())
         {
-            auto attrs = mv$(cnode->attrs());
+            auto attrs = mv_str(cnode->attrs());
             Expand_Attrs_CfgAttr(attrs);
             Expand_Attrs(expand_state, attrs, AttrStage::Pre,  [&](const Span& sp, const ExpandDecorator& d, const auto& a){ d.handle(sp, a, this->crate, cnode); });
             if(cnode.get())
-                cnode->attrs() = mv$(attrs);
+                cnode->attrs() = mv_str(attrs);
         }
         if(cnode.get())
         {
@@ -753,16 +753,16 @@ struct CExpandExpr:
                     cnode.reset();
             }
             if( this->replacement ) {
-                cnode = mv$(this->replacement);
+                cnode = mv_str(this->replacement);
             }
         }
 
         if(cnode.get())
         {
-            auto attrs = mv$(cnode->attrs());
+            auto attrs = mv_str(cnode->attrs());
             Expand_Attrs(expand_state, attrs, AttrStage::Post,  [&](const Span& sp, const auto& d, const auto& a){ d.handle(sp, a, this->crate, cnode); });
             if(cnode.get())
-                cnode->attrs() = mv$(attrs);
+                cnode->attrs() = mv_str(attrs);
         }
         assert( ! this->replacement );
     }
@@ -822,11 +822,11 @@ struct CExpandExpr:
                 if( newexpr )
                 {
                     if( nodes_out ) {
-                        nodes_out->push_back( mv$(newexpr) );
+                        nodes_out->push_back( mv_str(newexpr) );
                     }
                     else {
                         assert( !rv );
-                        rv = mv$(newexpr);
+                        rv = mv_str(newexpr);
                     }
                 }
                 else
@@ -849,7 +849,7 @@ struct CExpandExpr:
             }
         }
 
-        return mv$(rv);
+        return mv_str(rv);
     }
 
     void visit(::AST::ExprNode_Macro& node) override
@@ -864,12 +864,12 @@ struct CExpandExpr:
         if( this->replacement )
         {
             DEBUG("--- Visiting new node");
-            auto n = mv$(this->replacement);
+            auto n = mv_str(this->replacement);
             this->visit(n);
             if( n )
             {
                 assert( !this->replacement );
-                this->replacement = mv$(n);
+                this->replacement = mv_str(n);
             }
         }
     }
@@ -941,7 +941,7 @@ struct CExpandExpr:
             Expand_Mod(this->expand_state, node.m_local_mod->path(), *node.m_local_mod, mod_item_count);
         }
 
-        this->expand_state.modstack = mv$(prev_modstack);
+        this->expand_state.modstack = mv_str(prev_modstack);
     }
     void visit(::AST::ExprNode_Try& node) override {
         // Desugar into
@@ -953,7 +953,7 @@ struct CExpandExpr:
         // NOTE: MIR lowering and HIR typecheck need to know to skip these (OR resolve should handle naming all loop blocks)
         m_try_stack.push_back(RcString::new_interned(FMT("#try" << m_try_index++)));
         this->visit_nodelete(node, node.m_inner);
-        auto loop_name = mv$(m_try_stack.back());
+        auto loop_name = mv_str(m_try_stack.back());
         m_try_stack.pop_back();
 
         auto core_crate = crate.m_ext_cratename_core;
@@ -961,16 +961,16 @@ struct CExpandExpr:
         if(TARGETVER_MOST_1_39)
         {
             auto path_Ok  = get_path(core_crate, "result", "Result", "Ok");
-            ok_node = ::AST::ExprNodeP(new ::AST::ExprNode_CallPath( mv$(path_Ok), ::make_vec1(mv$(node.m_inner)) ));
+            ok_node = ::AST::ExprNodeP(new ::AST::ExprNode_CallPath( mv_str(path_Ok), ::make_vec1(mv_str(node.m_inner)) ));
         }
         else
         {
             auto path_Try = get_path(core_crate, "ops", "Try");
             auto path_Try_from_output = ::AST::Path::new_ufcs_trait(::TypeRef(node.span()), path_Try, { ::AST::PathNode(RcString::new_interned("from_output")) });
-            ok_node = ::AST::ExprNodeP(new ::AST::ExprNode_CallPath( mv$(path_Try_from_output), ::make_vec1(mv$(node.m_inner)) ));
+            ok_node = ::AST::ExprNodeP(new ::AST::ExprNode_CallPath( mv_str(path_Try_from_output), ::make_vec1(mv_str(node.m_inner)) ));
         }
-        auto break_node = AST::ExprNodeP(new AST::ExprNode_Flow(AST::ExprNode_Flow::BREAK, loop_name, mv$(ok_node)));
-        this->replacement = AST::ExprNodeP(new AST::ExprNode_Loop(loop_name, mv$(break_node)));
+        auto break_node = AST::ExprNodeP(new AST::ExprNode_Flow(AST::ExprNode_Flow::BREAK, loop_name, mv_str(ok_node)));
+        this->replacement = AST::ExprNodeP(new AST::ExprNode_Loop(loop_name, mv_str(break_node)));
     }
     void visit(::AST::ExprNode_Asm& node) override {
         for(auto& v : node.m_output)
@@ -1241,9 +1241,9 @@ struct CExpandExpr:
             ::std::vector< ::AST::ExprNode_Match_Arm>   arms;
             // - `Some(pattern ) => code`
             arms.push_back( ::AST::ExprNode_Match_Arm(
-                ::make_vec1( ::AST::Pattern(::AST::Pattern::TagNamedTuple(), node.span(), path_Some, ::make_vec1( mv$(node.m_pattern) ) ) ),
+                ::make_vec1( ::AST::Pattern(::AST::Pattern::TagNamedTuple(), node.span(), path_Some, ::make_vec1( mv_str(node.m_pattern) ) ) ),
                 {},
-                mv$(node.m_code)
+                mv_str(node.m_code)
                 ) );
             // - `None => break label`
             arms.push_back( ::AST::ExprNode_Match_Arm(
@@ -1255,7 +1255,7 @@ struct CExpandExpr:
             replacement.reset(new ::AST::ExprNode_Match(
                 ::AST::ExprNodeP(new ::AST::ExprNode_CallPath(
                     ::AST::Path::new_ufcs_trait( ::TypeRef(node.span()), path_IntoIterator, { ::AST::PathNode(rcstring_into_iter) } ),
-                    ::make_vec1( mv$(node.m_cond) )
+                    ::make_vec1( mv_str(node.m_cond) )
                     )),
                 ::make_vec1(::AST::ExprNode_Match_Arm(
                     ::make_vec1( ::AST::Pattern(::AST::Pattern::TagBind(), node.span(), rcstring_it) ),
@@ -1270,7 +1270,7 @@ struct CExpandExpr:
                                     ::AST::ExprNodeP(new ::AST::ExprNode_NamedValue( ::AST::Path(rcstring_it) ))
                                     )) )
                                 )),
-                            mv$(arms)
+                            mv_str(arms)
                             ))
                         )) )
                     )
@@ -1520,23 +1520,23 @@ struct CExpandExpr:
             ::AST::ExprNode_StructLiteral::t_values values;
             if( node.m_left && node.m_right )
             {
-                values.push_back({ {}, rcstring_start, mv$(node.m_left ) });
-                values.push_back({ {}, rcstring_end  , mv$(node.m_right) });
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_Range), nullptr, mv$(values)) );
+                values.push_back({ {}, rcstring_start, mv_str(node.m_left ) });
+                values.push_back({ {}, rcstring_end  , mv_str(node.m_right) });
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_Range), nullptr, mv_str(values)) );
             }
             else if( node.m_left )
             {
-                values.push_back({ {}, rcstring_start, mv$(node.m_left ) });
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_RangeFrom), nullptr, mv$(values)) );
+                values.push_back({ {}, rcstring_start, mv_str(node.m_left ) });
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_RangeFrom), nullptr, mv_str(values)) );
             }
             else if( node.m_right )
             {
-                values.push_back({ {}, rcstring_end  , mv$(node.m_right) });
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_RangeTo), nullptr, mv$(values)) );
+                values.push_back({ {}, rcstring_end  , mv_str(node.m_right) });
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_RangeTo), nullptr, mv_str(values)) );
             }
             else
             {
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_RangeFull), nullptr, mv$(values)) );
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_RangeFull), nullptr, mv_str(values)) );
             }
             replacement->set_span( node.span() );
             break; }
@@ -1550,28 +1550,28 @@ struct CExpandExpr:
             if( node.m_left )
             {
                 ::AST::ExprNode_StructLiteral::t_values values;
-                values.push_back({ {}, rcstring_start, mv$(node.m_left)  });
-                values.push_back({ {}, rcstring_end  , mv$(node.m_right) });
+                values.push_back({ {}, rcstring_start, mv_str(node.m_left)  });
+                values.push_back({ {}, rcstring_end  , mv_str(node.m_right) });
                 switch(gTargetVersion)
                 {
                 case TargetVersion::Rustc1_19:
                     break;
                 case TargetVersion::Rustc1_29:
                 case TargetVersion::Rustc1_39:
-                    values.push_back({ {}, RcString::new_interned("is_empty"), ::AST::ExprNodeP(new ::AST::ExprNode_NamedValue(mv$(path_None))) });
+                    values.push_back({ {}, RcString::new_interned("is_empty"), ::AST::ExprNodeP(new ::AST::ExprNode_NamedValue(mv_str(path_None))) });
                     break;
                 case TargetVersion::Rustc1_54:
                 case TargetVersion::Rustc1_74:
                     values.push_back({ {}, RcString::new_interned("exhausted"), ::AST::ExprNodeP(new ::AST::ExprNode_Bool(false)) });
                     break;
                 }
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_RangeInclusive_NonEmpty), nullptr, mv$(values)) );
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_RangeInclusive_NonEmpty), nullptr, mv_str(values)) );
             }
             else
             {
                 ::AST::ExprNode_StructLiteral::t_values values;
-                values.push_back({ {}, rcstring_end,  mv$(node.m_right) });
-                replacement.reset( new ::AST::ExprNode_StructLiteral(mv$(path_RangeToInclusive), nullptr, mv$(values)) );
+                values.push_back({ {}, rcstring_end,  mv_str(node.m_right) });
+                replacement.reset( new ::AST::ExprNode_StructLiteral(mv_str(path_RangeToInclusive), nullptr, mv_str(values)) );
             }
             replacement->set_span( node.span() );
             break; }
@@ -1629,7 +1629,7 @@ struct CExpandExpr:
                             ::AST::Path(path_Try_from_error),
                             ::make_vec1(
                                 ::AST::ExprNodeP(new ::AST::ExprNode_CallPath(
-                                    ::AST::Path::new_ufcs_trait(::TypeRef(node.span()), mv$(path_From), { ::AST::PathNode(RcString::new_interned("from")) }),
+                                    ::AST::Path::new_ufcs_trait(::TypeRef(node.span()), mv_str(path_From), { ::AST::PathNode(RcString::new_interned("from")) }),
                                     ::make_vec1( ::AST::ExprNodeP( new ::AST::ExprNode_NamedValue( ::AST::Path(rcstring_r) ) ) )
                                     ))
                                 )
@@ -1639,10 +1639,10 @@ struct CExpandExpr:
 
                 replacement.reset(new ::AST::ExprNode_Match(
                     ::AST::ExprNodeP(new AST::ExprNode_CallPath(
-                        mv$(path_Try_into_result),
-                        ::make_vec1( mv$(node.m_value) )
+                        mv_str(path_Try_into_result),
+                        ::make_vec1( mv_str(node.m_value) )
                         )),
-                    mv$(arms)
+                    mv_str(arms)
                     ));
             }
             else  // 1.54+ - TryV2
@@ -1676,10 +1676,10 @@ struct CExpandExpr:
 
                 replacement.reset(new ::AST::ExprNode_Match(
                     ::AST::ExprNodeP(new AST::ExprNode_CallPath(
-                        mv$(path_Try_branch),
-                        ::make_vec1( mv$(node.m_value) )
+                        mv_str(path_Try_branch),
+                        ::make_vec1( mv_str(node.m_value) )
                         )),
-                    mv$(arms)
+                    mv_str(arms)
                     ));
             }
         }
@@ -1707,7 +1707,7 @@ void Expand_Expr(const ExpandState& es, AST::Expr& node)
     CExpandExpr visitor { es };
     node.visit_nodes(visitor);
     if( visitor.replacement ) {
-        node = AST::Expr( mv$(visitor.replacement) );
+        node = AST::Expr( mv_str(visitor.replacement) );
     }
 }
 
@@ -1820,7 +1820,7 @@ void Expand_Impl(const ExpandState& es, ::AST::Path modpath, ::AST::Module& mod,
         // TODO: UFCS path, or different method
         AST::AbsolutePath   path("", {"", i.name});
 
-        auto attrs = mv$(i.attrs);
+        auto attrs = mv_str(i.attrs);
         Expand_Attrs_CfgAttr(attrs);
         Expand_Attrs(es, attrs, AttrStage::Pre,  mod, impl, i.vis, i.name, *i.data);
 
@@ -1834,7 +1834,7 @@ void Expand_Impl(const ExpandState& es, ::AST::Path modpath, ::AST::Module& mod,
             {
                 TRACE_FUNCTION_F("Macro invoke " << e.path());
                 // Move out of the module to avoid invalidation if a new macro invocation is added
-                auto mi_owned = mv$(e);
+                auto mi_owned = mv_str(e);
 
                 auto ttl = Expand_Macro(es, mod, mi_owned);
                 ASSERT_BUG(mi_owned.span(), ttl, "TODO: Unexpanded macro?");
@@ -1853,7 +1853,7 @@ void Expand_Impl(const ExpandState& es, ::AST::Path modpath, ::AST::Module& mod,
                 }
                 else {
                     // Move back in (using the index, as the old pointr may be invalid)
-                    i.data->as_MacroInv() = mv$(mi_owned);
+                    i.data->as_MacroInv() = mv_str(mi_owned);
                 }
             }
             }
@@ -1879,7 +1879,7 @@ void Expand_Impl(const ExpandState& es, ::AST::Path modpath, ::AST::Module& mod,
             Expand_Attrs(es, attrs, AttrStage::Post,  mod, impl, i.vis, i.name, *i.data);
             // TODO: How would this be populated? It got moved out?
             if( i.attrs.m_items.size() == 0 )
-                i.attrs = mv$(attrs);
+                i.attrs = mv_str(attrs);
         }
     }
 
@@ -2026,7 +2026,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
             }
         }
 
-        auto attrs = mv$(i.attrs);
+        auto attrs = mv_str(i.attrs);
         auto vis = i.vis;
         if( es.mode == ExpandMode::FirstPass )
         {
@@ -2048,7 +2048,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
             continue ;
         }
 
-        auto dat = mv$(i.data);
+        auto dat = mv_str(i.data);
 
         TU_MATCH_HDRA( (dat), {)
         TU_ARMA(None, e) {
@@ -2063,7 +2063,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
             if( macro_recursion_stack.size() > MAX_MACRO_RECURSION ) {
                 ERROR(i.span, E0000, "Exceeded macro recusion limit of " << MAX_MACRO_RECURSION);
             }
-            auto mi_owned = mv$(e);
+            auto mi_owned = mv_str(e);
 
             if( !mi_owned.is_expanded() )
             {
@@ -2097,11 +2097,11 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
                     DEBUG("Deferred macro");
                 }
             }
-            dat.as_MacroInv() = mv$(mi_owned);
+            dat.as_MacroInv() = mv_str(mi_owned);
             }
         TU_ARMA(Macro, e) {
             ASSERT_BUG(i.span, e, "Null macro - " << i.name);
-            mod.add_macro(i.vis.is_global(), i.name, mv$(e));
+            mod.add_macro(i.vis.is_global(), i.name, mv_str(e));
             dat = AST::Item::make_None({});
             }
         TU_ARMA(Use, e) {
@@ -2140,10 +2140,10 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
         TU_ARMA(ExternBlock, e) {
             // TODO: Run expand on inner items?
             // HACK: Just convert inner items into outer items
-            auto items = mv$( e.items() );
+            auto items = mv_str( e.items() );
             for(auto& i2 : items)
             {
-                mod.m_items.push_back( box$(i2) );
+                mod.m_items.push_back( box_str(i2) );
             }
             }
         TU_ARMA(Impl, e) {
@@ -2292,7 +2292,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
             {
                 auto& ti = trait_items[idx];
                 DEBUG(" - " << ti.name << " " << ti.data.tag_str());
-                auto attrs = mv$(ti.attrs);
+                auto attrs = mv_str(ti.attrs);
                 auto ti_path = path + ti.name;
                 Expand_Attrs_CfgAttr(attrs);
                 Expand_Attrs(es, attrs, AttrStage::Pre,  ti_path, mod, e, ti.data);
@@ -2306,7 +2306,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
                     {
                         TRACE_FUNCTION_F("Macro invoke " << e.path());
                         // Move out of the module to avoid invalidation if a new macro invocation is added
-                        auto mi_owned = mv$(e);
+                        auto mi_owned = mv_str(e);
 
                         auto ttl = Expand_Macro(es, mod, mi_owned);
                         ASSERT_BUG(mi_owned.span(), ttl, "TODO: Unexpanded macro");
@@ -2318,7 +2318,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
                             while( ttl->lookahead(0) != TOK_EOF )
                             {
                                 auto i = Parse_Trait_Item(*ttl);
-                                trait_items.insert( trait_items.begin() + insert_pos, mv$(i) );
+                                trait_items.insert( trait_items.begin() + insert_pos, mv_str(i) );
                                 insert_pos ++;
                             }
                             // - Any new macro invocations ends up at the end of the list and handled
@@ -2327,7 +2327,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
                         else
                         {
                             // Move back in (using the index, as the old pointer may be invalid)
-                            trait_items[idx].data.as_MacroInv() = mv$(mi_owned);
+                            trait_items[idx].data.as_MacroInv() = mv_str(mi_owned);
                         }
                     }
                     }
@@ -2348,7 +2348,7 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
 
                     Expand_Attrs(es, attrs, AttrStage::Post,  ti_path, mod, e, ti.data);
                     if( ti.attrs.m_items.size() == 0 )
-                        ti.attrs = mv$(attrs);
+                        ti.attrs = mv_str(attrs);
                 }
             }
             }
@@ -2374,11 +2374,11 @@ void Expand_Mod(const ExpandState& es, ::AST::AbsolutePath modpath, ::AST::Modul
 
             auto& i = *mod.m_items[idx];
             if( i.data.tag() == ::AST::Item::TAGDEAD ) {
-                i.data = mv$(dat);
+                i.data = mv_str(dat);
             }
             // TODO: When would this _not_ be empty?
             if( i.attrs.m_items.size() == 0 )
-                i.attrs = mv$(attrs);
+                i.attrs = mv_str(attrs);
         }
     }
 
@@ -2455,7 +2455,7 @@ void Expand_Mod_Early(::AST::Crate& crate, ::AST::Module& mod, std::vector<std::
             {
                 const auto& mac_inv = i->data.as_MacroInv();
                 DEBUG("macro_rules marked with #[macro_export] moved to the crate root - " << mac_inv.input_ident());
-                new_root_items.push_back(box$(*i));
+                new_root_items.push_back(box_str(*i));
                 i->data = AST::Item();
 
 #if 0
@@ -2494,7 +2494,7 @@ void Expand_Mod_Early(::AST::Crate& crate, ::AST::Module& mod, std::vector<std::
         {
             // 1.74 HACK - Parse `macro_rules` during the first pass, so they're present for `use` to refer to
             if( mi->path().is_trivial() && mi->path().as_trivial() == "macro_rules" ) {
-                auto mi_owned = mv$(*mi);
+                auto mi_owned = mv_str(*mi);
 
                 TRACE_FUNCTION_F("Macro invoke " << mi_owned.path());
 
@@ -2525,7 +2525,7 @@ void Expand_Mod_Early(::AST::Crate& crate, ::AST::Module& mod, std::vector<std::
                 else
                 {
                 }
-                mod.m_items[idx]->data.as_MacroInv() = mv$(mi_owned);
+                mod.m_items[idx]->data.as_MacroInv() = mv_str(mi_owned);
             }
         }
     }
@@ -2592,11 +2592,11 @@ void Expand(::AST::Crate& crate)
         AST::AttributeList  attrs;
         AST::AttributeName  name;
         name.elems.push_back("macro_use");
-        attrs.push_back( AST::Attribute(Span(), mv$(name), {}) );
+        attrs.push_back( AST::Attribute(Span(), mv_str(name), {}) );
         // NOTE: For `macro_use` we want to import this first, but for item lookup, we want it to be last.
         // - Solution, add to the end - but pre-visit the attributes
         crate.m_root_module.m_items.push_back(
-            box$( AST::Named<AST::Item>(Span(), mv$(attrs), AST::Visibility::make_restricted(AST::Visibility::Ty::Private, AST::AbsolutePath()), std_crate_shortname, AST::Item::make_Crate({std_crate_name}) ) )
+            box_str( AST::Named<AST::Item>(Span(), mv_str(attrs), AST::Visibility::make_restricted(AST::Visibility::Ty::Private, AST::AbsolutePath()), std_crate_shortname, AST::Item::make_Crate({std_crate_name}) ) )
             );
         auto& i = *crate.m_root_module.m_items.back();
         Expand_Attrs(es, i.attrs, AttrStage::Post, ::AST::AbsolutePath(), crate.m_root_module, i.vis, i.data);
@@ -2682,7 +2682,7 @@ void Expand(::AST::Crate& crate)
                 auto it = exported_macros.find(mac.name);
                 if( it == exported_macros.end() )
                 {
-                    auto res = exported_macros.insert( mv$(v) );
+                    auto res = exported_macros.insert( mv_str(v) );
                     DEBUG("- Import " << mac.name << "! (from \"" << res.first->second->m_source_crate << "\")");
                 }
                 else if( v.second->m_rules.empty() ) {
@@ -2690,7 +2690,7 @@ void Expand(::AST::Crate& crate)
                 }
                 else {
                     DEBUG("- Replace " << mac.name << "! (from \"" << it->second->m_source_crate << "\") with one from \"" << v.second->m_source_crate << "\"");
-                    it->second = mv$( v.second );
+                    it->second = mv_str( v.second );
                 }
             }
         }

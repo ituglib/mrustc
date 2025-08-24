@@ -1576,7 +1576,7 @@ namespace {
                     tup_ents.push_back( arg->m_res_type.clone() );
                 }
                 ::HIR::PathParams   params;
-                params.m_types.push_back( ::HIR::TypeRef( mv$(tup_ents) ) );
+                params.m_types.push_back( ::HIR::TypeRef( mv_str(tup_ents) ) );
 
                 bool found = m_resolve.find_impl(node.span(), trait, &params, val_ty, [&](ImplRef impl_ref, bool fuzzy)->bool{
                     ASSERT_BUG(node.span(), !fuzzy, "Fuzzy match in check pass");

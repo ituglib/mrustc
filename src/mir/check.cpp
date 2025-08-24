@@ -387,20 +387,20 @@ void MIR_Validate_ValState(::MIR::TypeResolve& state, const ::MIR::Function& fcn
             return ;
         src_path.push_back(idx);
         // TODO: Update the target block, and only visit if we've induced a change
-        to_visit_blocks.push_back( ToVisit { idx, mv$(src_path), (can_move ? mv$(vs) : ValStates(vs)) } );
+        to_visit_blocks.push_back( ToVisit { idx, mv_str(src_path), (can_move ? mv_str(vs) : ValStates(vs)) } );
         };
     auto add_to_visit_move = [&](unsigned int idx, ::std::vector<unsigned int> src_path, ValStates vs) {
-        add_to_visit(idx, mv$(src_path), vs, true);
+        add_to_visit(idx, mv_str(src_path), vs, true);
         };
     auto add_to_visit_copy = [&](unsigned int idx, ::std::vector<unsigned int> src_path, ValStates& vs) {
-        add_to_visit(idx, mv$(src_path), vs, false);
+        add_to_visit(idx, mv_str(src_path), vs, false);
         };
     add_to_visit_move( 0, {}, ValStates { state.m_args.size(), fcn.locals.size() } );
     while( to_visit_blocks.size() > 0 )
     {
         auto block = to_visit_blocks.back().bb;
-        auto path = mv$(to_visit_blocks.back().path);
-        auto val_state = mv$( to_visit_blocks.back().state );
+        auto path = mv_str(to_visit_blocks.back().path);
+        auto val_state = mv_str( to_visit_blocks.back().state );
         to_visit_blocks.pop_back();
         assert(block < fcn.blocks.size());
 
@@ -569,7 +569,7 @@ void MIR_Validate_ValState(::MIR::TypeResolve& state, const ::MIR::Function& fcn
             }
         TU_ARMA(Goto, e) {
             // Push block with the new state
-            add_to_visit_move( e, mv$(path), mv$(val_state) );
+            add_to_visit_move( e, mv_str(path), mv_str(val_state) );
             }
         TU_ARMA(Panic, e) {
             // What should be done here?
@@ -578,7 +578,7 @@ void MIR_Validate_ValState(::MIR::TypeResolve& state, const ::MIR::Function& fcn
             // Push blocks
             val_state.ensure_valid( state, e.cond );
             add_to_visit_copy( e.bb_true , path, val_state );
-            add_to_visit_move( e.bb_false, mv$(path), mv$(val_state) );
+            add_to_visit_move( e.bb_false, mv_str(path), mv_str(val_state) );
             }
         TU_ARMA(Switch, e) {
             val_state.ensure_valid( state, e.val );
@@ -593,7 +593,7 @@ void MIR_Validate_ValState(::MIR::TypeResolve& state, const ::MIR::Function& fcn
             {
                 add_to_visit_copy( tgt, path, val_state );
             }
-            add_to_visit_move( e.def_target, path, mv$(val_state) );
+            add_to_visit_move( e.def_target, path, mv_str(val_state) );
             }
         TU_ARMA(Call, e) {
             if( e.fcn.is_Value() )
@@ -605,7 +605,7 @@ void MIR_Validate_ValState(::MIR::TypeResolve& state, const ::MIR::Function& fcn
 
             // TODO: If the function returns !, don't follow the ret_block
             val_state.mark_validity( state, e.ret_val, true );
-            add_to_visit_move(e.ret_block, mv$(path), mv$(val_state));
+            add_to_visit_move(e.ret_block, mv_str(path), mv_str(val_state));
             }
         }
     }
@@ -853,7 +853,7 @@ void MIR_Validate(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path
                             TU_ARMA(Static, ve) {
                                 tmp = ms.monomorph_type(state.sp, ve->m_type);
                                 resolve.expand_associated_types(state.sp, tmp);
-                                check_types( dst_ty, ::HIR::TypeRef::new_borrow(::HIR::BorrowType::Shared, mv$(tmp)) );
+                                check_types( dst_ty, ::HIR::TypeRef::new_borrow(::HIR::BorrowType::Shared, mv_str(tmp)) );
                                 }
                             TU_ARMA(Function, ve) {
                                 MIR_ASSERT(state, dst_ty.data().is_Function(), dst_ty);

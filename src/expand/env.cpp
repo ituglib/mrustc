@@ -28,7 +28,7 @@ namespace {
         if( !string_np ) {
             ERROR(sp, E0000, "Expected a string literal - got " << *n);
         }
-        return mv$( string_np->m_value );
+        return mv_str( string_np->m_value );
     }
 }
 
@@ -43,7 +43,7 @@ class CExpanderEnv:
         if( !var_val_cstr ) {
             ERROR(sp, E0000, "Environment variable '" << varname << "' not defined");
         }
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token(TOK_STRING, ::std::string(var_val_cstr), {}))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token(TOK_STRING, ::std::string(var_val_cstr), {}))) );
     }
 };
 
@@ -73,7 +73,7 @@ class CExpanderOptionEnv:
             rv.push_back( Token(TOK_STRING, ::std::string(var_val_cstr), {}) );
             rv.push_back( Token(TOK_PAREN_CLOSE) );
         }
-        return box$( TTStreamO(sp, ParseState(), TokenTree( AST::Edition::Rust2015, {}, mv$(rv) )) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree( AST::Edition::Rust2015, {}, mv_str(rv) )) );
     }
 };
 

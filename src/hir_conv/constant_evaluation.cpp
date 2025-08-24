@@ -51,13 +51,13 @@ namespace {
             auto name = RcString::new_interned(FMT(name_prefix << next_item_idx));
             next_item_idx ++;
             auto rv = mod_path.get_simple_path() + name.c_str();
-            auto s = ::HIR::Static( ::HIR::Linkage(), false, mv$(type), ::HIR::ExprPtr() );
+            auto s = ::HIR::Static( ::HIR::Linkage(), false, mv_str(type), ::HIR::ExprPtr() );
             s.m_value_res = ::std::move(value);
             s.m_value_generated = true;
             s.m_save_literal = true;
             DEBUG(rv << ": " << s.m_type << " = " << s.m_value_res);
 
-            const_cast<::HIR::Module&>(mod).m_inline_statics.push_back( ::std::make_pair( mv$(name), box$(s) ) );
+            const_cast<::HIR::Module&>(mod).m_inline_statics.push_back( ::std::make_pair( mv_str(name), box_str(s) ) );
             return rv;
         }
     };
@@ -2536,7 +2536,7 @@ namespace HIR {
                 }
                 else if( te->name == "type_id" ) {
                     auto ty = local_state.monomorph_expand(te->params.m_types.at(0));
-                    dst.write_ptr(state, EncodedLiteral::PTR_BASE, StaticRefPtr::allocate(HIR::Path(mv$(ty), "#type_id"), nullptr));
+                    dst.write_ptr(state, EncodedLiteral::PTR_BASE, StaticRefPtr::allocate(HIR::Path(mv_str(ty), "#type_id"), nullptr));
                 }
                 else if( te->name == "needs_drop" ) {
                     auto ty = local_state.monomorph_expand(te->params.m_types.at(0));
@@ -2993,9 +2993,9 @@ namespace HIR {
                 if( inner_alloc->is_writable() )
                 {
                     auto inner_val = allocation_to_encoded(inner_alloc->get_type(), *inner_alloc);
-                    auto item_path = nvs.new_static( inner_alloc->get_type().clone(), mv$(inner_val) );
+                    auto item_path = nvs.new_static( inner_alloc->get_type().clone(), mv_str(inner_val) );
 
-                    rv.relocations.push_back(Reloc::new_named(r.offset, Target_GetPointerBits()/8, mv$(item_path)));
+                    rv.relocations.push_back(Reloc::new_named(r.offset, Target_GetPointerBits()/8, mv_str(item_path)));
                 }
                 else
                 {
@@ -3614,8 +3614,8 @@ namespace {
                 {
                     // ::std::unique_ptr<VisEnt<ValueItem>>
                     ::std::unique_ptr<::HIR::VisEnt<::HIR::ValueItem>>  iv;
-                    iv.reset( new ::HIR::VisEnt<::HIR::ValueItem> { ::HIR::Publicity::new_none(), ::HIR::ValueItem::make_Static(mv$(*v.second)) } );
-                    mod.m_value_items.insert(::std::make_pair( v.first, mv$(iv) ));
+                    iv.reset( new ::HIR::VisEnt<::HIR::ValueItem> { ::HIR::Publicity::new_none(), ::HIR::ValueItem::make_Static(mv_str(*v.second)) } );
+                    mod.m_value_items.insert(::std::make_pair( v.first, mv_str(iv) ));
                 }
                 mod.m_inline_statics.clear();
             }
@@ -3649,13 +3649,13 @@ void ConvertHIR_ConstantEvaluate(::HIR::Crate& crate)
     ExpanderApply().visit_crate(crate);
     for(auto& new_ty_pair : crate.m_new_types)
     {
-        auto res = crate.m_root_module.m_mod_items.insert( mv$(new_ty_pair) );
+        auto res = crate.m_root_module.m_mod_items.insert( mv_str(new_ty_pair) );
         ASSERT_BUG(Span(), res.second, "Duplicate type in consteval?");
     }
     crate.m_new_types.clear();
     for(auto& new_val_pair : crate.m_new_values)
     {
-        auto res = crate.m_root_module.m_value_items.insert( mv$(new_val_pair) );
+        auto res = crate.m_root_module.m_value_items.insert( mv_str(new_val_pair) );
         ASSERT_BUG(Span(), res.second, "Duplicate value in consteval?");
     }
     crate.m_new_values.clear();

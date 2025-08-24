@@ -623,7 +623,7 @@ namespace
                 MIR_ASSERT(mir_res, state_p, "No state result?");
             }
             this->clear_state(mir_res, *state_p);
-            *state_p = mv$(new_vs);
+            *state_p = mv_str(new_vs);
         }
     };
 
@@ -733,11 +733,11 @@ void MIR_Validate_FullValState(::MIR::TypeResolve& mir_res, const ::MIR::Functio
     }
 
     ::std::vector< ::std::pair<unsigned int, ValueStates> > todo_queue;
-    todo_queue.push_back( ::std::make_pair(0, mv$(state)) );
+    todo_queue.push_back( ::std::make_pair(0, mv_str(state)) );
     while( ! todo_queue.empty() )
     {
         auto cur_block = todo_queue.back().first;
-        auto state = mv$(todo_queue.back().second);
+        auto state = mv_str(todo_queue.back().second);
         todo_queue.pop_back();
 
         // Mask off any values which aren't valid in the first statement of this block
@@ -959,21 +959,21 @@ void MIR_Validate_FullValState(::MIR::TypeResolve& mir_res, const ::MIR::Functio
         (Diverge,
             ),
         (Goto,   // Jump to another block
-            todo_queue.push_back( ::std::make_pair(te, mv$(state)) );
+            todo_queue.push_back( ::std::make_pair(te, mv_str(state)) );
             ),
         (Panic,
-            todo_queue.push_back( ::std::make_pair(te.dst, mv$(state)) );
+            todo_queue.push_back( ::std::make_pair(te.dst, mv_str(state)) );
             ),
         (If,
             state.ensure_lvalue_valid(mir_res, te.cond);
             todo_queue.push_back( ::std::make_pair(te.bb_true, state.clone()) );
-            todo_queue.push_back( ::std::make_pair(te.bb_false, mv$(state)) );
+            todo_queue.push_back( ::std::make_pair(te.bb_false, mv_str(state)) );
             ),
         (Switch,
             state.ensure_lvalue_valid(mir_res, te.val);
             for(size_t i = 0; i < te.targets.size(); i ++)
             {
-                todo_queue.push_back( ::std::make_pair(te.targets[i], i == te.targets.size()-1 ? mv$(state) : state.clone()) );
+                todo_queue.push_back( ::std::make_pair(te.targets[i], i == te.targets.size()-1 ? mv_str(state) : state.clone()) );
             }
             ),
         (SwitchValue,
@@ -982,7 +982,7 @@ void MIR_Validate_FullValState(::MIR::TypeResolve& mir_res, const ::MIR::Functio
             {
                 todo_queue.push_back( ::std::make_pair(te.targets[i], state.clone()) );
             }
-            todo_queue.push_back( ::std::make_pair(te.def_target, mv$(state)) );
+            todo_queue.push_back( ::std::make_pair(te.def_target, mv_str(state)) );
             ),
         (Call,
             if(const auto* e = te.fcn.opt_Value())
@@ -1003,7 +1003,7 @@ void MIR_Validate_FullValState(::MIR::TypeResolve& mir_res, const ::MIR::Functio
                 todo_queue.push_back( ::std::make_pair(te.panic_block, state.clone()) );
             }
             state.mark_lvalue_valid(mir_res, te.ret_val);
-            todo_queue.push_back( ::std::make_pair(te.ret_block, mv$(state)) );
+            todo_queue.push_back( ::std::make_pair(te.ret_block, mv_str(state)) );
             )
         )
     }

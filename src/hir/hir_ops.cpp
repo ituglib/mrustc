@@ -296,7 +296,7 @@ namespace {
             // 1. Monomorph
             auto trait_path_mono = monomorph_cb.monomorph_traitpath(sp, trait_path_raw, false, false);
             // 2. Add
-            rv.push_back( ::HIR::GenericBound::make_TraitBound({ hrtbs ? box$(hrtbs->clone()) : nullptr, type.clone(), mv$(trait_path_mono) }) );
+            rv.push_back( ::HIR::GenericBound::make_TraitBound({ hrtbs ? box_str(hrtbs->clone()) : nullptr, type.clone(), mv_str(trait_path_mono) }) );
         }
 
         // TODO: Add traits from `Self: Foo` bounds?
@@ -1283,7 +1283,7 @@ const ::MIR::Function* HIR::Crate::get_or_gen_mir(const ::HIR::ItemPath& ip, con
         auto idx = this->m_type_indexes.at(ty_b.first);
         vtable_params.m_types.at(idx) = ty_b.second.type.clone();
     }
-    return ::HIR::TypeRef::new_path( ::HIR::GenericPath(vtable_ty_spath, mv$(vtable_params)), &vtable_ref );
+    return ::HIR::TypeRef::new_path( ::HIR::GenericPath(vtable_ty_spath, mv_str(vtable_params)), &vtable_ref );
 }
 
 unsigned HIR::Trait::get_vtable_value_index(const HIR::GenericPath& trait_path, const RcString& name) const
@@ -1364,7 +1364,7 @@ const ::HIR::t_struct_fields& HIR::pattern_get_named(const Span& sp, const ::HIR
 namespace HIR {
 EncodedLiteralPtr::EncodedLiteralPtr(EncodedLiteral el)
 {
-    p = new EncodedLiteral(mv$(el));
+    p = new EncodedLiteral(mv_str(el));
 }
 EncodedLiteralPtr::~EncodedLiteralPtr()
 {

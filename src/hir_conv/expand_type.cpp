@@ -164,7 +164,7 @@ public:
                     if( nt == ::HIR::TypeRef() )
                         break;
                     num_exp ++;
-                    new_type = mv$(nt);
+                    new_type = mv_str(nt);
                 }
                 else {
                     break;
@@ -173,7 +173,7 @@ public:
             ASSERT_BUG(sp, num_exp < MAX_RECURSIVE_TYPE_EXPANSIONS, "Recursion limit hit expanding " << ty << " (currently on " << new_type << ")");
             if( ! new_type.data().is_Infer() ) {
                 DEBUG("Replacing " << ty << " with " << new_type << " (" << num_exp << " expansions)");
-                ty = mv$(new_type);
+                ty = mv_str(new_type);
             }
         }
     }
@@ -233,7 +233,7 @@ public:
             cur = &rv;
         } while( ++num_exp < MAX_RECURSIVE_TYPE_EXPANSIONS );
         ASSERT_BUG(sp, num_exp < MAX_RECURSIVE_TYPE_EXPANSIONS, "Recursion limit expanding " << path << " (currently on " << *cur << ")");
-        return mv$( rv );
+        return mv_str( rv );
     }
 
     ::HIR::Pattern::PathBinding visit_pattern_PathBinding(const Span& sp, ::HIR::Path& path)
@@ -339,7 +339,7 @@ public:
             if( new_path != ::HIR::GenericPath() )
             {
                 DEBUG("Replacing " << e.path << " with " << new_path);
-                e.path = mv$(new_path);
+                e.path = mv_str(new_path);
             }
             e.binding = visit_pattern_PathBinding(sp, e.path);
             }
@@ -348,7 +348,7 @@ public:
             if( new_path != ::HIR::GenericPath() )
             {
                 DEBUG("Replacing " << e.path << " with " << new_path);
-                e.path = mv$(new_path);
+                e.path = mv_str(new_path);
             }
             e.binding = visit_pattern_PathBinding(sp, e.path);
             }
@@ -357,7 +357,7 @@ public:
             if( new_path != ::HIR::GenericPath() )
             {
                 DEBUG("Replacing " << e.path << " with " << new_path);
-                e.path = mv$(new_path);
+                e.path = mv_str(new_path);
             }
             e.binding = visit_pattern_PathBinding(sp, e.path);
             // TODO: If this is an empty/wildcard AND it's poiting at a value/tuple entry, change to PathValue/PathTuple
@@ -385,7 +385,7 @@ public:
                     for(auto& t : n)
                     {
                         auto type = (&t == &n.back() ? std::move(orig_type) : orig_type.clone());
-                        auto hrtbs = orig_hrtbs ? (&t == &n.back() ? std::move(orig_hrtbs) : box$(orig_hrtbs->clone())) : nullptr;
+                        auto hrtbs = orig_hrtbs ? (&t == &n.back() ? std::move(orig_hrtbs) : box_str(orig_hrtbs->clone())) : nullptr;
                         it = params.m_bounds.insert(it, HIR::GenericBound::make_TraitBound({ std::move(hrtbs), std::move(type), std::move(t) }));
                     }
                 }

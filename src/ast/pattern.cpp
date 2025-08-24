@@ -248,7 +248,7 @@ AST::Pattern AST::Pattern::clone() const
         ::std::vector<AST::StructPatternEntry>  sps;
         for(const auto& sp : e.sub_patterns)
             sps.push_back(AST::StructPatternEntry { sp.attrs.clone(), sp.name, sp.pat.clone() });
-        rv.m_data = Data::make_Struct({ ::AST::Path(e.path), mv$(sps) });
+        rv.m_data = Data::make_Struct({ ::AST::Path(e.path), mv_str(sps) });
         }
     TU_ARMA(Slice, e) {
         rv.m_data = Data::make_Slice({ H::clone_list(e.sub_pats) });

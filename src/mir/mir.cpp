@@ -714,10 +714,10 @@ namespace MIR {
     (Bool, return ::MIR::Constant(e2); ),
     (Bytes, return ::MIR::Constant(e2); ),
     (StaticString, return ::MIR::Constant(e2); ),
-    (Const, return ::MIR::Constant::make_Const({box$(e2.p->clone())}); ),
+    (Const, return ::MIR::Constant::make_Const({box_str(e2.p->clone())}); ),
     (Generic, return ::MIR::Constant(e2); ),
-    (Function, return ::MIR::Constant::make_Function({box$(e2.p->clone())}); ),
-    (ItemAddr, return ::MIR::Constant(box$(e2->clone())); )
+    (Function, return ::MIR::Constant::make_Function({box_str(e2.p->clone())}); ),
+    (ItemAddr, return ::MIR::Constant(box_str(e2->clone())); )
     )
     throw "";
 }
@@ -777,7 +777,7 @@ namespace MIR {
         ret.reserve(e.vals.size());
         for(const auto& v : e.vals)
             ret.push_back( v.clone() );
-        return ::MIR::RValue::make_Tuple({ mv$(ret) });
+        return ::MIR::RValue::make_Tuple({ mv_str(ret) });
         ),
     // Array literal
     (Array,
@@ -785,7 +785,7 @@ namespace MIR {
         ret.reserve(e.vals.size());
         for(const auto& v : e.vals)
             ret.push_back( v.clone() );
-        return ::MIR::RValue::make_Array({ mv$(ret) });
+        return ::MIR::RValue::make_Array({ mv_str(ret) });
         ),
     // Create a new instance of a union
     (UnionVariant,
@@ -797,7 +797,7 @@ namespace MIR {
         ret.reserve(e.vals.size());
         for(const auto& v : e.vals)
             ret.push_back( v.clone() );
-        return ::MIR::RValue::make_EnumVariant({ e.path.clone(), e.index, mv$(ret) });
+        return ::MIR::RValue::make_EnumVariant({ e.path.clone(), e.index, mv_str(ret) });
         ),
     // Create a new instance of a struct
     (Struct,
@@ -805,7 +805,7 @@ namespace MIR {
         ret.reserve(e.vals.size());
         for(const auto& v : e.vals)
             ret.push_back( v.clone() );
-        return ::MIR::RValue::make_Struct({ e.path.clone(), mv$(ret) });
+        return ::MIR::RValue::make_Struct({ e.path.clone(), mv_str(ret) });
         )
     )
     throw "";

@@ -60,7 +60,7 @@ namespace {
             }
         TU_ARMA(Const, ce) {
             return ::MIR::Constant::make_Const({
-                box$(params.monomorph(resolve, *ce.p))
+                box_str(params.monomorph(resolve, *ce.p))
                 });
             }
         TU_ARMA(Generic, ce) {
@@ -101,7 +101,7 @@ namespace {
             }
         TU_ARMA(Function, ce) {
             return ::MIR::Constant::make_Function({
-                box$(params.monomorph(resolve, *ce.p))
+                box_str(params.monomorph(resolve, *ce.p))
                 });
             }
         TU_ARMA(ItemAddr, ce) {
@@ -111,7 +111,7 @@ namespace {
             // TODO: If this is a pointer to a function on a trait object, replace with the address loaded from the vtable.
             // - Requires creating a new temporary for the vtable pointer.
             // - Also requires knowing what the receiver is.
-            return ::MIR::Constant( box$(p) );
+            return ::MIR::Constant( box_str(p) );
             }
         }
         throw "";
@@ -241,7 +241,7 @@ namespace {
                 (DstMeta,
                     auto lv = monomorph_LValue(resolve, params, se.val);
                     // TODO: Get the type of this, and if it's an array - replace with the size
-                    rval = ::MIR::RValue::make_DstMeta({ mv$(lv) });
+                    rval = ::MIR::RValue::make_DstMeta({ mv_str(lv) });
                     ),
                 (DstPtr,
                     rval = ::MIR::RValue::make_DstPtr({ monomorph_LValue(resolve, params, se.val) });
@@ -286,7 +286,7 @@ namespace {
 
                 statements.push_back( ::MIR::Statement::make_Assign({
                     monomorph_LValue(resolve, params, e.dst),
-                    mv$(rval)
+                    mv_str(rval)
                     }) );
                 } break;
             case ::MIR::Statement::TAG_Asm: {
@@ -301,7 +301,7 @@ namespace {
                     new_in.push_back(::std::make_pair( ent.first, monomorph_LValue(resolve, params, ent.second) ));
 
                 statements.push_back( ::MIR::Statement::make_Asm({
-                    e.tpl, mv$(new_out), mv$(new_in), e.clobbers, e.flags
+                    e.tpl, mv_str(new_out), mv_str(new_in), e.clobbers, e.flags
                     }) );
                 } break;
             case ::MIR::Statement::TAG_Asm2: {
@@ -319,8 +319,8 @@ namespace {
                         new_params.push_back(MIR::AsmParam::make_Reg({
                             v.dir,
                             v.spec.clone(),
-                            v.input  ? box$( monomorph_Param(resolve, params, *v.input) ) : nullptr,
-                            v.output ? box$( monomorph_LValue(resolve, params, *v.output) ) : nullptr,
+                            v.input  ? box_str( monomorph_Param(resolve, params, *v.input) ) : nullptr,
+                            v.output ? box_str( monomorph_LValue(resolve, params, *v.output) ) : nullptr,
                             }));
                     }
                 }
@@ -397,10 +397,10 @@ namespace {
             )
         )
 
-        output.blocks.push_back( ::MIR::BasicBlock { mv$(statements), mv$(terminator) } );
+        output.blocks.push_back( ::MIR::BasicBlock { mv_str(statements), mv_str(terminator) } );
     }
 
-    return ::MIR::FunctionPointer( box$(output).release() );
+    return ::MIR::FunctionPointer( box_str(output).release() );
 }
 
 /// Monomorphise all functions in a TransList

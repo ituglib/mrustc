@@ -379,7 +379,7 @@ struct ContentLoopVariableUse
                 }
 
                 DEBUG("joiner = " << Token(joiner) << ", controlling_loops = {" << controlling_loops << "}, content = " << content);
-                ret.push_back( MacroExpansionEnt::make_Loop({ mv$(content), joiner, mv$(controlling_loops) }) );
+                ret.push_back( MacroExpansionEnt::make_Loop({ mv_str(content), joiner, mv_str(controlling_loops) }) );
             }
             // - `${operator(args}` - Extensions
             else if( tok.type() == TOK_BRACE_OPEN )
@@ -456,7 +456,7 @@ struct ContentLoopVariableUse
 
                     // Emit the literal $ <name>
                     ret.push_back( MacroExpansionEnt(Token(TOK_DOLLAR)) );
-                    ret.push_back( MacroExpansionEnt(mv$(tok)) );
+                    ret.push_back( MacroExpansionEnt(mv_str(tok)) );
                 }
                 else
                 {
@@ -486,7 +486,7 @@ struct ContentLoopVariableUse
         }
         else
         {
-            ret.push_back( MacroExpansionEnt( mv$(tok) ) );
+            ret.push_back( MacroExpansionEnt( mv_str(tok) ) );
         }
     }
 
@@ -558,7 +558,7 @@ MacroRulesArm Parse_MacroRules_MakeArm(Span pat_sp, ::std::vector<MacroPatEnt> p
 {
     // - Convert the rule into an instruction stream
     auto rule_sequence = macro_pattern_to_simple(pat_sp, pattern);
-    auto arm = MacroRulesArm( mv$(rule_sequence), mv$(contents) );
+    auto arm = MacroRulesArm( mv_str(rule_sequence), mv_str(contents) );
     enumerate_names(pattern,  arm.m_param_names);
     return arm;
 }
@@ -600,7 +600,7 @@ MacroRulesPtr Parse_MacroRules(TokenStream& lex)
     // Re-parse the patterns into a unified form
     for(auto& rule : rules)
     {
-        rv->m_rules.push_back( Parse_MacroRules_MakeArm(rule.m_pat_span, mv$(rule.m_pattern), mv$(rule.m_contents)) );
+        rv->m_rules.push_back( Parse_MacroRules_MakeArm(rule.m_pat_span, mv_str(rule.m_pattern), mv_str(rule.m_contents)) );
     }
 
     return rv;
@@ -784,7 +784,7 @@ namespace {
             rv.push_back( ::std::move(spe) );
             };
         auto push_ifv = [&push](bool is_equal, ::std::vector<SimplePatIfCheck> ents, size_t tgt) {
-            push(SimplePatEnt::make_If({ is_equal, tgt, mv$(ents) }));
+            push(SimplePatEnt::make_If({ is_equal, tgt, mv_str(ents) }));
             };
         for(size_t idx = 0; idx < pattern.size(); idx ++)
         {
@@ -887,7 +887,7 @@ namespace {
                     {
                         auto v = ::make_vec1<SimplePatIfCheck>( { MacroPatEnt::PAT_TOKEN, ent.tok} );
                         v.insert(v.end(), p.begin(), p.end());
-                        repeat_conds.push_back(mv$(v));
+                        repeat_conds.push_back(mv_str(v));
                     }
                 }
 

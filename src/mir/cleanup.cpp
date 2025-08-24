@@ -48,19 +48,19 @@ public:
     ::MIR::LValue new_temporary(::HIR::TypeRef ty)
     {
         auto rv = ::MIR::LValue::new_Local( static_cast<unsigned int>(m_fcn.locals.size()) );
-        m_fcn.locals.push_back( mv$(ty) );
+        m_fcn.locals.push_back( mv_str(ty) );
         return rv;
     }
 
     void push_statement(::MIR::Statement stmt)
     {
-        new_statements.push_back( mv$(stmt) );
+        new_statements.push_back( mv_str(stmt) );
     }
 
     ::MIR::LValue in_temporary(::HIR::TypeRef ty, ::MIR::RValue val)
     {
-        auto rv = this->new_temporary( mv$(ty) );
-        push_statement( ::MIR::Statement::make_Assign({ rv.clone(), mv$(val) }) );
+        auto rv = this->new_temporary( mv_str(ty) );
+        push_statement( ::MIR::Statement::make_Assign({ rv.clone(), mv_str(val) }) );
         return rv;
     }
 
@@ -91,7 +91,7 @@ private:
             for(auto& stmt : new_statements)
             {
                 DEBUG("- Push stmt @" << cur_stmt << ": " << stmt);
-                it = block.statements.insert(it, mv$(stmt));
+                it = block.statements.insert(it, mv_str(stmt));
                 ++ it;
                 cur_stmt += 1;
             }
@@ -165,9 +165,9 @@ namespace {
     const RcString rcstring_vtable = RcString::new_interned("vtable#");
     ::MIR::Constant create_vtable(HIR::TypeRef ty, const HIR::TraitPath& trait) {
         auto vtable_path = trait.m_hrtbs
-            ? ::HIR::Path(mv$(ty), trait.m_hrtbs->clone(), trait.m_path.clone(), rcstring_vtable)
-            : ::HIR::Path(mv$(ty), trait.m_path.clone(), rcstring_vtable);
-        return ::MIR::Constant::make_ItemAddr(box$(vtable_path));
+            ? ::HIR::Path(mv_str(ty), trait.m_hrtbs->clone(), trait.m_path.clone(), rcstring_vtable)
+            : ::HIR::Path(mv_str(ty), trait.m_path.clone(), rcstring_vtable);
+        return ::MIR::Constant::make_ItemAddr(box_str(vtable_path));
     }
 }
 
@@ -191,7 +191,7 @@ namespace {
         if( path == ::HIR::GenericPath() )
             MIR_TODO(state, "Literal of type " << ty << " - " << lit);
         DEBUG("Unknown type " << ty << ", but a path was provided - Return ItemAddr " << path);
-        return ::MIR::Constant::make_ItemAddr( box$(path) );
+        return ::MIR::Constant::make_ItemAddr( box_str(path) );
     TU_ARMA(Tuple, te) {
         auto* repr = Target_GetTypeRepr(state.sp, state.m_resolve, ty);
         MIR_ASSERT(state, repr, "No type repr, but encoded value available? " << ty);
@@ -202,10 +202,10 @@ namespace {
         for(const auto& fld : repr->fields)
         {
             auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit.slice(fld.offset), monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), params, ::HIR::GenericPath());
-            lvals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv$(rval)) );
+            lvals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv_str(rval)) );
         }
 
-        return ::MIR::RValue::make_Tuple({ mv$(lvals) });
+        return ::MIR::RValue::make_Tuple({ mv_str(lvals) });
         }
     TU_ARMA(Array, te) {
         size_t size = 0;
@@ -238,8 +238,8 @@ namespace {
         if( is_all_same )
         {
             auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit.slice(0, size), te.inner.clone(), params, ::HIR::GenericPath());
-            auto data_lval = mutator.in_temporary(te.inner.clone(), mv$(rval));
-            return ::MIR::RValue::make_SizedArray({ mv$(data_lval), static_cast<unsigned int>(count) });
+            auto data_lval = mutator.in_temporary(te.inner.clone(), mv_str(rval));
+            return ::MIR::RValue::make_SizedArray({ mv_str(data_lval), static_cast<unsigned int>(count) });
         }
         else
         {
@@ -250,11 +250,11 @@ namespace {
             for(unsigned int i = 0; i < count; i ++)
             {
                 auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit.slice(ofs, size), te.inner.clone(), params, ::HIR::GenericPath());
-                lvals.push_back( mutator.in_temporary(te.inner.clone(), mv$(rval)) );
+                lvals.push_back( mutator.in_temporary(te.inner.clone(), mv_str(rval)) );
                 ofs += size;
             }
 
-            return ::MIR::RValue::make_Array({ mv$(lvals) });
+            return ::MIR::RValue::make_Array({ mv_str(lvals) });
         }
         }
     TU_ARMA(Path, te) {
@@ -269,10 +269,10 @@ namespace {
             for(const auto& fld : repr->fields)
             {
                 auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit.slice(fld.offset), monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), params, ::HIR::GenericPath());
-                lvals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv$(rval)) );
+                lvals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv_str(rval)) );
             }
 
-            return ::MIR::RValue::make_Struct({ te.path.m_data.as_Generic().clone(), mv$(lvals) });
+            return ::MIR::RValue::make_Struct({ te.path.m_data.as_Generic().clone(), mv_str(lvals) });
         }
         else if( te.binding.is_Enum() )
         {
@@ -296,14 +296,14 @@ namespace {
                     if(has_tag_field && &fld == &repr->fields.back())
                         continue;
                     auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit.slice(base_ofs + fld.offset), monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), params, ::HIR::GenericPath());
-                    vals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv$(rval)) );
+                    vals.push_back( mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, fld.ty), mv_str(rval)) );
                 }
             }
             else
             {
                 // Leave empty
             }
-            return ::MIR::RValue::make_EnumVariant({ te.path.m_data.as_Generic().clone(), var_idx, mv$(vals) });
+            return ::MIR::RValue::make_EnumVariant({ te.path.m_data.as_Generic().clone(), var_idx, mv_str(vals) });
         }
         else if( te.binding.is_Union() )
         {
@@ -370,9 +370,9 @@ namespace {
             if( var_idx == ~0u ) {
                 MIR_TODO(state, "MIR_Cleanup_LiteralToRValue - " << path << ": " << ty << " = " << lit << " - Decode union into MIR");
             }
-            auto inner_rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit, repr->fields[var_idx].ty.clone(), params, mv$(path));
-            auto inner_lval = mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, repr->fields[var_idx].ty), mv$(inner_rval));
-            return ::MIR::RValue::make_UnionVariant({ te.path.m_data.as_Generic().clone(), var_idx, mv$(inner_lval) });
+            auto inner_rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit, repr->fields[var_idx].ty.clone(), params, mv_str(path));
+            auto inner_lval = mutator.in_temporary( monomorph_erase_lifetimes.monomorph_type(state.sp, repr->fields[var_idx].ty), mv_str(inner_rval));
+            return ::MIR::RValue::make_UnionVariant({ te.path.m_data.as_Generic().clone(), var_idx, mv_str(inner_lval) });
         }
         else
         {
@@ -411,15 +411,15 @@ namespace {
         {
             // Share logic with `Borrow` below, but wrap returned value in a cast op
             auto ty_borrow = ::HIR::TypeRef::new_borrow(te.type, te.inner.clone());
-            auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit, ty_borrow.clone(), params, mv$(path));
-            auto lval = mutator.in_temporary( mv$(ty_borrow), mv$(rval) );
-            return ::MIR::RValue::make_Cast({ mv$(lval), mv$(ty) });
+            auto rval = MIR_Cleanup_LiteralToRValue(state, mutator, lit, ty_borrow.clone(), params, mv_str(path));
+            auto lval = mutator.in_temporary( mv_str(ty_borrow), mv_str(rval) );
+            return ::MIR::RValue::make_Cast({ mv_str(lval), mv_str(ty) });
         }
         else
         {
             auto v = lit.read_uint(Target_GetPointerBits()/8);
             auto lval = mutator.in_temporary( ::HIR::CoreType::Usize, ::MIR::RValue( ::MIR::Constant::make_Uint({ v, ::HIR::CoreType::Usize }) ) );
-            return ::MIR::RValue::make_Cast({ mv$(lval), mv$(ty) });
+            return ::MIR::RValue::make_Cast({ mv_str(lval), mv_str(ty) });
         }
         }
     TU_ARMA(Borrow, te) {
@@ -430,7 +430,7 @@ namespace {
         if(data_reloc->p)
         {
             const auto& path = *data_reloc->p;
-            auto ptr_val = ::MIR::Constant::make_ItemAddr(box$(params.monomorph_path(state.sp, path)));
+            auto ptr_val = ::MIR::Constant::make_ItemAddr(box_str(params.monomorph_path(state.sp, path)));
             DEBUG("ptr_val = " << ptr_val);
             ::HIR::TypeRef tmp;
             const auto& src_ty = state.get_static_type(tmp, path);
@@ -442,18 +442,18 @@ namespace {
             case MetadataType::None:
                 // TODO: What if the type doesn't match? Emit a `_Cast foo as &Bar`?
                 if( src_ty != te.inner ) {
-                    auto src_ty_ref = mutator.in_temporary( ::HIR::TypeRef::new_borrow(te.type, src_ty.clone()), mv$(ptr_val) );
+                    auto src_ty_ref = mutator.in_temporary( ::HIR::TypeRef::new_borrow(te.type, src_ty.clone()), mv_str(ptr_val) );
                     auto src_ty_ptr = mutator.in_temporary(
                         ::HIR::TypeRef::new_pointer(te.type, src_ty.clone()),
-                        ::MIR::RValue::make_Cast({ mv$(src_ty_ref), ::HIR::TypeRef::new_pointer(te.type, src_ty.clone()) })
+                        ::MIR::RValue::make_Cast({ mv_str(src_ty_ref), ::HIR::TypeRef::new_pointer(te.type, src_ty.clone()) })
                     );
                     auto inner_lval = mutator.in_temporary(
                         ::HIR::TypeRef::new_pointer(te.type, te.inner.clone()),
-                        ::MIR::RValue::make_Cast({ mv$(src_ty_ptr), ::HIR::TypeRef::new_pointer(te.type, te.inner.clone()) })
+                        ::MIR::RValue::make_Cast({ mv_str(src_ty_ptr), ::HIR::TypeRef::new_pointer(te.type, te.inner.clone()) })
                     );
-                    return ::MIR::RValue::make_Borrow({ te.type, MIR::LValue::new_Deref(mv$(inner_lval)) });
+                    return ::MIR::RValue::make_Borrow({ te.type, MIR::LValue::new_Deref(mv_str(inner_lval)) });
                 }
-                return mv$(ptr_val);
+                return mv_str(ptr_val);
             case MetadataType::Slice: {
                 MIR_ASSERT(state, src_ty.data().is_Array(), "BorrowOf returning slice not of an array, instead " << src_ty);
                 const auto& te = src_ty.data().as_Array();
@@ -461,15 +461,15 @@ namespace {
                 unsigned int size = te.size.as_Known();
 
                 auto size_val = ::MIR::Param( ::MIR::Constant::make_Uint({ U128(size), ::HIR::CoreType::Usize }) );
-                return ::MIR::RValue::make_MakeDst({ ::MIR::Param(mv$(ptr_val)), mv$(size_val) });
+                return ::MIR::RValue::make_MakeDst({ ::MIR::Param(mv_str(ptr_val)), mv_str(size_val) });
                 break; }
             case MetadataType::TraitObject: {
                 const auto* tep = te.inner.data().opt_TraitObject();
                 if(!tep) MIR_TODO(state, "Hidden vtable");
 
-                auto vtable_val = ::MIR::Param( create_vtable(&ty == &tmp ? mv$(tmp) : src_ty.clone(), tep->m_trait) );
+                auto vtable_val = ::MIR::Param( create_vtable(&ty == &tmp ? mv_str(tmp) : src_ty.clone(), tep->m_trait) );
 
-                return ::MIR::RValue::make_MakeDst({ ::MIR::Param(mv$(ptr_val)), mv$(vtable_val) });
+                return ::MIR::RValue::make_MakeDst({ ::MIR::Param(mv_str(ptr_val)), mv_str(vtable_val) });
                 break; }
             case MetadataType::Unknown:
                 MIR_BUG(state, te.inner << " unknown metadata type");
@@ -485,14 +485,14 @@ namespace {
                 ::std::vector<uint8_t>  bytestr;
                 for(auto v : data_reloc->bytes)
                     bytestr.push_back( static_cast<uint8_t>(v) );
-                return ::MIR::RValue::make_MakeDst({ ::MIR::Constant(mv$(bytestr)), ::MIR::Constant::make_Uint({ U128(data_reloc->bytes.size()), ::HIR::CoreType::Usize }) });
+                return ::MIR::RValue::make_MakeDst({ ::MIR::Constant(mv_str(bytestr)), ::MIR::Constant::make_Uint({ U128(data_reloc->bytes.size()), ::HIR::CoreType::Usize }) });
             }
             else if( te.inner.data().is_Array() && te.inner.data().as_Array().inner == ::HIR::CoreType::U8 ) {
                 // TODO: How does this differ at codegen to the above?
                 ::std::vector<uint8_t>  bytestr;
                 for(auto v : data_reloc->bytes)
                     bytestr.push_back( static_cast<uint8_t>(v) );
-                return ::MIR::Constant( mv$(bytestr) );
+                return ::MIR::Constant( mv_str(bytestr) );
             }
             else if( te.inner == ::HIR::CoreType::Str ) {
                 return ::MIR::Constant::make_StaticString( data_reloc->bytes );
@@ -504,13 +504,13 @@ namespace {
                 for(auto v : data_reloc->bytes)
                     bytestr.push_back( static_cast<uint8_t>(v) );
                 // Make a `*const [u8]`
-                auto ptr1 = ::MIR::RValue::make_MakeDst({ ::MIR::Constant(mv$(bytestr)), ::MIR::Constant::make_Uint({ U128(data_reloc->bytes.size()), ::HIR::CoreType::Usize }) });
-                auto lval = mutator.in_temporary( ::HIR::TypeRef::new_pointer(HIR::BorrowType::Shared, ::HIR::TypeRef::new_slice(::HIR::CoreType::U8)), mv$(ptr1) );
+                auto ptr1 = ::MIR::RValue::make_MakeDst({ ::MIR::Constant(mv_str(bytestr)), ::MIR::Constant::make_Uint({ U128(data_reloc->bytes.size()), ::HIR::CoreType::Usize }) });
+                auto lval = mutator.in_temporary( ::HIR::TypeRef::new_pointer(HIR::BorrowType::Shared, ::HIR::TypeRef::new_slice(::HIR::CoreType::U8)), mv_str(ptr1) );
                 // Cast to `*const T`
                 auto raw_ptr_ty = ::HIR::TypeRef::new_pointer(HIR::BorrowType::Shared, te.inner.clone());
-                auto lval2 = mutator.in_temporary( raw_ptr_ty.clone(), ::MIR::RValue::make_Cast({ mv$(lval), raw_ptr_ty.clone() }) );
+                auto lval2 = mutator.in_temporary( raw_ptr_ty.clone(), ::MIR::RValue::make_Cast({ mv_str(lval), raw_ptr_ty.clone() }) );
                 // Reborrow as `&T`
-                return ::MIR::RValue::make_Borrow({ ::HIR::BorrowType::Shared, ::MIR::LValue::new_Deref(mv$(lval2)) });
+                return ::MIR::RValue::make_Borrow({ ::HIR::BorrowType::Shared, ::MIR::LValue::new_Deref(mv_str(lval2)) });
             }
         }
         }
@@ -518,7 +518,7 @@ namespace {
         const auto* data_reloc = lit.get_reloc();
         MIR_ASSERT(state, data_reloc, "Function with no relocation?!");
         MIR_ASSERT(state, data_reloc->p, "");
-        return ::MIR::Constant::make_ItemAddr( box$( data_reloc->p->clone() ) );
+        return ::MIR::Constant::make_ItemAddr( box_str( data_reloc->p->clone() ) );
         }
     }
     throw "";
@@ -552,12 +552,12 @@ namespace {
     {
         receiver_lvp = mutator.in_temporary(
             HIR::TypeRef::new_borrow(HIR::BorrowType::Owned, pe.type.clone()),
-            MIR::RValue::make_Borrow({ HIR::BorrowType::Owned, mv$(receiver_lvp) })
+            MIR::RValue::make_Borrow({ HIR::BorrowType::Owned, mv_str(receiver_lvp) })
             );
     }
 
     // Allocate a temporary for the vtable pointer itself
-    auto vtable_lv = mutator.new_temporary( mv$(vtable_ty) );
+    auto vtable_lv = mutator.new_temporary( mv_str(vtable_ty) );
     auto fcn_lval = ::MIR::LValue::new_Field( ::MIR::LValue::new_Deref( vtable_lv.clone() ), vtable_idx );
     ::HIR::TypeRef  tmp;
     const auto& ty = state.get_lvalue_type(tmp, fcn_lval);
@@ -585,37 +585,37 @@ namespace {
                     }
                 TU_ARMA(Tuple, se) {
                     for(unsigned int i = 0; i < se.size(); i ++ ) {
-                        auto val = ::MIR::LValue::new_Field( (i == se.size() - 1 ? mv$(lv) : lv.clone()), i );
+                        auto val = ::MIR::LValue::new_Field( (i == se.size() - 1 ? mv_str(lv) : lv.clone()), i );
                         if( i == str.m_struct_markings.coerce_unsized_index ) {
-                            vals.push_back( H::get_unit_ptr(state, mutator, monomorph(se[i].ent), mv$(val), out_inner_ptr) );
+                            vals.push_back( H::get_unit_ptr(state, mutator, monomorph(se[i].ent), mv_str(val), out_inner_ptr) );
                         }
                         else {
-                            vals.push_back( mv$(val) );
+                            vals.push_back( mv_str(val) );
                         }
                     }
                     }
                 TU_ARMA(Named, se) {
                     for(unsigned int i = 0; i < se.size(); i ++ ) {
-                        auto val = ::MIR::LValue::new_Field( (i == se.size() - 1 ? mv$(lv) : lv.clone()), i );
+                        auto val = ::MIR::LValue::new_Field( (i == se.size() - 1 ? mv_str(lv) : lv.clone()), i );
                         if( i == str.m_struct_markings.coerce_unsized_index ) {
-                            vals.push_back( H::get_unit_ptr(state, mutator, monomorph(se[i].second.ent), mv$(val), out_inner_ptr ) );
+                            vals.push_back( H::get_unit_ptr(state, mutator, monomorph(se[i].second.ent), mv_str(val), out_inner_ptr ) );
                         }
                         else {
-                            vals.push_back( mv$(val) );
+                            vals.push_back( mv_str(val) );
                         }
                     }
                     }
                 }
 
                 auto new_path = ty_path.clone();
-                return mutator.in_temporary( mv$(ty), ::MIR::RValue::make_Struct({ mv$(new_path), mv$(vals) }) );
+                return mutator.in_temporary( mv_str(ty), ::MIR::RValue::make_Struct({ mv_str(new_path), mv_str(vals) }) );
             }
             else if( ty.data().is_Borrow() || ty.data().is_Pointer() )
             {
                 out_inner_ptr = lv.clone();
                 return mutator.in_temporary(
                     ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, ::HIR::TypeRef::new_unit()),
-                    ::MIR::RValue::make_DstPtr({ mv$(lv) })
+                    ::MIR::RValue::make_DstPtr({ mv_str(lv) })
                     );
             }
             else
@@ -644,8 +644,8 @@ namespace {
         auto ptr_rval = ::MIR::RValue::make_DstPtr({ receiver_lvp.clone() });
 
         auto ptr_lv = mutator.new_temporary( ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, ::HIR::TypeRef::new_unit()) );
-        mutator.push_statement( ::MIR::Statement::make_Assign({ ptr_lv.clone(), mv$(ptr_rval) }) );
-        receiver_lvp = mv$(ptr_lv);
+        mutator.push_statement( ::MIR::Statement::make_Assign({ ptr_lv.clone(), mv_str(ptr_rval) }) );
+        receiver_lvp = mv_str(ptr_lv);
     }
     else
     {
@@ -655,8 +655,8 @@ namespace {
     }
 
     // - Load the vtable and store it
-    auto vtable_rval = ::MIR::RValue::make_DstMeta({ mv$(inner_dyn_ptr) });
-    mutator.push_statement( ::MIR::Statement::make_Assign({ vtable_lv.clone(), mv$(vtable_rval) }) );
+    auto vtable_rval = ::MIR::RValue::make_DstMeta({ mv_str(inner_dyn_ptr) });
+    mutator.push_statement( ::MIR::Statement::make_Assign({ vtable_lv.clone(), mv_str(vtable_rval) }) );
 
     // Update the terminator with the new information.
     return fcn_lval;
@@ -747,7 +747,7 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
         auto vtable_ty = de.m_trait.m_path != HIR::SimplePath()
             ? de.m_trait.m_trait_ptr->get_vtable_type(state.sp, state.m_crate, de)
             : ::HIR::TypeRef::new_unit();
-        out_meta_ty = ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, mv$(vtable_ty));
+        out_meta_ty = ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, mv_str(vtable_ty));
 
         // If the data trait hasn't changed, return the vtable pointer
         if( const auto* se = src_ty.data().opt_TraitObject() )
@@ -758,12 +758,12 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
                 assert(se->m_trait.m_trait_ptr);
                 const auto& trait = *se->m_trait.m_trait_ptr;
                 auto vtable_ty = trait.get_vtable_type(state.sp, state.m_crate, *se);
-                auto in_meta_ty = ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, mv$(vtable_ty));
+                auto in_meta_ty = ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, mv_str(vtable_ty));
 
                 auto parent_trait_field = trait.get_vtable_parent_index(state.sp, se->m_trait.m_path.m_params, de.m_trait.m_path);
                 MIR_ASSERT(state, parent_trait_field != 0, "Unable to find parent trait for trait object upcast - " << se->m_trait.m_path << " in " << de.m_trait.m_path);
-                auto in_meta_val = mutator.in_temporary( mv$(in_meta_ty), ::MIR::RValue::make_DstMeta({ ptr_value.clone() }) );
-                out_meta_val = MIR::LValue::new_Field( MIR::LValue::new_Deref( mv$(in_meta_val) ), parent_trait_field );
+                auto in_meta_val = mutator.in_temporary( mv_str(in_meta_ty), ::MIR::RValue::make_DstMeta({ ptr_value.clone() }) );
+                out_meta_val = MIR::LValue::new_Field( MIR::LValue::new_Deref( mv_str(in_meta_val) ), parent_trait_field );
             }
             else
             {
@@ -794,19 +794,19 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
         if( source_is_dst )
         {
             auto ty_unit_ptr = ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Shared, ::HIR::TypeRef::new_unit());
-            auto thin_ptr_lval = mutator.in_temporary( mv$(ty_unit_ptr), ::MIR::RValue::make_DstPtr({ mv$(ptr_value) }) );
+            auto thin_ptr_lval = mutator.in_temporary( mv_str(ty_unit_ptr), ::MIR::RValue::make_DstPtr({ mv_str(ptr_value) }) );
 
-            return ::MIR::RValue::make_MakeDst({ mv$(thin_ptr_lval), mv$(meta_value) });
+            return ::MIR::RValue::make_MakeDst({ mv_str(thin_ptr_lval), mv_str(meta_value) });
         }
         else
         {
-            return ::MIR::RValue::make_MakeDst({ mv$(ptr_value), mv$(meta_value) });
+            return ::MIR::RValue::make_MakeDst({ mv_str(ptr_value), mv_str(meta_value) });
         }
     }
     else
     {
         // Re-emit the "unsize" pseudo-op
-        return ::MIR::RValue::make_MakeDst({ mv$(ptr_value), MIR::Constant::make_ItemAddr({}) });
+        return ::MIR::RValue::make_MakeDst({ mv_str(ptr_value), MIR::Constant::make_ItemAddr({}) });
     }
 }
 
@@ -851,18 +851,18 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
                     auto ty_s = monomorph_cb_s.monomorph_type(state.sp, se[i].ent, false);
 
                     auto new_rval = MIR_Cleanup_CoerceUnsized(state, mutator, ty_d, ty_s,  ::MIR::LValue::new_Field(value.clone(), i));
-                    auto new_lval = mutator.in_temporary( mv$(ty_d), mv$(new_rval) );
+                    auto new_lval = mutator.in_temporary( mv_str(ty_d), mv_str(new_rval) );
 
-                    ents.push_back( mv$(new_lval) );
+                    ents.push_back( mv_str(new_lval) );
                 }
                 else if( state.m_resolve.is_type_phantom_data( se[i].ent ) )
                 {
                     auto ty_d = monomorph_cb_d.monomorph_type(state.sp, se[i].ent, false);
 
                     auto new_rval = ::MIR::RValue::make_Struct({ ty_d.data().as_Path().path.m_data.as_Generic().clone(), {} });
-                    auto new_lval = mutator.in_temporary( mv$(ty_d), mv$(new_rval) );
+                    auto new_lval = mutator.in_temporary( mv_str(ty_d), mv_str(new_rval) );
 
-                    ents.push_back( mv$(new_lval) );
+                    ents.push_back( mv_str(new_lval) );
                 }
                 else
                 {
@@ -880,19 +880,19 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
                     auto ty_s = monomorph_cb_s.monomorph_type(state.sp, se[i].second.ent, false);
 
                     auto new_rval = MIR_Cleanup_CoerceUnsized(state, mutator, ty_d, ty_s,  ::MIR::LValue::new_Field(value.clone(), i));
-                    auto new_lval = mutator.new_temporary( mv$(ty_d) );
-                    mutator.push_statement( ::MIR::Statement::make_Assign({ new_lval.clone(), mv$(new_rval) }) );
+                    auto new_lval = mutator.new_temporary( mv_str(ty_d) );
+                    mutator.push_statement( ::MIR::Statement::make_Assign({ new_lval.clone(), mv_str(new_rval) }) );
 
-                    ents.push_back( mv$(new_lval) );
+                    ents.push_back( mv_str(new_lval) );
                 }
                 else if( state.m_resolve.is_type_phantom_data( se[i].second.ent ) )
                 {
                     auto ty_d = monomorph_cb_d.monomorph_type(state.sp, se[i].second.ent, false);
 
                     auto new_rval = ::MIR::RValue::make_Struct({ ty_d.data().as_Path().path.m_data.as_Generic().clone(), {} });
-                    auto new_lval = mutator.in_temporary( mv$(ty_d), mv$(new_rval) );
+                    auto new_lval = mutator.in_temporary( mv_str(ty_d), mv_str(new_rval) );
 
-                    ents.push_back( mv$(new_lval) );
+                    ents.push_back( mv_str(new_lval) );
                 }
                 else
                 {
@@ -901,7 +901,7 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
             }
             }
         }
-        return ::MIR::RValue::make_Struct({ dte.path.m_data.as_Generic().clone(), mv$(ents) });
+        return ::MIR::RValue::make_Struct({ dte.path.m_data.as_Generic().clone(), mv_str(ents) });
     }
 
     if( dst_ty.data().is_Borrow() )
@@ -909,7 +909,7 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
         MIR_ASSERT(state, src_ty.data().is_Borrow(), "CoerceUnsized to Borrow must have a Borrow source - " << src_ty << " to " << dst_ty);
         const auto& ste = src_ty.data().as_Borrow();
 
-        return MIR_Cleanup_Unsize(state, mutator, dst_ty, ste.inner, mv$(value));
+        return MIR_Cleanup_Unsize(state, mutator, dst_ty, ste.inner, mv_str(value));
     }
 
     // Pointer Coercion - Downcast and unsize
@@ -921,14 +921,14 @@ bool MIR_Cleanup_Unsize_GetMetadata(const ::MIR::TypeResolve& state, MirMutator&
 
         if( dte.type == ste.type )
         {
-            return MIR_Cleanup_Unsize(state, mutator, dst_ty, ste.inner, mv$(value));
+            return MIR_Cleanup_Unsize(state, mutator, dst_ty, ste.inner, mv_str(value));
         }
         else
         {
             MIR_ASSERT(state, dte.inner == ste.inner, "TODO: Can pointer CoerceUnsized unsize? " << src_ty << " to " << dst_ty);
             MIR_ASSERT(state, dte.type < ste.type, "CoerceUnsize attempting to raise pointer type");
 
-            return ::MIR::RValue::make_Cast({ mv$(value), dst_ty.clone() });
+            return ::MIR::RValue::make_Cast({ mv_str(value), dst_ty.clone() });
         }
     }
 
@@ -1046,7 +1046,7 @@ void MIR_Cleanup_Param(const ::MIR::TypeResolve& state, MirMutator& mutator, ::M
         if( lit_ptr )
         {
             DEBUG("Replace constant " << *ce.p << " with " << *lit_ptr);
-            auto new_rval = MIR_Cleanup_LiteralToRValue(state, mutator, *lit_ptr, c_ty.clone(), params, mv$(*ce.p));
+            auto new_rval = MIR_Cleanup_LiteralToRValue(state, mutator, *lit_ptr, c_ty.clone(), params, mv_str(*ce.p));
             if( auto* lv = new_rval.opt_Use() ) {
                 p = ::MIR::Param::make_LValue( ::std::move(*lv) );
             }
@@ -1055,7 +1055,7 @@ void MIR_Cleanup_Param(const ::MIR::TypeResolve& state, MirMutator& mutator, ::M
                 p = ::MIR::Param::make_Constant( ::std::move(*c) );
             }
             else {
-                auto tmp_lv = mutator.in_temporary( mv$(c_ty), mv$(new_rval) );
+                auto tmp_lv = mutator.in_temporary( mv_str(c_ty), mv_str(new_rval) );
                 p = ::MIR::Param::make_LValue( ::std::move(tmp_lv) );
             }
         }
@@ -1255,7 +1255,7 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                         if( lit_ptr )
                         {
                             DEBUG("Replace constant " << *ce->p << " with " << *lit_ptr);
-                            se.src = MIR_Cleanup_LiteralToRValue(state, mutator, *lit_ptr, mv$(ty), params, mv$(*ce->p));
+                            se.src = MIR_Cleanup_LiteralToRValue(state, mutator, *lit_ptr, mv_str(ty), params, mv_str(*ce->p));
                             if( auto* p = se.src.opt_Constant() ) {
                                 MIR_Cleanup_Constant(state, mutator, *p);
                             }
@@ -1275,7 +1275,7 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                         const auto& src_ty = state.get_param_type(tmp, e->ptr_val);
                         const auto& dst_ty = state.get_lvalue_type(tmp2, se.dst);
                         MIR_ASSERT(state, e->ptr_val.is_LValue(), "BUG: MakeDst with no metadata should be LValue");
-                        se.src = MIR_Cleanup_CoerceUnsized(state, mutator, dst_ty, src_ty, mv$(e->ptr_val.as_LValue()));
+                        se.src = MIR_Cleanup_CoerceUnsized(state, mutator, dst_ty, src_ty, mv_str(e->ptr_val.as_LValue()));
                     }
                 }
 
@@ -1352,7 +1352,7 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                         )
                     {
                         auto tgt_lvalue = MIR_Cleanup_Virtualize(sp, state, mutator, e.args.front().as_LValue(), te, pe);
-                        e.fcn = mv$(tgt_lvalue);
+                        e.fcn = mv_str(tgt_lvalue);
                     }
                 }
 
@@ -1363,8 +1363,8 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                     if( pe.trait.m_path == resolve.m_lang_Fn || pe.trait.m_path == resolve.m_lang_FnMut || pe.trait.m_path == resolve.m_lang_FnOnce )
                     {
                         MIR_ASSERT(state, e.args.size() == 2, "Fn* call requires two arguments");
-                        auto fcn_lvalue = mv$(e.args[0].as_LValue());
-                        auto args_lvalue = mv$(e.args[1].as_LValue());
+                        auto fcn_lvalue = mv_str(e.args[0].as_LValue());
+                        auto args_lvalue = mv_str(e.args[1].as_LValue());
 
                         DEBUG("Convert function pointer call");
 
@@ -1376,9 +1376,9 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                         }
                         // If the trait is Fn/FnMut, dereference the input value.
                         if( pe.trait.m_path == resolve.m_lang_FnOnce )
-                            e.fcn = mv$(fcn_lvalue);
+                            e.fcn = mv_str(fcn_lvalue);
                         else
-                            e.fcn = ::MIR::LValue::new_Deref( mv$(fcn_lvalue) );
+                            e.fcn = ::MIR::LValue::new_Deref( mv_str(fcn_lvalue) );
                     }
                 }
                 if( path.m_data.is_UfcsKnown() && path.m_data.as_UfcsKnown().type.data().is_NamedFunction() )
@@ -1389,8 +1389,8 @@ void MIR_Cleanup(const StaticTraitResolve& resolve, const ::HIR::ItemPath& path,
                     {
                         auto n_args = fcn_ty.decay(state.sp).m_arg_types.size();
                         MIR_ASSERT(state, e.args.size() == 2, "Fn* call requires two arguments");
-                        auto fcn_lvalue = mv$(e.args[0].as_LValue());
-                        auto args_lvalue = mv$(e.args[1].as_LValue());
+                        auto fcn_lvalue = mv_str(e.args[0].as_LValue());
+                        auto args_lvalue = mv_str(e.args[1].as_LValue());
 
                         DEBUG("Convert named function pointer call");
 

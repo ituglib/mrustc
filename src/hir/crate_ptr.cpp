@@ -13,7 +13,7 @@
 {
 }
 ::HIR::CratePtr::CratePtr(HIR::Crate c):
-    m_ptr( new ::HIR::Crate(mv$(c)) )
+    m_ptr( new ::HIR::Crate(mv_str(c)) )
 {
 }
 ::HIR::CratePtr::~CratePtr()

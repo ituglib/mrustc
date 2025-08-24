@@ -243,11 +243,11 @@ Static Static::clone() const
 
 Function::Function(Span sp, ::std::string abi, Flags flags, GenericParams params, TypeRef ret_type, Arglist args, bool is_variadic):
     m_span(sp),
-    m_params( mv$(params) ),
-    m_rettype( mv$(ret_type) ),
-    m_args( mv$(args) ),
+    m_params( mv_str(params) ),
+    m_rettype( mv_str(ret_type) ),
+    m_args( mv_str(args) ),
     m_is_variadic(is_variadic),
-    m_abi( mv$(abi) ),
+    m_abi( mv_str(abi) ),
     m_flags(flags)
 {
 }
@@ -258,7 +258,7 @@ Function Function::clone() const
         new_args.push_back( AST::Function::Arg( arg.pat.clone(), arg.ty.clone(), arg.attrs.clone() ) );
     }
 
-    auto rv = Function( m_span, m_abi, m_flags, m_params.clone(), m_rettype.clone(), mv$(new_args), m_is_variadic );
+    auto rv = Function( m_span, m_abi, m_flags, m_params.clone(), m_rettype.clone(), mv_str(new_args), m_is_variadic );
     if( m_code.is_valid() ) {
         rv.m_code = AST::Expr( m_code.node().clone() );
     }
@@ -266,13 +266,13 @@ Function Function::clone() const
 }
 
 void Trait::add_type(Span sp, RcString name, AttributeList attrs, TypeRef type) {
-    m_items.push_back( Named<Item>(sp, mv$(attrs), AST::Visibility::make_global(), mv$(name), Item::make_Type({TypeAlias(GenericParams(), mv$(type))})) );
+    m_items.push_back( Named<Item>(sp, mv_str(attrs), AST::Visibility::make_global(), mv_str(name), Item::make_Type({TypeAlias(GenericParams(), mv_str(type))})) );
 }
 void Trait::add_function(Span sp, RcString name, AttributeList attrs, Function fcn) {
-    m_items.push_back( Named<Item>(sp, mv$(attrs), AST::Visibility::make_global(), mv$(name), Item::make_Function({mv$(fcn)})) );
+    m_items.push_back( Named<Item>(sp, mv_str(attrs), AST::Visibility::make_global(), mv_str(name), Item::make_Function({mv_str(fcn)})) );
 }
 void Trait::add_static(Span sp, RcString name, AttributeList attrs, Static v) {
-    m_items.push_back( Named<Item>(sp, mv$(attrs), AST::Visibility::make_global(), mv$(name), Item::make_Static({mv$(v)})) );
+    m_items.push_back( Named<Item>(sp, mv_str(attrs), AST::Visibility::make_global(), mv_str(name), Item::make_Static({mv_str(v)})) );
 }
 void Trait::set_is_marker() {
     m_is_marker = true;
@@ -315,17 +315,17 @@ Enum Enum::clone() const
             decltype(e.m_items) new_st;
             for(const auto& f : e.m_items)
                 new_st.push_back( f.clone() );
-            new_variants.push_back( EnumVariant(var.m_attrs.clone(), var.m_name, mv$(new_st)) );
+            new_variants.push_back( EnumVariant(var.m_attrs.clone(), var.m_name, mv_str(new_st)) );
             ),
         (Struct,
             decltype(e.m_fields)    new_fields;
             for(const auto& f : e.m_fields)
                 new_fields.push_back( f.clone() );
-            new_variants.push_back( EnumVariant(var.m_attrs.clone(), var.m_name, mv$(new_fields)) );
+            new_variants.push_back( EnumVariant(var.m_attrs.clone(), var.m_name, mv_str(new_fields)) );
             )
         )
     }
-    return Enum(m_params.clone(), mv$(new_variants));
+    return Enum(m_params.clone(), mv_str(new_variants));
 }
 Struct Struct::clone() const
 {
@@ -337,13 +337,13 @@ Struct Struct::clone() const
         decltype(e.ents)    new_fields;
         for(const auto& f : e.ents)
             new_fields.push_back( f.clone() );
-        return Struct(m_params.clone(), mv$(new_fields));
+        return Struct(m_params.clone(), mv_str(new_fields));
         ),
     (Struct,
         decltype(e.ents)    new_fields;
         for(const auto& f : e.ents)
             new_fields.push_back( f.clone() );
-        return Struct(m_params.clone(), mv$(new_fields));
+        return Struct(m_params.clone(), mv_str(new_fields));
         )
     )
     throw "";
@@ -354,7 +354,7 @@ Union Union::clone() const
     decltype(m_variants)    new_vars;
     for(const auto& f : m_variants)
         new_vars.push_back( f.clone() );
-    return Union(m_params.clone(), mv$(new_vars));
+    return Union(m_params.clone(), mv_str(new_vars));
 }
 
 ::std::ostream& operator<<(::std::ostream& os, const ImplDef& impl)
@@ -364,18 +364,18 @@ Union Union::clone() const
 
 void Impl::add_function(Span sp, AttributeList attrs, AST::Visibility vis, bool is_specialisable, RcString name, Function fcn)
 {
-    m_items.push_back( ImplItem { sp, mv$(attrs), mv$(vis), is_specialisable, mv$(name), box$( Item::make_Function(mv$(fcn)) ) } );
+    m_items.push_back( ImplItem { sp, mv_str(attrs), mv_str(vis), is_specialisable, mv_str(name), box_str( Item::make_Function(mv_str(fcn)) ) } );
 }
 void Impl::add_type(Span sp, AttributeList attrs, AST::Visibility vis, bool is_specialisable, RcString name, GenericParams params, TypeRef type)
 {
-    m_items.push_back( ImplItem { sp, mv$(attrs), mv$(vis), is_specialisable, mv$(name), box$( Item::make_Type(TypeAlias(mv$(params), mv$(type))) ) } );
+    m_items.push_back( ImplItem { sp, mv_str(attrs), mv_str(vis), is_specialisable, mv_str(name), box_str( Item::make_Type(TypeAlias(mv_str(params), mv_str(type))) ) } );
 }
 void Impl::add_static(Span sp, AttributeList attrs, AST::Visibility vis, bool is_specialisable, RcString name, Static v)
 {
-    m_items.push_back( ImplItem { sp, mv$(attrs), mv$(vis), is_specialisable, mv$(name), box$( Item::make_Static(mv$(v)) ) } );
+    m_items.push_back( ImplItem { sp, mv_str(attrs), mv_str(vis), is_specialisable, mv_str(name), box_str( Item::make_Static(mv_str(v)) ) } );
 }
 void Impl::add_macro_invocation(MacroInvocation item) {
-    m_items.push_back( ImplItem { item.span(), {}, AST::Visibility::make_global(), false, "", box$( Item::make_MacroInv(mv$(item)) ) } );
+    m_items.push_back( ImplItem { item.span(), {}, AST::Visibility::make_global(), false, "", box_str( Item::make_MacroInv(mv_str(item)) ) } );
 }
 
 bool Impl::has_named_item(const RcString& name) const
@@ -413,14 +413,14 @@ UseItem UseItem::clone() const
     }
     return UseItem {
         this->sp,
-        mv$(entries)
+        mv_str(entries)
         };
 }
 
 void ExternBlock::add_item(Named<Item> named_item)
 {
     ASSERT_BUG(named_item.span, named_item.data.is_Function() || named_item.data.is_Static() || named_item.data.is_Type(), "Incorrect item type for ExternBlock - " << named_item.data.tag_str());
-    m_items.push_back( mv$(named_item) );
+    m_items.push_back( mv_str(named_item) );
 }
 ExternBlock ExternBlock::clone() const
 {
@@ -438,7 +438,7 @@ ExternBlock ExternBlock::clone() const
 }
 
 void Module::add_item( Named<Item> named_item ) {
-    m_items.push_back( box$(named_item) );
+    m_items.push_back( box_str(named_item) );
     const auto& i = m_items.back();
     if( i->name == "" ) {
     }
@@ -447,13 +447,13 @@ void Module::add_item( Named<Item> named_item ) {
     }
 }
 void Module::add_item(Span sp, Visibility vis, RcString name, Item it, AttributeList attrs) {
-    add_item( Named<Item>( mv$(sp), mv$(attrs), mv$(vis), mv$(name), mv$(it) ) );
+    add_item( Named<Item>( mv_str(sp), mv_str(attrs), mv_str(vis), mv_str(name), mv_str(it) ) );
 }
 void Module::add_ext_crate(Span sp, AST::Visibility vis, RcString ext_name, RcString imp_name, AttributeList attrs) {
-    this->add_item( mv$(sp), mv$(vis), imp_name, Item::make_Crate({mv$(ext_name)}), mv$(attrs) );
+    this->add_item( mv_str(sp), mv_str(vis), imp_name, Item::make_Crate({mv_str(ext_name)}), mv_str(attrs) );
 }
 void Module::add_macro_invocation(MacroInvocation item) {
-    this->add_item( item.span(), AST::Visibility::make_global(), "", Item( mv$(item) ), ::AST::AttributeList {} );
+    this->add_item( item.span(), AST::Visibility::make_global(), "", Item( mv_str(item) ), ::AST::AttributeList {} );
 }
 void Module::add_macro(bool is_exported, RcString name, MacroRulesPtr macro) {
     assert(macro);
@@ -462,8 +462,8 @@ void Module::add_macro(bool is_exported, RcString name, MacroRulesPtr macro) {
         Span(),
         {},
         /*is_pub=*/is_exported ? AST::Visibility::make_global() : AST::Visibility::make_restricted(AST::Visibility::Ty::Private, m_my_path),
-        mv$(name),
-        mv$(macro)
+        mv_str(name),
+        mv_str(macro)
         ) );
 }
 

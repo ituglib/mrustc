@@ -334,7 +334,7 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
     TU_ARMA(TraitObject, e) {
         ::HIR::TypeData::Data_TraitObject  to;
         if( e.m_trait.m_hrtbs ) {
-            to.m_trait.m_hrtbs = box$(e.m_trait.m_hrtbs->clone());
+            to.m_trait.m_hrtbs = box_str(e.m_trait.m_hrtbs->clone());
             m_hrb_stack.push_back(e.m_trait.m_hrtbs.get());
         }
         to.m_trait = this->monomorph_traitpath(sp, e.m_trait, allow_infer, false);
@@ -346,7 +346,7 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
             m_hrb_stack.pop_back();
         }
         to.m_lifetime = monomorph_lifetime(sp, e.m_lifetime);
-        return ::HIR::TypeRef( mv$(to) );
+        return ::HIR::TypeRef( mv_str(to) );
         }
     TU_ARMA(ErasedType, e) {
         ::std::vector< ::HIR::TraitPath>    traits;
@@ -378,9 +378,9 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
 
         return ::HIR::TypeRef( ::HIR::TypeData::Data_ErasedType {
             e.m_is_sized,
-            mv$(traits),
-            mv$(lfts),
-            mv$(inner)
+            mv_str(traits),
+            mv_str(lfts),
+            mv_str(inner)
             } );
         }
     TU_ARMA(Array, e) {
@@ -397,7 +397,7 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
         for(const auto& ty : e) {
             types.push_back( this->monomorph_type(sp, ty, allow_infer) );
         }
-        return ::HIR::TypeRef( mv$(types) );
+        return ::HIR::TypeRef( mv_str(types) );
         }
     TU_ARMA(Borrow, e) {
         return ::HIR::TypeRef::new_borrow (e.type, this->monomorph_type(sp, e.inner, allow_infer), monomorph_lifetime(sp, e.lifetime));
@@ -422,18 +422,18 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
         for( const auto& arg : e.m_arg_types )
             ft.m_arg_types.push_back( this->monomorph_type(sp, arg, allow_infer) );
         m_hrb_stack.pop_back();
-        return ::HIR::TypeRef( mv$(ft) );
+        return ::HIR::TypeRef( mv_str(ft) );
         }
     // Closures and generators are just passed through, needed for hackery in type checking (erasing HRLs)
     TU_ARMA(Closure, e) {
         ::HIR::TypeData::Data_Closure  oe;
         oe.node = e.node;
-        return ::HIR::TypeRef( mv$(oe) );
+        return ::HIR::TypeRef( mv_str(oe) );
         }
     TU_ARMA(Generator, e) {
         ::HIR::TypeData::Data_Generator oe;
         oe.node = e.node;
-        return ::HIR::TypeRef( mv$(oe) );
+        return ::HIR::TypeRef( mv_str(oe) );
         }
     }
     throw "";
@@ -471,7 +471,7 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
             this->monomorph_genericpath(sp, e2.trait, allow_infer, false),
             e2.item,
             this->monomorph_path_params(sp, e2.params, allow_infer),
-            e2.hrtbs ? box$(e2.hrtbs->clone()) : nullptr
+            e2.hrtbs ? box_str(e2.hrtbs->clone()) : nullptr
             }));
         if( e2.hrtbs /*&& !ignore_hrls*/ ) {
             m_hrb_stack.pop_back();
@@ -503,7 +503,7 @@ bool monomorphise_type_needed(const ::HIR::TypeRef& tpl, bool ignore_lifetimes/*
     }
 
     ::HIR::TraitPath    rv {
-        tpl.m_hrtbs ? box$(tpl.m_hrtbs->clone()) : nullptr,
+        tpl.m_hrtbs ? box_str(tpl.m_hrtbs->clone()) : nullptr,
         this->monomorph_genericpath(sp, tpl.m_path, allow_infer, true),
         {},
         {},

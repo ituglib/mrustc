@@ -1140,7 +1140,7 @@ namespace {
         DEBUG("Component " << nodes.at(i).name());
         // TODO: If this came from an import, return the real path?
 
-        //rv = Resolve_Use_CanoniseAndBind_Mod(span, crate, *mod, mv$(rv), nodes[i].name(), parent_modules, Lookup::Type);
+        //rv = Resolve_Use_CanoniseAndBind_Mod(span, crate, *mod, mv_str(rv), nodes[i].name(), parent_modules, Lookup::Type);
         //const auto& b = rv.binding();
         assert(mod);
         auto b = Resolve_Use_GetBinding_Mod(span, crate, source_mod_path, *mod, nodes.at(i).name(), inner_parent_modules, /*types_only=*/true);

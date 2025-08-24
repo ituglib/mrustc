@@ -26,7 +26,7 @@ namespace {
         if( !string_np ) {
             ERROR(sp, E0000, "include! requires a string literal - got " << *n);
         }
-        return mv$( string_np->m_value );
+        return mv_str( string_np->m_value );
     }
 
     ::std::string get_path_relative_to(const ::std::string& base_path, ::std::string path)
@@ -84,15 +84,15 @@ class CIncludeExpander:
         auto path = get_string(sp, lex, crate, mod);
         GET_CHECK_TOK(tok, lex, TOK_EOF);
 
-        //::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv$(path));
-        ::std::string file_path = get_path_relative_to(sp.get_top_file_span().filename.c_str(), mv$(path));
+        //::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv_str(path));
+        ::std::string file_path = get_path_relative_to(sp.get_top_file_span().filename.c_str(), mv_str(path));
         crate.m_extra_files.push_back(file_path);
 
         try {
             ParseState  ps;
             ps.module = &mod;
             DEBUG("Edition = " << crate.m_edition);
-            return box$( Lexer(file_path, crate.m_edition, ps) );
+            return box_str( Lexer(file_path, crate.m_edition, ps) );
         }
         catch(::std::runtime_error& e)
         {
@@ -112,7 +112,7 @@ class CIncludeBytesExpander:
         auto path = get_string(sp, lex, crate, mod);
         GET_CHECK_TOK(tok, lex, TOK_EOF);
 
-        ::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv$(path));
+        ::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv_str(path));
         crate.m_extra_files.push_back(file_path);
 
         ::std::ifstream is(file_path);
@@ -123,8 +123,8 @@ class CIncludeBytesExpander:
         ss << is.rdbuf();
 
         ::std::vector<TokenTree>    toks;
-        toks.push_back(Token(TOK_BYTESTRING, mv$(ss.str()), {}));
-        return box$( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv$(toks))) );
+        toks.push_back(Token(TOK_BYTESTRING, mv_str(ss.str()), {}));
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 };
 
@@ -139,7 +139,7 @@ class CIncludeStrExpander:
         auto path = get_string(sp, lex, crate, mod);
         GET_CHECK_TOK(tok, lex, TOK_EOF);
 
-        ::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv$(path));
+        ::std::string file_path = get_path_relative_to(mod.m_file_info.path, mv_str(path));
         crate.m_extra_files.push_back(file_path);
 
         ::std::ifstream is(file_path);
@@ -150,8 +150,8 @@ class CIncludeStrExpander:
         ss << is.rdbuf();
 
         ::std::vector<TokenTree>    toks;
-        toks.push_back(Token(TOK_STRING, mv$(ss.str()), {}));
-        return box$( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv$(toks))) );
+        toks.push_back(Token(TOK_STRING, mv_str(ss.str()), {}));
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 };
 

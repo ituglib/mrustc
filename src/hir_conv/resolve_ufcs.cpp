@@ -48,13 +48,13 @@ namespace resolve_ufcs {
             Visitor* v;
             t_trait_imports old_imports;
 
-            ModTraitsGuard(Visitor& v, t_trait_imports old_imports): v(&v), old_imports(mv$(old_imports)) {}
-            ModTraitsGuard(ModTraitsGuard&& x): v(x.v), old_imports(mv$(x.old_imports)) { x.v = nullptr; }
+            ModTraitsGuard(Visitor& v, t_trait_imports old_imports): v(&v), old_imports(mv_str(old_imports)) {}
+            ModTraitsGuard(ModTraitsGuard&& x): v(x.v), old_imports(mv_str(x.old_imports)) { x.v = nullptr; }
             ModTraitsGuard& operator=(ModTraitsGuard&&) = delete;
             ~ModTraitsGuard() {
                 if(v) {
                     DEBUG("Stack pop: " << this->v->m_traits.size() << " -> " << this->old_imports.size());
-                    this->v->m_traits = mv$(this->old_imports);
+                    this->v->m_traits = mv_str(this->old_imports);
                     v = nullptr;
                 }
             }
@@ -62,7 +62,7 @@ namespace resolve_ufcs {
         ModTraitsGuard push_mod_traits(HIR::SimplePath path, const ::HIR::Module& mod) {
             static Span sp;
             DEBUG("");
-            ModTraitsGuard rv { *this, mv$(this->m_traits)  };
+            ModTraitsGuard rv { *this, mv_str(this->m_traits)  };
             for( const auto& trait_path : mod.m_traits ) {
                 DEBUG("- " << trait_path);
                 m_traits.push_back( ::std::make_pair( &trait_path, &m_crate.get_trait_by_path(sp, trait_path) ) );
@@ -183,7 +183,7 @@ namespace resolve_ufcs {
                     const auto& def = trait.m_params.m_types[ impl.m_trait_args.m_types.size() ];
                     auto ty = ms.monomorph_type(sp, def.m_default);
                     DEBUG("Add default trait arg " << ty << " from " << def.m_default);
-                    impl.m_trait_args.m_types.push_back( mv$(ty) );
+                    impl.m_trait_args.m_types.push_back( mv_str(ty) );
                 }
             }
 
@@ -276,7 +276,7 @@ namespace resolve_ufcs {
                             if( ent.is_Enum() && ent.as_Enum().find_variant(gp.m_path.components().back()) != SIZE_MAX )
                             {
                                 // Rewrite!
-                                m_replacement.reset(new ::HIR::ExprNode_TupleVariant(sp, mv$(gp), /*is_struct*/false, mv$(node.m_args)));
+                                m_replacement.reset(new ::HIR::ExprNode_TupleVariant(sp, mv_str(gp), /*is_struct*/false, mv_str(node.m_args)));
                                 DEBUG(&node << ": Replacing with TupleVariant " << m_replacement.get());
                                 return ;
                             }
@@ -301,7 +301,7 @@ namespace resolve_ufcs {
                                 auto idx = enm.find_variant(gp.m_path.components().back());
                                 if( enm.m_data.is_Value() || enm.m_data.as_Data().at(idx).type == HIR::TypeRef::new_unit() )
                                 {
-                                    m_replacement.reset(new ::HIR::ExprNode_UnitVariant(sp, mv$(gp), /*is_struct*/false));
+                                    m_replacement.reset(new ::HIR::ExprNode_UnitVariant(sp, mv_str(gp), /*is_struct*/false));
                                     DEBUG(&node << ": Replacing with UnitVariant " << m_replacement.get());
                                 }
                                 else
@@ -420,7 +420,7 @@ namespace resolve_ufcs {
             //auto s = trait_path.m_params.m_types.size();
             //trait_path.m_params.m_types.clear();
             //trait_path.m_params.m_types.resize(s);
-            return ::HIR::Path::Data::make_UfcsKnown({ mv$(e.type), mv$(trait_path), mv$(e.item), mv$(e.params)} );
+            return ::HIR::Path::Data::make_UfcsKnown({ mv_str(e.type), mv_str(trait_path), mv_str(e.item), mv_str(e.params)} );
         }
         static bool locate_item_in_trait(::HIR::Visitor::PathContext pc, const ::HIR::Trait& trait,  ::HIR::Path::Data& pd)
         {
@@ -451,7 +451,7 @@ namespace resolve_ufcs {
             static Span _sp;
             const auto& sp = _sp;
             if( locate_item_in_trait(pc, trait,  pd) ) {
-                pd = get_ufcs_known(pc, mv$(pd.as_UfcsUnknown()), trait_path.clone(), trait);
+                pd = get_ufcs_known(pc, mv_str(pd.as_UfcsUnknown()), trait_path.clone(), trait);
                 return true;
             }
 
@@ -500,7 +500,7 @@ namespace resolve_ufcs {
                 DEBUG("- Check (all) " << par_trait_path);
                 if( locate_item_in_trait(pc, *pt.m_trait_ptr,  pd) ) {
                     // TODO: Don't clone if this is from the temp.
-                    pd = get_ufcs_known(pc, mv$(pd.as_UfcsUnknown()), par_trait_path.clone(), *pt.m_trait_ptr);
+                    pd = get_ufcs_known(pc, mv_str(pd.as_UfcsUnknown()), par_trait_path.clone(), *pt.m_trait_ptr);
                     return true;
                 }
             }
@@ -560,7 +560,7 @@ namespace resolve_ufcs {
                 else {
                     DEBUG("pp = " << pp);
                     // Otherwise, set to the current result.
-                    pd = get_ufcs_known(pc, mv$(e), ::HIR::GenericPath(trait_path.m_path, mv$(pp)), trait);
+                    pd = get_ufcs_known(pc, mv_str(e), ::HIR::GenericPath(trait_path.m_path, mv_str(pp)), trait);
                 }
                 return false;
                 });
@@ -638,8 +638,8 @@ namespace resolve_ufcs {
                     return false;
                 }
 
-                auto new_data = ::HIR::Path::Data::make_UfcsInherent({ mv$(e.type), mv$(e.item), mv$(e.params)} );
-                pd = mv$(new_data);
+                auto new_data = ::HIR::Path::Data::make_UfcsInherent({ mv_str(e.type), mv_str(e.item), mv_str(e.params)} );
+                pd = mv_str(new_data);
                 DEBUG("- Resolved, replace with " << p);
                 return true;
                 });
@@ -677,7 +677,7 @@ namespace resolve_ufcs {
                 // TODO: Search supertraits
                 // TODO: Should impls be searched first, or item names?
                 // - Item names add complexity, but impls are slower
-                if( this->locate_in_trait_impl_and_set(sp, pc, mv$(trait_path), trait,  pd) ) {
+                if( this->locate_in_trait_impl_and_set(sp, pc, mv_str(trait_path), trait,  pd) ) {
                     return true;
                 }
             }
@@ -855,7 +855,7 @@ namespace resolve_ufcs {
                         auto trait_path = mstate.monomorph_genericpath(sp, t.m_path, /*allow_infer*/true);
                         DEBUG("Searching ATY bound: " << trait_path);
                         // Search within this (bounded) trait for the outer item
-                        if( this->locate_in_trait_impl_and_set(sp, pc, mv$(trait_path), *t.m_trait_ptr,  p.m_data) ) {
+                        if( this->locate_in_trait_impl_and_set(sp, pc, mv_str(trait_path), *t.m_trait_ptr,  p.m_data) ) {
                             assert(!p.m_data.is_UfcsUnknown());
                             return ;
                         }
@@ -948,7 +948,7 @@ namespace resolve_ufcs {
                     {
                         unsigned idx = enm_p->find_variant(gp.m_path.components().back());
                         pat.m_data = ::HIR::Pattern::Data::make_PathValue({
-                            mv$(gp),
+                            mv_str(gp),
                             ::HIR::Pattern::PathBinding::make_Enum({enm_p, idx})
                             });
                     }
@@ -1016,7 +1016,7 @@ namespace resolve_ufcs {
             if( path )
             {
                 DEBUG(*path << " += " << FMT_CB(os, fmt(os, *ty_impl)));
-                ig.named[*path].push_back(mv$(ty_impl));
+                ig.named[*path].push_back(mv_str(ty_impl));
             }
             else if( type.data().is_Path() || type.data().is_Generic() )
             {
@@ -1024,7 +1024,7 @@ namespace resolve_ufcs {
             }
             else
             {
-                ig.non_named.push_back(mv$(ty_impl));
+                ig.non_named.push_back(mv_str(ty_impl));
             }
             return true;
             });

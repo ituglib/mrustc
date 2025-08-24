@@ -84,7 +84,7 @@ Type_Function::Type_Function(const Type_Function& other):
     hrbs(other.hrbs),
     is_unsafe(other.is_unsafe),
     m_abi(other.m_abi),
-    m_rettype( box$( other.m_rettype->clone() ) ),
+    m_rettype( box_str( other.m_rettype->clone() ) ),
     is_variadic(other.is_variadic)
 {
     for( const auto& at : other.m_arg_types )
@@ -108,16 +108,16 @@ TypeRef::~TypeRef()
 
 TypeRef::TypeRef(TagMacro, ::AST::MacroInvocation inv):
     m_span(inv.span()),
-    m_data(TypeData::make_Macro({box$(inv)}))
+    m_data(TypeData::make_Macro({box_str(inv)}))
 {
 }
 TypeRef::TypeRef(TagPath, Span sp, AST::Path path):
-    m_span(mv$(sp)),
-    m_data(TypeData::make_Path( box$(path) ))
+    m_span(mv_str(sp)),
+    m_data(TypeData::make_Path( box_str(path) ))
 {
 }
 TypeRef::TypeRef(Span sp, AST::Path path):
-    TypeRef(TagPath(), mv$(sp), mv$(path))
+    TypeRef(TagPath(), mv_str(sp), mv_str(path))
 {
 }
 
@@ -140,16 +140,16 @@ TypeRef TypeRef::clone() const
     _COPY(None)
     _COPY(Any)
     _COPY(Bang)
-    _CLONE(Macro, { box$(old.inv->clone()) })
+    _CLONE(Macro, { box_str(old.inv->clone()) })
     //case TypeData::TAG_Macro:   assert( !"Copying an unexpanded type macro" );
     _COPY(Unit)
     _COPY(Primitive)
     _COPY(Function)
     _CLONE(Tuple, { H::clone_ty_vec(old.inner_types) })
-    _CLONE(Borrow,  { AST::LifetimeRef(old.lifetime), old.is_mut, box$(old.inner->clone()) })
-    _CLONE(Pointer, { old.is_mut, box$(old.inner->clone()) })
-    _CLONE(Array, { box$(old.inner->clone()), old.size })
-    _CLONE(Slice, { box$(old.inner->clone()) })
+    _CLONE(Borrow,  { AST::LifetimeRef(old.lifetime), old.is_mut, box_str(old.inner->clone()) })
+    _CLONE(Pointer, { old.is_mut, box_str(old.inner->clone()) })
+    _CLONE(Array, { box_str(old.inner->clone()), old.size })
+    _CLONE(Slice, { box_str(old.inner->clone()) })
     _COPY(Generic)
     _CLONE(Path, std::make_unique<AST::Path>(*old))
     _COPY(TraitObject)
@@ -161,8 +161,8 @@ TypeRef TypeRef::clone() const
 }
 
 Type_TraitPath::Type_TraitPath(AST::HigherRankedBounds hrbs, AST::Path path)
-    : hrbs(mv$(hrbs))
-    , path(box$(path))
+    : hrbs(mv_str(hrbs))
+    , path(box_str(path))
 {
 }
 Type_TraitPath::Type_TraitPath(const Type_TraitPath& x)

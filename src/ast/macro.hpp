@@ -34,10 +34,10 @@ public:
     }
 
     MacroInvocation(Span span, AST::Path macro, RcString ident, TokenTree input):
-        m_span( mv$(span) ),
-        m_macro_path( mv$(macro) ),
-        m_ident( mv$(ident) ),
-        m_input( mv$(input) )
+        m_span( mv_str(span) ),
+        m_macro_path( mv_str(macro) ),
+        m_ident( mv_str(ident) ),
+        m_input( mv_str(input) )
     {
     }
 

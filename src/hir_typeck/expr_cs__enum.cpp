@@ -564,7 +564,7 @@ namespace typecheck
         ExprVisitor_Enum(Context& context, ::HIR::t_trait_list base_traits, const ::HIR::TypeRef& ret_type):
             context(context),
             ret_type(ret_type),
-            m_traits( mv$(base_traits) )
+            m_traits( mv_str(base_traits) )
         {
         }
 
@@ -1002,7 +1002,7 @@ namespace typecheck
 
                 auto ty = this->context.m_ivars.new_ivar_tr();
                 this->context.equate_types_coerce(node.span(), ty, node.m_value);
-                this->context.equate_types_assoc(node.span(), ::HIR::TypeRef(), trait_path, HIR::PathParams(mv$(ty)),  node.m_slot->m_res_type.clone(), "");
+                this->context.equate_types_assoc(node.span(), ::HIR::TypeRef(), trait_path, HIR::PathParams(mv_str(ty)),  node.m_slot->m_res_type.clone(), "");
             }
 
             node.m_slot->visit( *this );
@@ -1253,7 +1253,7 @@ namespace typecheck
                 const auto& enm = this->context.m_crate.get_enum_by_path(sp, s_path);
                 fix_param_count(sp, this->context, ::HIR::TypeRef(), false, gp, enm.m_params, gp.m_params);
 
-                return ::HIR::TypeRef::new_path( ::HIR::GenericPath(mv$(s_path), gp.m_params.clone()), ::HIR::TypePathBinding::make_Enum(&enm) );
+                return ::HIR::TypeRef::new_path( ::HIR::GenericPath(mv_str(s_path), gp.m_params.clone()), ::HIR::TypePathBinding::make_Enum(&enm) );
             }
         }
 
@@ -1346,7 +1346,7 @@ namespace typecheck
 
             if( node.m_real_path == HIR::GenericPath() )
             {
-                auto t = this->context.m_resolve.expand_associated_types(sp, mv$(node.m_type));
+                auto t = this->context.m_resolve.expand_associated_types(sp, mv_str(node.m_type));
                 node.m_type = HIR::TypeRef();
                 if( node.m_is_struct )
                 {
@@ -1604,7 +1604,7 @@ namespace typecheck
                 visit_trait( tp, tr );
             }
             //  > Store the possible set of traits for later
-            node.m_traits = mv$(possible_traits);
+            node.m_traits = mv_str(possible_traits);
             for(unsigned int i = 0; i < max_num_params; i ++)
             {
                 node.m_trait_param_ivars.push_back( this->context.m_ivars.new_ivar() );
@@ -1660,7 +1660,7 @@ namespace typecheck
                         (void)val;
                         tuple_tys.push_back( this->context.m_ivars.new_ivar_tr() );
                     }
-                    this->context.equate_types(node.span(), node.m_res_type, ::HIR::TypeRef(mv$(tuple_tys)));
+                    this->context.equate_types(node.span(), node.m_res_type, ::HIR::TypeRef(mv_str(tuple_tys)));
                 }
                 else {
                     // mismatch
@@ -1681,7 +1681,7 @@ namespace typecheck
                 for(const auto& val : node.m_vals ) {
                     tuple_tys.push_back( val->m_res_type.clone() );
                 }
-                this->context.equate_types(node.span(), node.m_res_type, ::HIR::TypeRef(mv$(tuple_tys)));
+                this->context.equate_types(node.span(), node.m_res_type, ::HIR::TypeRef(mv_str(tuple_tys)));
             }
 
             for( auto& val : node.m_vals ) {
@@ -2006,7 +2006,7 @@ namespace typecheck
             for(auto& arg : node.m_args) {
                 arg_types.push_back( arg.second.clone() );
             }
-            this->context.equate_types( node.span(), node.m_res_type, ::HIR::TypeRef::new_closure(&node/*, mv$(arg_types), node.m_return.clone()*/) );
+            this->context.equate_types( node.span(), node.m_res_type, ::HIR::TypeRef::new_closure(&node/*, mv_str(arg_types), node.m_return.clone()*/) );
 
             this->context.equate_types_coerce( node.span(), node.m_return, node.m_code );
 

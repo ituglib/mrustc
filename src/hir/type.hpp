@@ -267,7 +267,7 @@ public:
 private:
     TypeInner(TypeData d):
         m_refcount(1),
-        m_data(mv$(d))
+        m_data(mv_str(d))
     {
     }
 };
@@ -277,7 +277,7 @@ inline TypeRef::TypeRef():
 {
 }
 inline TypeRef::TypeRef(TypeData d):
-    m_ptr(new TypeInner(mv$(d)))
+    m_ptr(new TypeInner(mv_str(d)))
 {
 }
 inline TypeRef::TypeRef(const TypeRef& x):
@@ -303,16 +303,16 @@ inline TypeData& TypeRef::get_unique() { assert(m_ptr); if(m_ptr->m_refcount != 
 
 
 inline TypeRef::TypeRef(::HIR::CoreType ct):
-    TypeRef( TypeData::make_Primitive(mv$(ct)) )
+    TypeRef( TypeData::make_Primitive(mv_str(ct)) )
 {}
 inline TypeRef::TypeRef(RcString name, unsigned int slot):
-    TypeRef( TypeData::make_Generic({ mv$(name), slot }) )
+    TypeRef( TypeData::make_Generic({ mv_str(name), slot }) )
 {}
 inline TypeRef::TypeRef(::std::vector< ::HIR::TypeRef> sts):
-    TypeRef( TypeData::make_Tuple(mv$(sts)) )
+    TypeRef( TypeData::make_Tuple(mv_str(sts)) )
 {}
 inline TypeRef::TypeRef(TypeData_FunctionPointer ft):
-    TypeRef( TypeData::make_Function(mv$(ft)) )
+    TypeRef( TypeData::make_Function(mv_str(ft)) )
 {
 }
 
@@ -332,26 +332,26 @@ inline TypeRef TypeRef::new_infer(unsigned int idx /*= ~0u*/, InferClass ty_clas
     return TypeRef(TypeData::make_Infer({idx, ty_class}));
 }
 inline TypeRef TypeRef::new_borrow(BorrowType bt, TypeRef inner) {
-    return TypeRef(TypeData::make_Borrow({ ::HIR::LifetimeRef(), bt, mv$(inner) }));
+    return TypeRef(TypeData::make_Borrow({ ::HIR::LifetimeRef(), bt, mv_str(inner) }));
 }
 inline TypeRef TypeRef::new_borrow(BorrowType bt, TypeRef inner, HIR::LifetimeRef lft) {
-    return TypeRef(TypeData::make_Borrow({ lft, bt, mv$(inner) }));
+    return TypeRef(TypeData::make_Borrow({ lft, bt, mv_str(inner) }));
 }
 inline TypeRef TypeRef::new_pointer(BorrowType bt, TypeRef inner) {
-    return TypeRef(TypeData::make_Pointer({bt, mv$(inner)}));
+    return TypeRef(TypeData::make_Pointer({bt, mv_str(inner)}));
 }
 inline TypeRef TypeRef::new_slice(TypeRef inner) {
-    return TypeRef(TypeData::make_Slice({mv$(inner)}));
+    return TypeRef(TypeData::make_Slice({mv_str(inner)}));
 }
 inline TypeRef TypeRef::new_array(TypeRef inner, uint64_t size) {
     assert(size != ~0u);
-    return TypeRef(TypeData::make_Array({mv$(inner), size}));
+    return TypeRef(TypeData::make_Array({mv_str(inner), size}));
 }
 inline TypeRef TypeRef::new_array(TypeRef inner, ::HIR::ConstGeneric size_gen) {
-    return TypeRef(TypeData::make_Array({mv$(inner), mv$(size_gen) }));
+    return TypeRef(TypeData::make_Array({mv_str(inner), mv_str(size_gen) }));
 }
 inline TypeRef TypeRef::new_path(::HIR::Path path, TypePathBinding binding) {
-    return TypeRef(TypeData::make_Path({ mv$(path), mv$(binding) }));
+    return TypeRef(TypeData::make_Path({ mv_str(path), mv_str(binding) }));
 }
 inline TypeRef TypeRef::new_closure(::HIR::ExprNode_Closure* node_ptr) {
     return TypeRef(TypeData::make_Closure({ node_ptr }));
@@ -395,17 +395,17 @@ public:
     TypeRef& operator=(const TypeRef&) = delete;
 
     TypeRef(::HIR::TypeData x):
-        m_data( mv$(x) )
+        m_data( mv_str(x) )
     {}
 
     TypeRef(::std::vector< ::HIR::TypeRef> sts):
-        m_data( TypeData::make_Tuple(mv$(sts)) )
+        m_data( TypeData::make_Tuple(mv_str(sts)) )
     {}
     TypeRef(RcString name, unsigned int slot):
-        m_data( TypeData::make_Generic({ mv$(name), slot }) )
+        m_data( TypeData::make_Generic({ mv_str(name), slot }) )
     {}
     TypeRef(::HIR::CoreType ct):
-        m_data( TypeData::make_Primitive(mv$(ct)) )
+        m_data( TypeData::make_Primitive(mv_str(ct)) )
     {}
 
     static TypeRef new_unit() {
@@ -418,26 +418,26 @@ public:
         return TypeRef(TypeData::make_Infer({idx, ty_class}));
     }
     static TypeRef new_borrow(BorrowType bt, TypeRef inner) {
-        return TypeRef(TypeData::make_Borrow({ ::HIR::LifetimeRef(), bt, box$(mv$(inner)) }));
+        return TypeRef(TypeData::make_Borrow({ ::HIR::LifetimeRef(), bt, box_str(mv_str(inner)) }));
     }
     static TypeRef new_pointer(BorrowType bt, TypeRef inner) {
-        return TypeRef(TypeData::make_Pointer({bt, box$(mv$(inner))}));
+        return TypeRef(TypeData::make_Pointer({bt, box_str(mv_str(inner))}));
     }
     static TypeRef new_slice(TypeRef inner) {
-        return TypeRef(TypeData::make_Slice({box$(mv$(inner))}));
+        return TypeRef(TypeData::make_Slice({box_str(mv_str(inner))}));
     }
     static TypeRef new_array(TypeRef inner, uint64_t size) {
         assert(size != ~0u);
-        return TypeRef(TypeData::make_Array({box$(mv$(inner)), size}));
+        return TypeRef(TypeData::make_Array({box_str(mv_str(inner)), size}));
     }
     static TypeRef new_array(TypeRef inner, ::HIR::ExprPtr size_expr) {
-        return TypeRef(TypeData::make_Array({box$(mv$(inner)), std::make_shared<HIR::ExprPtr>(mv$(size_expr)) }));
+        return TypeRef(TypeData::make_Array({box_str(mv_str(inner)), std::make_shared<HIR::ExprPtr>(mv_str(size_expr)) }));
     }
     static TypeRef new_path(::HIR::Path path, TypePathBinding binding) {
-        return TypeRef(TypeData::make_Path({ mv$(path), mv$(binding) }));
+        return TypeRef(TypeData::make_Path({ mv_str(path), mv_str(binding) }));
     }
     static TypeRef new_closure(::HIR::ExprNode_Closure* node_ptr, ::std::vector< ::HIR::TypeRef> args, ::HIR::TypeRef rv) {
-        return TypeRef(TypeData::make_Closure({ node_ptr, box$(mv$(rv)), mv$(args) }));
+        return TypeRef(TypeData::make_Closure({ node_ptr, box_str(mv_str(rv)), mv_str(args) }));
     }
 
     TypeRef clone() const;

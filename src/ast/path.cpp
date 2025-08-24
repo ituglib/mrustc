@@ -220,8 +220,8 @@ void PathParamEnt::fmt(::std::ostream& os) const
 
 // --- AST::PathNode
 PathNode::PathNode(RcString name, PathParams args):
-    m_name( mv$(name) ),
-    m_params( mv$(args) )
+    m_name( mv_str(name) ),
+    m_params( mv_str(args) )
 {
 }
 Ordering PathNode::ord(const PathNode& x) const
@@ -263,11 +263,11 @@ AST::Path::~Path()
 }
 AST::Path AST::Path::new_ufcs_ty(TypeRef type, ::std::vector<AST::PathNode> nodes)
 {
-    return AST::Path( AST::Path::Class::make_UFCS({box$(type), nullptr, nodes}) );
+    return AST::Path( AST::Path::Class::make_UFCS({box_str(type), nullptr, nodes}) );
 }
 AST::Path AST::Path::new_ufcs_trait(TypeRef type, Path trait, ::std::vector<AST::PathNode> nodes)
 {
-    return AST::Path( AST::Path::Class::make_UFCS({box$(type), box$(trait), nodes}) );
+    return AST::Path( AST::Path::Class::make_UFCS({box_str(type), box_str(trait), nodes}) );
 }
 AST::Path::Path(const Path& x):
     m_class()
@@ -294,9 +294,9 @@ AST::Path::Path(const Path& x):
         ),
     (UFCS,
         if( ent.trait )
-            m_class = Class::make_UFCS({ box$(ent.type->clone()), ::std::unique_ptr<Path>(new Path(*ent.trait)), ent.nodes });
+            m_class = Class::make_UFCS({ box_str(ent.type->clone()), ::std::unique_ptr<Path>(new Path(*ent.trait)), ent.nodes });
         else
-            m_class = Class::make_UFCS({ box$(ent.type->clone()), nullptr, ent.nodes });
+            m_class = Class::make_UFCS({ box_str(ent.type->clone()), nullptr, ent.nodes });
         )
     )
 }

@@ -124,13 +124,13 @@ namespace {
             t_trait_imports old_imports;
 
             ~ModTraitsGuard() {
-                this->v->m_traits = mv$(this->old_imports);
+                this->v->m_traits = mv_str(this->old_imports);
             }
         };
         ModTraitsGuard push_mod_traits(const ::HIR::Module& mod) {
             static Span sp;
             DEBUG("");
-            auto rv = ModTraitsGuard {  this, mv$(this->m_traits)  };
+            auto rv = ModTraitsGuard {  this, mv_str(this->m_traits)  };
             for( const auto& trait_path : mod.m_traits ) {
                 DEBUG("- " << trait_path);
                 m_traits.push_back( ::std::make_pair( &trait_path, &this->crate.get_trait_by_path(sp, trait_path) ) );
@@ -427,16 +427,16 @@ namespace {
                         ee->m_origin = m_fcn_path->get_full_path();
                         TU_MATCH_HDRA( (ee->m_origin.m_data), {)
                         TU_ARMA(Generic, e2) {
-                            e2.m_params = mv$(params);
+                            e2.m_params = mv_str(params);
                             }
                         TU_ARMA(UfcsInherent, e2) {
-                            e2.params = mv$(params);
+                            e2.params = mv_str(params);
                             // Impl params, just directly references the parameters.
                             // - Downstream monomorph will fix that
                             e2.impl_params = m_resolve.m_impl_generics->make_nop_params(0);
                             }
                         TU_ARMA(UfcsKnown, e2) {
-                            e2.params = mv$(params);
+                            e2.params = mv_str(params);
                             }
                         TU_ARMA(UfcsUnknown, e2) {
                             throw "";
@@ -524,7 +524,7 @@ namespace {
         }
         static ::HIR::Path::Data get_ufcs_known(::HIR::Path::Data::Data_UfcsUnknown e,  ::HIR::GenericPath trait_path, const ::HIR::Trait& trait)
         {
-            return ::HIR::Path::Data::make_UfcsKnown({ mv$(e.type), mv$(trait_path), mv$(e.item), mv$(e.params)} );
+            return ::HIR::Path::Data::make_UfcsKnown({ mv_str(e.type), mv_str(trait_path), mv_str(e.item), mv_str(e.params)} );
         }
         static bool locate_item_in_trait(::HIR::Visitor::PathContext pc, const ::HIR::Trait& trait,  ::HIR::Path::Data& pd)
         {
@@ -549,7 +549,7 @@ namespace {
         }
         bool locate_in_trait_and_set(const Span& sp, ::HIR::Visitor::PathContext pc, const ::HIR::GenericPath& trait_path, const ::HIR::Trait& trait,  ::HIR::Path::Data& pd) {
             if( locate_item_in_trait(pc, trait,  pd) ) {
-                pd = get_ufcs_known(mv$(pd.as_UfcsUnknown()), make_generic_path(trait_path.m_path, trait), trait);
+                pd = get_ufcs_known(mv_str(pd.as_UfcsUnknown()), make_generic_path(trait_path.m_path, trait), trait);
                 return true;
             }
             // Search all supertraits
@@ -557,7 +557,7 @@ namespace {
             {
                 if( locate_item_in_trait(pc, *pt.m_trait_ptr, pd) )
                 {
-                    pd = get_ufcs_known(mv$(pd.as_UfcsUnknown()), make_generic_path(trait_path.m_path, trait), trait);
+                    pd = get_ufcs_known(mv_str(pd.as_UfcsUnknown()), make_generic_path(trait_path.m_path, trait), trait);
                     return true;
                 }
             }
@@ -574,7 +574,7 @@ namespace {
                     DEBUG("- TODO: Bound " << bound);
                     return false;
                 }
-                pd = get_ufcs_known(mv$(e), make_generic_path(trait_path.m_path, trait), trait);
+                pd = get_ufcs_known(mv_str(e), make_generic_path(trait_path.m_path, trait), trait);
                 return true;
                 });
         }
@@ -604,7 +604,7 @@ namespace {
         }
         static ::HIR::GenericPath make_generic_path(::HIR::SimplePath sp, const ::HIR::Trait& trait)
         {
-            auto trait_path_g = ::HIR::GenericPath( mv$(sp) );
+            auto trait_path_g = ::HIR::GenericPath( mv_str(sp) );
             for(unsigned int i = 0; i < trait.m_params.m_types.size(); i ++ ) {
                 trait_path_g.m_params.m_types.push_back( ::HIR::TypeRef(trait.m_params.m_types[i].m_name, i) );
             }
@@ -671,8 +671,8 @@ namespace {
                     return true;
                     }) )
                 {
-                    auto new_data = ::HIR::Path::Data::make_UfcsInherent({ mv$(e.type), mv$(e.item), mv$(e.params)} );
-                    p.m_data = mv$(new_data);
+                    auto new_data = ::HIR::Path::Data::make_UfcsInherent({ mv_str(e.type), mv_str(e.item), mv_str(e.params)} );
+                    p.m_data = mv_str(new_data);
                     DEBUG("- Resolved, replace with " << p);
                     return ;
                 }
@@ -703,7 +703,7 @@ namespace {
                     // TODO: Search supertraits
                     // TODO: Should impls be searched first, or item names?
                     // - Item names add complexity, but impls are slower
-                    if( this->locate_in_trait_impl_and_set(pc, mv$(trait_path), trait,  p.m_data) ) {
+                    if( this->locate_in_trait_impl_and_set(pc, mv_str(trait_path), trait,  p.m_data) ) {
                         return ;
                     }
                 }
@@ -813,7 +813,7 @@ namespace {
         {
             // Push `Self = <Self as CurTrait>::Type` for processing defaults in the bounds.
             auto path_aty = ::HIR::Path( ::HIR::TypeRef::new_self(), this->get_current_trait_gp(), p.get_name() );
-            auto ty_aty = ::HIR::TypeRef::new_path( mv$(path_aty), ::HIR::TypePathBinding::make_Opaque({}) );
+            auto ty_aty = ::HIR::TypeRef::new_path( mv_str(path_aty), ::HIR::TypePathBinding::make_Opaque({}) );
             m_self_types.push_back(&ty_aty);
 
             ::HIR::Visitor::visit_associatedtype(p, item);

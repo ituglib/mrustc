@@ -123,7 +123,7 @@ namespace {
                         // TODO: Does expanding defaults need a custom monomorphiser that can handle later defaults?
                         MonomorphStatePtr   ms(self_ty, &params, nullptr);
                         auto ty = ms.monomorph_type(sp, typ.m_default);
-                        params.m_types.push_back( mv$(ty) );
+                        params.m_types.push_back( mv_str(ty) );
                     }
                 }
             }
@@ -232,7 +232,7 @@ namespace {
                             HIR::GenericPath path = std::move(*pe);
                             fix_type_params(sp, enm->m_params,  path.m_params);
                             pat.m_data = ::HIR::Pattern::Data::make_PathValue({
-                                mv$(path),
+                                mv_str(path),
                                 ::HIR::Pattern::PathBinding::make_Enum({ enm, static_cast<unsigned>(idx) })
                                 });
                         }
@@ -266,10 +266,10 @@ namespace {
                             if( !is_single_value ) {
                                 ERROR(sp, E0000, "Struct in range pattern - " << pat);
                             }
-                            auto path = mv$(*pe);
+                            auto path = mv_str(*pe);
                             fix_type_params(sp, str.m_params,  path.m_params);
                             pat.m_data = ::HIR::Pattern::Data::make_PathValue({
-                                mv$(path),
+                                mv_str(path),
                                 &str
                                 });
                             }
@@ -405,7 +405,7 @@ namespace {
                         ),
                     (Trait,
                         // TODO: Should this reassign instead?
-                        ty.data_mut() = ::HIR::TypeData::make_TraitObject({ ::HIR::TraitPath { {}, mv$(pe), {}, {} }, {}, {} });
+                        ty.data_mut() = ::HIR::TypeData::make_TraitObject({ ::HIR::TraitPath { {}, mv_str(pe), {}, {} }, {}, {} });
                         )
                     )
                     }
@@ -782,7 +782,7 @@ namespace {
                         }
                         else if( path.m_hrtbs && !path.m_hrtbs->is_empty() ) {
                             auto rv = monomorph_cb.monomorph_traitpath(sp, tp, false);
-                            rv.m_hrtbs = box$(path.m_hrtbs->clone());
+                            rv.m_hrtbs = box_str(path.m_hrtbs->clone());
                             return rv;
                         }
                         else {
@@ -823,12 +823,12 @@ namespace {
 
                     // Build output path.
                     ::HIR::TraitPath    out_path;
-                    out_path.m_hrtbs = mv$(path.m_hrtbs);
-                    out_path.m_path = mv$(path.m_path);
+                    out_path.m_hrtbs = mv_str(path.m_hrtbs);
+                    out_path.m_path = mv_str(path.m_path);
                     out_path.m_trait_ptr = &tr;
                     fill_type_aliases(out_path);
                     // TODO: HRLs?
-                    supertraits.push_back( mv$(out_path) );
+                    supertraits.push_back( mv_str(out_path) );
                     tp_stack.pop_back();
                 }
 
@@ -856,7 +856,7 @@ namespace {
 
                             if( v != ::HIR::TypeRef() )
                             {
-                                out_path.m_type_bounds.insert( ::std::make_pair(ty.first, ::HIR::TraitPath::AtyEqual { out_path.m_path.clone(), mv$(v) }) );
+                                out_path.m_type_bounds.insert( ::std::make_pair(ty.first, ::HIR::TraitPath::AtyEqual { out_path.m_path.clone(), mv_str(v) }) );
                             }
                         }
 
@@ -876,7 +876,7 @@ namespace {
                             DEBUG(ty.first << ": " << traits);
                             if( !traits.empty() )
                             {
-                                out_path.m_trait_bounds.insert( ::std::make_pair(ty.first, ::HIR::TraitPath::AtyBound { out_path.m_path.clone(), mv$(traits) }) );
+                                out_path.m_trait_bounds.insert( ::std::make_pair(ty.first, ::HIR::TraitPath::AtyBound { out_path.m_path.clone(), mv_str(traits) }) );
                             }
                         }
                     }
@@ -950,7 +950,7 @@ namespace {
                     DEBUG("supertraits dd = " << e.supertraits);
                 }
             }
-            tr.m_all_parent_traits = mv$(e.supertraits);
+            tr.m_all_parent_traits = mv_str(e.supertraits);
         }
     };
 

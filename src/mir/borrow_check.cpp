@@ -396,7 +396,7 @@ namespace {
                 HIR::TypeRef    tmp;
                 auto src_ty = state.get_lvalue_type(tmp, b->val).clone_shallow();
                 auto lft = borrow_lvalue(ofs, b->type, b->val);
-                type_assign(target, ::HIR::TypeRef::new_borrow(b->type, mv$(src_ty), lft));
+                type_assign(target, ::HIR::TypeRef::new_borrow(b->type, mv_str(src_ty), lft));
             }
             else {
                 HIR::TypeRef    tmp;
@@ -587,7 +587,7 @@ void MIR_BorrowCheck(const StaticTraitResolve& resolve, const ::HIR::ItemPath& p
                         HIR::TypeRef    tmp;
                         auto src_ty = state.get_lvalue_type(tmp, rse.val).clone_shallow();
                         auto lft = borrow_state.borrow_lvalue(0, rse.type, rse.val);
-                        borrow_state.do_assign(se.dst, HIR::TypeRef::new_borrow(rse.type, mv$(src_ty), lft));
+                        borrow_state.do_assign(se.dst, HIR::TypeRef::new_borrow(rse.type, mv_str(src_ty), lft));
                         }
                     TU_ARMA(Array, rse) {
                         HIR::TypeRef    tmp;

@@ -19,7 +19,7 @@ TokenTree TokenTree::clone() const
         ents.reserve( m_subtrees.size() );
         for(const auto& sub : m_subtrees)
             ents.push_back( sub.clone() );
-        return TokenTree(m_edition, m_hygiene, mv$(ents) );
+        return TokenTree(m_edition, m_hygiene, mv_str(ents) );
     }
 }
 

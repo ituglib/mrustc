@@ -21,7 +21,7 @@ class CExpanderFile:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token(TOK_STRING, ::std::string(get_top_span(sp)->filename.c_str()), {}))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token(TOK_STRING, ::std::string(get_top_span(sp)->filename.c_str()), {}))) );
     }
 };
 
@@ -30,7 +30,7 @@ class CExpanderLine:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_line), CORETYPE_U32))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_line), CORETYPE_U32))) );
     }
 };
 
@@ -39,7 +39,7 @@ class CExpanderColumn:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_ofs), CORETYPE_U32))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_ofs), CORETYPE_U32))) );
     }
 };
 class CExpanderUnstableColumn:
@@ -47,7 +47,7 @@ class CExpanderUnstableColumn:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_ofs), CORETYPE_U32))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token(U128(get_top_span(sp)->start_ofs), CORETYPE_U32))) );
     }
 };
 
@@ -62,7 +62,7 @@ class CExpanderModulePath:
             path_str += "::";
             path_str += comp.c_str();
         }
-        return box$( TTStreamO(sp, ParseState(), TokenTree( Token(TOK_STRING, mv$(path_str), {}) )) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree( Token(TOK_STRING, mv_str(path_str), {}) )) );
     }
 };
 

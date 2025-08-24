@@ -80,16 +80,16 @@ struct MacroPatEnt
     }
     // Literal token
     MacroPatEnt(Span sp, Token tok):
-        sp(mv$(sp)),
-        tok( mv$(tok) ),
+        sp(mv_str(sp)),
+        tok( mv_str(tok) ),
         type(PAT_TOKEN)
     {
     }
 
     // Variable reference
     MacroPatEnt(Span sp, RcString name, unsigned int name_index, Type type):
-        sp(mv$(sp)),
-        name( mv$(name) ),
+        sp(mv_str(sp)),
+        name( mv_str(name) ),
         name_index( name_index ),
         tok(),
         type(type)
@@ -98,11 +98,11 @@ struct MacroPatEnt
 
     // Loop/optional
     MacroPatEnt(Span sp, Token sep, const char* op, unsigned index, ::std::vector<MacroPatEnt> ents):
-        sp(mv$(sp)),
+        sp(mv_str(sp)),
         name( op ),
         name_index(index),
-        tok( mv$(sep) ),
-        subpats( mv$(ents) ),
+        tok( mv_str(sep) ),
+        subpats( mv_str(ents) ),
         type(PAT_LOOP)
     {
     }
@@ -172,8 +172,8 @@ struct MacroRulesArm
     MacroRulesArm()
     {}
     MacroRulesArm(::std::vector<SimplePatEnt> pattern, ::std::vector<MacroExpansionEnt> contents):
-        m_pattern( mv$(pattern) ),
-        m_contents( mv$(contents) )
+        m_pattern( mv_str(pattern) ),
+        m_contents( mv_str(contents) )
     {}
     MacroRulesArm(const MacroRulesArm&) = delete;
     MacroRulesArm& operator=(const MacroRulesArm&) = delete;

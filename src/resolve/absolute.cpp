@@ -114,7 +114,7 @@ namespace
                 data.lifetimes.push_back( NamedI<GenericSlot> { params.m_lifetimes[i].name(), GenericSlot { GenericSlot::Level::Hrb, static_cast<unsigned short>(i) } } );
             }
 
-            m_name_context.push_back(mv$(e));
+            m_name_context.push_back(mv_str(e));
         }
         void push(/*const */::AST::GenericParams& params, GenericSlot::Level level, bool has_self=false) {
             auto   e = Ent::make_Generic({ level, &params });
@@ -150,7 +150,7 @@ namespace
                 }
             }
 
-            m_name_context.push_back(mv$(e));
+            m_name_context.push_back(mv_str(e));
         }
         void pop(const ::AST::HigherRankedBounds& ) {
             if( !m_name_context.back().is_Generic() )
@@ -285,7 +285,7 @@ namespace
                 DEBUG("New var @ " << m_block_level << ": #" << m_var_count << " " << name);
                 auto& vb = m_name_context.back().as_VarBlock();
                 assert(vb.level == m_block_level);
-                vb.variables.push_back( ::std::make_pair(mv$(name), m_var_count) );
+                vb.variables.push_back( ::std::make_pair(mv_str(name), m_var_count) );
                 m_var_count += 1;
                 assert( m_var_count >= vb.variables.size() );
                 return m_var_count - 1;
@@ -940,11 +940,11 @@ void Resolve_Absolute_Path_BindUFCS(Context& context, const Span& sp, Context::L
         // - Since traits can't be associated items, this will always be the same form
 
         auto span = path.m_class.as_UFCS().type->span();
-        auto nodes = mv$(path.m_class.as_UFCS().nodes);
-        auto inner_path = mv$(path);
-        inner_path.m_class.as_UFCS().nodes.push_back( mv$(nodes.front()) );
+        auto nodes = mv_str(path.m_class.as_UFCS().nodes);
+        auto inner_path = mv_str(path);
+        inner_path.m_class.as_UFCS().nodes.push_back( mv_str(nodes.front()) );
         nodes.erase( nodes.begin() );
-        path = ::AST::Path::new_ufcs_ty( TypeRef(span, mv$(inner_path)), mv$(nodes) );
+        path = ::AST::Path::new_ufcs_ty( TypeRef(span, mv_str(inner_path)), mv_str(nodes) );
     }
 
     if(path.m_class.as_UFCS().type) {
@@ -1034,7 +1034,7 @@ namespace {
         AST::Path   np = AST::Path(crate_name, {});
         for(unsigned int i = start; i < nodes.size(); i ++)
         {
-            np.nodes().push_back( mv$(nodes[i]) );
+            np.nodes().push_back( mv_str(nodes[i]) );
         }
         np.m_bindings = path.m_bindings.clone();
         return np;
@@ -1046,9 +1046,9 @@ namespace {
         type_path.m_class.as_Absolute().nodes.resize( i+1 );
         //Resolve_Absolute_Path(
 
-        auto new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv$(type_path)) );
+        auto new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv_str(type_path)) );
         for( unsigned int j = i+1; j < path_abs.nodes.size(); j ++ )
-            new_path.nodes().push_back( mv$(path_abs.nodes[j]) );
+            new_path.nodes().push_back( mv_str(path_abs.nodes[j]) );
 
         DEBUG(path << " -> " << new_path);
 
@@ -1061,11 +1061,11 @@ namespace {
 
         auto type_path = ::AST::Path(ty_path_tpl);
         if( ! n.args().is_empty() ) {
-            type_path.nodes().back().args() = mv$(n.args());
+            type_path.nodes().back().args() = mv_str(n.args());
         }
-        auto new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv$(type_path)) );
+        auto new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv_str(type_path)) );
         for( unsigned int j = i+1; j < path_abs.nodes.size(); j ++ )
-            new_path.nodes().push_back( mv$(path_abs.nodes[j]) );
+            new_path.nodes().push_back( mv_str(path_abs.nodes[j]) );
 
         return new_path;
     }
@@ -1078,7 +1078,7 @@ namespace {
             rv.nodes().reserve( p.components().size() );
             for(const auto& c : p.components())
                 rv.nodes().push_back( AST::PathNode(c) );
-            rv.nodes().back().args() = mv$( path.nodes().back().args() );
+            rv.nodes().back().args() = mv_str( path.nodes().back().args() );
             auto ap = sp_to_ap(p);
 
     #if 0
@@ -1102,7 +1102,7 @@ namespace {
                 rv.m_bindings.macro.set(ap, AST::PathBinding_Macro::make_MacroRules({ nullptr }));
             }
     #endif
-            path = mv$(rv);
+            path = mv_str(rv);
             return;
         }
         const auto& ext_crate = context.m_crate.m_extern_crates.at(p.crate_name());
@@ -1130,7 +1130,7 @@ namespace {
                 rv.nodes().reserve( p.components().size() );
                 for(const auto& c : p.components())
                     rv.nodes().push_back( AST::PathNode(c) );
-                rv.nodes().back().args() = mv$( path.nodes().back().args() );
+                rv.nodes().back().args() = mv_str( path.nodes().back().args() );
                 auto ap = sp_to_ap(p);
                 if( e.m_data.is_Data() && e.m_data.as_Data()[var_idx].is_struct ) {
                     rv.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_EnumVar({nullptr, static_cast<unsigned>(var_idx), &e}) );
@@ -1138,7 +1138,7 @@ namespace {
                 else {
                     rv.m_bindings.value.set( ap, ::AST::PathBinding_Value::make_EnumVar({nullptr, static_cast<unsigned>(var_idx), &e}) );
                 }
-                path = mv$(rv);
+                path = mv_str(rv);
 
                 return ;
                 }
@@ -1225,9 +1225,9 @@ namespace {
         rv.nodes().reserve( p.components().size() );
         for(const auto& c : p.components())
             rv.nodes().push_back( AST::PathNode(c) );
-        rv.nodes().back().args() = mv$( path.nodes().back().args() );
-        rv.m_bindings = mv$(pb);
-        path = mv$(rv);
+        rv.nodes().back().args() = mv_str( path.nodes().back().args() );
+        rv.m_bindings = mv_str(pb);
+        path = mv_str(rv);
     }
 
     void Resolve_Absolute_Path_BindAbsolute__hir_from(Context& context, const Span& sp, Context::LookupMode& mode, ::AST::Path& path, const AST::ExternCrate& crate, unsigned int start)
@@ -1267,12 +1267,12 @@ namespace {
                     ASSERT_BUG(sp, n.args().is_empty(), "Params present, but name resolves to a crate root - " << path << " #" << i << " -> " << newpath);
                 }
                 else {
-                    newpath.nodes().back().args() = mv$(path.nodes()[i].args());
+                    newpath.nodes().back().args() = mv_str(path.nodes()[i].args());
                 }
                 for(unsigned int j = i + 1; j < path.nodes().size(); j ++)
-                    newpath.nodes().push_back( mv$(path.nodes()[j]) );
+                    newpath.nodes().push_back( mv_str(path.nodes()[j]) );
                 DEBUG("> Recurse with " << newpath);
-                path = mv$(newpath);
+                path = mv_str(newpath);
                 // TODO: Recursion limit
                 Resolve_Absolute_Path_BindAbsolute(context, sp, mode, path);
                 return ;
@@ -1292,7 +1292,7 @@ namespace {
                     ap.nodes.push_back( path_abs.nodes[j].name() );
                 AST::PathParams pp;
                 if( !n.args().is_empty() ) {
-                    pp = mv$(n.args());
+                    pp = mv_str(n.args());
                 }
                 else {
                     for(const auto& typ : e.m_params.m_types)
@@ -1323,23 +1323,23 @@ namespace {
                 }
 
                 if( !found ) {
-                    new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv$(trait_path)) );
+                    new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv_str(trait_path)) );
                 }
                 else {
-                    new_path = ::AST::Path::new_ufcs_trait( ::TypeRef(sp), mv$(trait_path) );
+                    new_path = ::AST::Path::new_ufcs_trait( ::TypeRef(sp), mv_str(trait_path) );
                 }
                 for( unsigned int j = i+1; j < path_abs.nodes.size(); j ++ )
-                    new_path.nodes().push_back( mv$(path_abs.nodes[j]) );
+                    new_path.nodes().push_back( mv_str(path_abs.nodes[j]) );
 
-                path = mv$(new_path);
+                path = mv_str(new_path);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             case ::HIR::TypeItem::TAG_ExternType:
             case ::HIR::TypeItem::TAG_TypeAlias:
             case ::HIR::TypeItem::TAG_Struct:
             case ::HIR::TypeItem::TAG_Union:
-                path = split_into_crate(sp, mv$(path), start,  crate.m_name);
-                path = split_into_ufcs_ty(sp, mv$(path), i-start);
+                path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
+                path = split_into_ufcs_ty(sp, mv_str(path), i-start);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
             TU_ARMA(Enum, e) {
                 if( i+1 < path_abs.nodes.size() )
@@ -1376,12 +1376,12 @@ namespace {
                         else {
                             path.m_bindings.value.set(ap, ::AST::PathBinding_Value::make_EnumVar({nullptr, static_cast<unsigned int>(idx), &e}));
                         }
-                        path = split_into_crate(sp, mv$(path), start,  crate.m_name);
+                        path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
                         return;
                     }
                 }
-                path = split_into_crate(sp, mv$(path), start,  crate.m_name);
-                path = split_into_ufcs_ty(sp, mv$(path), i-start);
+                path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
+                path = split_into_ufcs_ty(sp, mv_str(path), i-start);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             }
@@ -1437,7 +1437,7 @@ namespace {
                     }
                     path.m_bindings.type.set(::std::move(ap), ::std::move(pbt));
                     // Update path (trim down to `start` and set crate name)
-                    path = split_into_crate(sp, mv$(path), start,  crate.m_name);
+                    path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
                     return ;
                 }
             }
@@ -1453,7 +1453,7 @@ namespace {
                     TU_ARMA(StructConstant, e) {
                         auto ty_path = e.ty;
                         path.m_bindings.value.set( ::std::move(ap), ::AST::PathBinding_Value::make_Struct({nullptr, &crate.m_hir->get_struct_by_path(sp, ty_path)}) );
-                        path = split_into_crate(sp, mv$(path), start,  crate.m_name);
+                        path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
                         return ;
                         }
                     TU_ARMA(Import, e) {
@@ -1463,7 +1463,7 @@ namespace {
                     TU_ARMA(Constant, e) {
                         // Bind and update path
                         path.m_bindings.value.set( ::std::move(ap), ::AST::PathBinding_Value::make_Static({nullptr, nullptr}) );
-                        path = split_into_crate(sp, mv$(path), start,  crate.m_name);
+                        path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
                         return ;
                         }
                     }
@@ -1504,7 +1504,7 @@ namespace {
                         }
                     }
                     path.m_bindings.value.set(::std::move(ap), ::std::move(pbv));
-                    path = split_into_crate(sp, mv$(path), start,  crate.m_name);
+                    path = split_into_crate(sp, mv_str(path), start,  crate.m_name);
                     return ;
                 }
             }
@@ -1575,7 +1575,7 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
             default:
                 ERROR(sp, E0000, "Encountered non-namespace item '" << n.name() << "' ("<<name_ref.path<<") in path " << path);
             TU_ARMA(TypeAlias, e) {
-                path = split_replace_into_ufcs_path(sp, mv$(path), i,  name_ref.path);
+                path = split_replace_into_ufcs_path(sp, mv_str(path), i,  name_ref.path);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             TU_ARMA(Crate, e) {
@@ -1591,7 +1591,7 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
                     Resolve_Absolute_Path_BindAbsolute(context, sp, lm, trait_path);
                 }
                 if( !n.args().is_empty() ) {
-                    trait_path.nodes().back().args() = mv$(n.args());
+                    trait_path.nodes().back().args() = mv_str(n.args());
                 }
                 else {
                     if( e.trait_ ) {
@@ -1649,15 +1649,15 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
                     }
                 }
                 if( !found ) {
-                    new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv$(trait_path)) );
+                    new_path = ::AST::Path::new_ufcs_ty( ::TypeRef(sp, mv_str(trait_path)) );
                 }
                 else {
-                    new_path = ::AST::Path::new_ufcs_trait( ::TypeRef(sp), mv$(trait_path) );
+                    new_path = ::AST::Path::new_ufcs_trait( ::TypeRef(sp), mv_str(trait_path) );
                 }
                 for( unsigned int j = i+1; j < path_abs.nodes.size(); j ++ )
-                    new_path.nodes().push_back( mv$(path_abs.nodes[j]) );
+                    new_path.nodes().push_back( mv_str(path_abs.nodes[j]) );
 
-                path = mv$(new_path);
+                path = mv_str(new_path);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             TU_ARMA(Enum, e) {
@@ -1665,9 +1665,9 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
                     auto newpath = name_ref.path;
                     for(unsigned int j = i+1; j < path_abs.nodes.size(); j ++)
                     {
-                        newpath.nodes().push_back( mv$(path_abs.nodes[j]) );
+                        newpath.nodes().push_back( mv_str(path_abs.nodes[j]) );
                     }
-                    path = mv$(newpath);
+                    path = mv_str(newpath);
                     //TOOD: Recursion limit
                     Resolve_Absolute_Path_BindAbsolute(context, sp, mode, path);
                     return ;
@@ -1706,16 +1706,16 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
                         }
                     }
 
-                    path = split_replace_into_ufcs_path(sp, mv$(path), i,  name_ref.path);
+                    path = split_replace_into_ufcs_path(sp, mv_str(path), i,  name_ref.path);
                     return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
                 }
             TU_ARMA(Struct, e) {
-                path = split_replace_into_ufcs_path(sp, mv$(path), i,  name_ref.path);
+                path = split_replace_into_ufcs_path(sp, mv_str(path), i,  name_ref.path);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             TU_ARMA(Union, e) {
-                path = split_replace_into_ufcs_path(sp, mv$(path), i,  name_ref.path);
+                path = split_replace_into_ufcs_path(sp, mv_str(path), i,  name_ref.path);
                 return Resolve_Absolute_Path_BindUFCS(context, sp, mode,  path);
                 }
             TU_ARMA(Module, e) {
@@ -1723,10 +1723,10 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
                     auto newpath = name_ref.path;
                     for(unsigned int j = i+1; j < path_abs.nodes.size(); j ++)
                     {
-                        newpath.nodes().push_back( mv$(path_abs.nodes[j]) );
+                        newpath.nodes().push_back( mv_str(path_abs.nodes[j]) );
                     }
                     DEBUG("- Module import, " << path << " => " << newpath);
-                    path = mv$(newpath);
+                    path = mv_str(newpath);
                     Resolve_Absolute_Path_BindAbsolute(context, sp, mode, path);
                     return ;
                 }
@@ -1747,7 +1747,7 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
 
     // Replaces the path with the one returned by `lookup_in_mod`, ensuring that `use` aliases are eliminated
     DEBUG("Replace " << path << " with " << tmp);
-    auto args = mv$(path.nodes().back().args());
+    auto args = mv_str(path.nodes().back().args());
     if( tmp != path )
     {
         // If the paths mismatch (i.e. there was an import involved), pass through resolution again
@@ -1755,8 +1755,8 @@ void Resolve_Absolute_Path_BindAbsolute(Context& context, const Span& sp, Contex
         DEBUG("- Recurse");
         Resolve_Absolute_Path_BindAbsolute(context, sp, mode, tmp);
     }
-    tmp.nodes().back().args() = mv$(args);
-    path = mv$(tmp);
+    tmp.nodes().back().args() = mv_str(args);
+    path = mv_str(tmp);
 }
 
 void Resolve_Absolute_Path(/*const*/ Context& context, const Span& sp, Context::LookupMode mode,  ::AST::Path& path)
@@ -1866,21 +1866,21 @@ void Resolve_Absolute_Path(/*const*/ Context& context, const Span& sp, Context::
             {
                 // Only primitive types turn `Local` paths
                 if( p.m_class.is_Local() ) {
-                    p = ::AST::Path::new_ufcs_ty( TypeRef(sp, mv$(p)) );
+                    p = ::AST::Path::new_ufcs_ty( TypeRef(sp, mv_str(p)) );
                 }
                 if( ! e.nodes[0].args().is_empty() )
                 {
                     assert( p.nodes().size() > 0 );
                     assert( p.nodes().back().args().is_empty() );
-                    p.nodes().back().args() = mv$( e.nodes[0].args() );
+                    p.nodes().back().args() = mv_str( e.nodes[0].args() );
                 }
                 for( unsigned int i = 1; i < e.nodes.size(); i ++ )
                 {
-                    p.nodes().push_back( mv$(e.nodes[i]) );
+                    p.nodes().push_back( mv_str(e.nodes[i]) );
                 }
                 p.m_bindings = ::AST::Path::Bindings {};
             }
-            path = mv$(p);
+            path = mv_str(p);
         }
         else {
             // Look up value
@@ -1888,9 +1888,9 @@ void Resolve_Absolute_Path(/*const*/ Context& context, const Span& sp, Context::
             //DEBUG("Found path " << p << " for " << path);
             if( p.is_absolute() ) {
                 assert( !p.nodes().empty() );
-                p.nodes().back().args() = mv$(e.nodes.back().args());
+                p.nodes().back().args() = mv_str(e.nodes.back().args());
             }
-            path = mv$(p);
+            path = mv_str(p);
         }
 
         if( !path.is_trivial() )
@@ -1911,12 +1911,12 @@ void Resolve_Absolute_Path(/*const*/ Context& context, const Span& sp, Context::
         for(unsigned int i = 0; i < start_len; i ++ )
             np_nodes.push_back( mp_nodes[i] );
         for(auto& en : e.nodes)
-            np_nodes.push_back( mv$(en) );
+            np_nodes.push_back( mv_str(en) );
 
         if( !path.is_trivial() )
             Resolve_Absolute_PathNodes(context, sp,  np_nodes);
 
-        path = mv$(np);
+        path = mv_str(np);
         }
     TU_ARMA(Super, e) {
         DEBUG("- Super");
@@ -1935,12 +1935,12 @@ void Resolve_Absolute_Path(/*const*/ Context& context, const Span& sp, Context::
         for(unsigned int i = 0; i < start_len; i ++ )
             np_nodes.push_back( mp_nodes[i] );
         for(auto& en : e.nodes)
-            np_nodes.push_back( mv$(en) );
+            np_nodes.push_back( mv_str(en) );
 
         if( !path.is_trivial() )
             Resolve_Absolute_PathNodes(context, sp,  np_nodes);
 
-        path = mv$(np);
+        path = mv_str(np);
         }
     TU_ARMA(Absolute, e) {
         DEBUG("- Absolute");
@@ -2194,8 +2194,8 @@ void Resolve_Absolute_Type(Context& context,  TypeRef& type)
         if(auto* ufcs = e->m_class.opt_UFCS())
         {
             if( ufcs->nodes.size() == 0 /*&& ufcs->trait && *ufcs->trait == ::AST::Path()*/ ) {
-                auto ty = mv$(*ufcs->type);
-                type = mv$(ty);
+                auto ty = mv_str(*ufcs->type);
+                type = mv_str(ty);
                 return ;
             }
             assert( ufcs->nodes.size() == 1);
@@ -2205,8 +2205,8 @@ void Resolve_Absolute_Type(Context& context,  TypeRef& type)
         {
             auto tp = Type_TraitPath();
             tp.path = std::move(e);
-            auto ty = ::TypeRef( type.span(), ::make_vec1(mv$(tp)), {} );
-            type = mv$(ty);
+            auto ty = ::TypeRef( type.span(), ::make_vec1(mv_str(tp)), {} );
+            type = mv_str(ty);
             return ;
         }
         //else if(auto* be = e->m_bindings.type.binding.opt_TypeParameter())
@@ -2494,16 +2494,16 @@ void Resolve_Absolute_Pattern(Context& context, bool allow_refutable,  ::AST::Pa
 
     TU_MATCH_HDRA( (pat.data()), {)
     TU_ARMA(MaybeBind, e) {
-        auto name = mv$( e.name );
+        auto name = mv_str( e.name );
         // Attempt to resolve the name in the current namespace, and if it fails, it's a binding
         auto p = context.lookup_opt( name.name, name.hygiene, Context::LookupMode::PatternValue );
         if( p.is_valid() ) {
             Resolve_Absolute_Path(context, pat.span(), Context::LookupMode::PatternValue, p);
-            pat.data() = AST::Pattern::Data::make_Value({ ::AST::Pattern::Value::make_Named(mv$(p)), AST::Pattern::Value() });
+            pat.data() = AST::Pattern::Data::make_Value({ ::AST::Pattern::Value::make_Named(mv_str(p)), AST::Pattern::Value() });
             DEBUG("MaybeBind resolved to " << pat);
         }
         else {
-            pat.bindings().push_back(AST::PatternBinding(mv$(name), AST::PatternBinding::Type::MOVE, false));
+            pat.bindings().push_back(AST::PatternBinding(mv_str(name), AST::PatternBinding::Type::MOVE, false));
             pat.bindings().back().m_slot = context.push_var( pat.span(), pat.bindings().back().m_name );
             pat.data() = AST::Pattern::Data::make_Any({});
             DEBUG("- Binding #" << pat.bindings().back().m_slot << " '" << pat.bindings().back().m_name << "' (was MaybeBind)");

@@ -56,13 +56,13 @@ ParseError::BadChar::~BadChar() throw()
 }
 
 ParseError::Unexpected::Unexpected(const TokenStream& lex, const Token& tok)//:
-//    m_tok( mv$(tok) )
+//    m_tok( mv_str(tok) )
 {
     Span pos = tok.get_pos().filename != "" ? lex.sub_span(tok.get_pos()) : lex.point_span();
     ERROR(pos, E0000, "Unexpected token " << tok);
 }
 ParseError::Unexpected::Unexpected(const TokenStream& lex, const Token& tok, Token exp)//:
-//    m_tok( mv$(tok) )
+//    m_tok( mv_str(tok) )
 {
     Span pos = tok.get_pos().filename != "" ? lex.sub_span(tok.get_pos()) : lex.point_span();
     ERROR(pos, E0000, "Unexpected token " << tok << ", expected " << exp);

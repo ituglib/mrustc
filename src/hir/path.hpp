@@ -340,7 +340,7 @@ public:
     Data m_data;
 
     Path(Data data):
-        m_data(mv$(data))
+        m_data(mv_str(data))
     {}
     Path(GenericPath _);
     Path(SimplePath _);

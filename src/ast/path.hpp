@@ -401,13 +401,13 @@ public:
 
 
     Path(RcString name):
-        m_class( Class::make_Local({ mv$(name) }) )
+        m_class( Class::make_Local({ mv_str(name) }) )
     {}
 
     // ABSOLUTE
 #if 0
     Path(RcString crate, ::std::vector<RcString> nodes):
-        m_class( Class::make_Absolute({ mv$(crate), mv$(nodes)}) )
+        m_class( Class::make_Absolute({ mv_str(crate), mv_str(nodes)}) )
     {}
 #endif
     Path(const AbsolutePath& p, ::AST::PathParams pp={}):
@@ -516,7 +516,7 @@ public:
 
     // ABSOLUTE
     Path(RcString crate, ::std::vector<PathNode> nodes):
-        m_class( Class::make_Absolute({ mv$(crate), mv$(nodes)}) )
+        m_class( Class::make_Absolute({ mv_str(crate), mv_str(nodes)}) )
     {}
     Path(const AbsolutePath& p):
         m_class(Class::make_Absolute({ p.crate, {} }))
@@ -550,7 +550,7 @@ public:
     }
     // Local (variable/type param)
     Path(RcString name):
-        m_class(Class::make_Local({ mv$(name) }))
+        m_class(Class::make_Local({ mv_str(name) }))
     {
     }
 
@@ -560,23 +560,23 @@ public:
 
     // VARIABLE
     static Path new_local(RcString name) {
-        return Path(mv$(name));
+        return Path(mv_str(name));
     }
 
     // RELATIVE
     static Path new_relative(Ident::Hygiene hygiene, ::std::vector<PathNode> nodes) {
-        return Path( Class::make_Relative({ mv$(hygiene), mv$(nodes) }) );
+        return Path( Class::make_Relative({ mv_str(hygiene), mv_str(nodes) }) );
     }
     static Path new_self(::std::vector<PathNode> nodes) {
-        return Path( Class::make_Self({ mv$(nodes) }) );
+        return Path( Class::make_Self({ mv_str(nodes) }) );
     }
     static Path new_super(unsigned int count, ::std::vector<PathNode> nodes) {
-        return Path( Class::make_Super({ count, mv$(nodes) }) );
+        return Path( Class::make_Super({ count, mv_str(nodes) }) );
     }
 
     Path operator+(PathNode pn) const {
         Path tmp = Path(*this);
-        tmp.append( mv$(pn) );
+        tmp.append( mv_str(pn) );
         return tmp;
     }
     Path operator+(const RcString& s) const {
@@ -589,7 +589,7 @@ public:
     }
     Path& operator+=(const Path& x);
     Path& operator+=(PathNode pn) {
-        this->append(mv$(pn));
+        this->append(mv_str(pn));
         return *this;
     }
 
@@ -598,7 +598,7 @@ public:
         assert( !m_class.is_Invalid() );
         //if( m_class.is_Invalid() )
         //    m_class = Class::make_Relative({});
-        nodes().push_back( mv$(node) );
+        nodes().push_back( mv_str(node) );
         m_bindings = Bindings();
     }
 #endif

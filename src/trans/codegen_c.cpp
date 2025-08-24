@@ -1547,7 +1547,7 @@ namespace {
                             ,0)
                         ,0)
                     ;
-                emit_destructor_call( ::MIR::LValue::new_Deref(mv$(inner_ptr)), inner_type, /*unsized_valid=*/true, indent_level );
+                emit_destructor_call( ::MIR::LValue::new_Deref(mv_str(inner_ptr)), inner_type, /*unsized_valid=*/true, indent_level );
             }
 
             if( TARGETVER_MOST_1_54 )
@@ -2303,7 +2303,7 @@ namespace {
                 ::MIR::RValue::make_EnumVariant({
                     p.clone(),
                     static_cast<unsigned>(var_idx),
-                    mv$(vals)
+                    mv_str(vals)
                     })
                 }));
             m_of << "\treturn rv;\n";

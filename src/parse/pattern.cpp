@@ -50,7 +50,7 @@ AST::Pattern Parse_Pattern(TokenStream& lex, AllowOrPattern allow_or)
             lex.getToken();
             pats.push_back(Parse_Pattern1(lex, allow_or));
         }
-        return AST::Pattern( lex.end_span(ps), AST::Pattern::Data::make_Or(mv$(pats)) ); 
+        return AST::Pattern( lex.end_span(ps), AST::Pattern::Data::make_Or(mv_str(pats)) ); 
     }
     else
     {
@@ -69,11 +69,11 @@ AST::Pattern Parse_Pattern1(TokenStream& lex, AllowOrPattern allow_or)
     if( tok.type() == TOK_IDENT && lex.lookahead(0) == TOK_EXCLAM )
     {
         lex.getToken();
-        return AST::Pattern( AST::Pattern::TagMacro(), lex.end_span(ps), box$(Parse_MacroInvocation(ps, tok.ident().name, lex)));
+        return AST::Pattern( AST::Pattern::TagMacro(), lex.end_span(ps), box_str(Parse_MacroInvocation(ps, tok.ident().name, lex)));
     }
     if( tok.type() == TOK_INTERPOLATED_PATTERN )
     {
-        return mv$(tok.frag_pattern());
+        return mv_str(tok.frag_pattern());
     }
 
     bool expect_bind = false;
@@ -116,9 +116,9 @@ AST::Pattern Parse_Pattern1(TokenStream& lex, AllowOrPattern allow_or)
         if( GET_TOK(tok, lex) != TOK_AT )
         {
             PUTBACK(tok, lex);
-            return AST::Pattern(AST::Pattern::TagBind(), lex.end_span(ps), mv$(bind_name), bind_type, is_mut);
+            return AST::Pattern(AST::Pattern::TagBind(), lex.end_span(ps), mv_str(bind_name), bind_type, is_mut);
         }
-        binding = AST::PatternBinding( mv$(bind_name), bind_type, is_mut );
+        binding = AST::PatternBinding( mv_str(bind_name), bind_type, is_mut );
 
         // '@' consumed, move on to next token
         //GET_TOK(tok, lex);
@@ -153,11 +153,11 @@ AST::Pattern Parse_Pattern1(TokenStream& lex, AllowOrPattern allow_or)
             if( true /*is_refutable*/ ) {
                 assert(bind_type == ::AST::PatternBinding::Type::MOVE);
                 assert(is_mut == false);
-                return AST::Pattern(AST::Pattern::TagMaybeBind(), lex.end_span(ps), mv$(name));
+                return AST::Pattern(AST::Pattern::TagMaybeBind(), lex.end_span(ps), mv_str(name));
             }
             // Otherwise, it IS a binding
             else {
-                return AST::Pattern(AST::Pattern::TagBind(), lex.end_span(ps), mv$(name), bind_type, is_mut);
+                return AST::Pattern(AST::Pattern::TagBind(), lex.end_span(ps), mv_str(name), bind_type, is_mut);
             }
             throw "";}
         }
@@ -169,7 +169,7 @@ AST::Pattern Parse_Pattern1(TokenStream& lex, AllowOrPattern allow_or)
         pat = Parse_PatternReal(lex, allow_or);
     }
     if(binding.is_valid()) {
-        pat.bindings().insert( pat.bindings().begin(), mv$(binding) );
+        pat.bindings().insert( pat.bindings().begin(), mv_str(binding) );
     }
     return pat;
 }
@@ -180,7 +180,7 @@ AST::Pattern Parse_PatternReal(TokenStream& lex, AllowOrPattern allow_or)
     if( LOOK_AHEAD(lex) == TOK_INTERPOLATED_PATTERN )
     {
         GET_TOK(tok, lex);
-        return mv$(tok.frag_pattern());
+        return mv_str(tok.frag_pattern());
     }
     auto ps = lex.start_span();
     AST::Pattern    ret = Parse_PatternReal1(lex, allow_or);
@@ -197,7 +197,7 @@ AST::Pattern Parse_PatternReal(TokenStream& lex, AllowOrPattern allow_or)
         if( rightval.is_Invalid() )
             throw ParseError::Generic(lex, "Using '...' with a no RHS value");
 
-        return AST::Pattern(lex.end_span(ps), AST::Pattern::Data::make_Value({ mv$(leftval), mv$(rightval) }));
+        return AST::Pattern(lex.end_span(ps), AST::Pattern::Data::make_Value({ mv_str(leftval), mv_str(rightval) }));
     }
     else if( TARGETVER_LEAST_1_39 && tok.type() == TOK_DOUBLE_DOT )
     {
@@ -212,7 +212,7 @@ AST::Pattern Parse_PatternReal(TokenStream& lex, AllowOrPattern allow_or)
             // - Perfectly valid
         }
 
-        return AST::Pattern(lex.end_span(ps), AST::Pattern::Data::make_ValueLeftInc({ mv$(leftval), mv$(rightval) }));
+        return AST::Pattern(lex.end_span(ps), AST::Pattern::Data::make_ValueLeftInc({ mv_str(leftval), mv_str(rightval) }));
     }
     else
     {
@@ -262,17 +262,17 @@ AST::Pattern::Value Parse_PatternValue(TokenStream& lex)
     case TOK_RWORD_FALSE:
         return AST::Pattern::Value::make_Integer({CORETYPE_BOOL, U128(0)});
     case TOK_STRING:
-        return AST::Pattern::Value::make_String( mv$(tok.str()) );
+        return AST::Pattern::Value::make_String( mv_str(tok.str()) );
     case TOK_BYTESTRING:
-        return AST::Pattern::Value::make_ByteString({ mv$(tok.str()) });
+        return AST::Pattern::Value::make_ByteString({ mv_str(tok.str()) });
     case TOK_INTERPOLATED_EXPR: {
         auto e = tok.take_frag_node();
         // TODO: Visitor?
         if( auto* n = dynamic_cast<AST::ExprNode_String*>(e.get()) ) {
-            return AST::Pattern::Value::make_String( mv$(n->m_value) );
+            return AST::Pattern::Value::make_String( mv_str(n->m_value) );
         }
         else if( auto* n = dynamic_cast<AST::ExprNode_ByteString*>(e.get()) ) {
-            return AST::Pattern::Value::make_ByteString({ mv$(n->m_value) });
+            return AST::Pattern::Value::make_ByteString({ mv_str(n->m_value) });
         }
         else if( auto* n = dynamic_cast<AST::ExprNode_Bool*>(e.get()) ) {
             return AST::Pattern::Value::make_Integer({CORETYPE_BOOL, U128(n->m_value ? 1 : 0)});
@@ -367,12 +367,12 @@ AST::Pattern Parse_PatternReal_Path(TokenStream& lex, ProtoSpan ps, AST::Path pa
     switch( GET_TOK(tok, lex) )
     {
     case TOK_PAREN_OPEN:
-        return AST::Pattern( AST::Pattern::TagNamedTuple(), lex.end_span(ps), mv$(path), Parse_PatternTuple(lex, nullptr) );
+        return AST::Pattern( AST::Pattern::TagNamedTuple(), lex.end_span(ps), mv_str(path), Parse_PatternTuple(lex, nullptr) );
     case TOK_BRACE_OPEN:
-        return Parse_PatternStruct(lex, ps, mv$(path));
+        return Parse_PatternStruct(lex, ps, mv_str(path));
     default:
         PUTBACK(tok, lex);
-        return AST::Pattern( AST::Pattern::TagValue(), lex.end_span(ps), AST::Pattern::Value::make_Named(mv$(path)) );
+        return AST::Pattern( AST::Pattern::TagValue(), lex.end_span(ps), AST::Pattern::Value::make_Named(mv_str(path)) );
     }
 }
 
@@ -425,7 +425,7 @@ AST::Pattern Parse_PatternReal_Slice(TokenStream& lex)
             if(is_split)
                 ERROR(lex.end_span(ps), E0000, "Multiple instances of .. in a slice pattern");
 
-            inner_binding = mv$(binding);
+            inner_binding = mv_str(binding);
             is_split = true;
             if(lex.lookahead(0) == TOK_AT)
                 GET_CHECK_TOK(tok, lex, TOK_AT);
@@ -448,13 +448,13 @@ AST::Pattern Parse_PatternReal_Slice(TokenStream& lex)
 
     if( is_split )
     {
-        return ::AST::Pattern( lex.end_span(ps), ::AST::Pattern::Data::make_SplitSlice({ mv$(leading), mv$(inner_binding), mv$(trailing) }) );
+        return ::AST::Pattern( lex.end_span(ps), ::AST::Pattern::Data::make_SplitSlice({ mv_str(leading), mv_str(inner_binding), mv_str(trailing) }) );
     }
     else
     {
         assert( !inner_binding.is_valid() );
         assert( trailing.empty() );
-        return ::AST::Pattern( lex.end_span(ps), ::AST::Pattern::Data::make_Slice({ mv$(leading) }) );
+        return ::AST::Pattern( lex.end_span(ps), ::AST::Pattern::Data::make_Slice({ mv_str(leading) }) );
     }
 }
 
@@ -474,7 +474,7 @@ AST::Pattern Parse_PatternReal_Slice(TokenStream& lex)
             CHECK_TOK(tok, TOK_PAREN_CLOSE);
             // If this was just a parenthesised pattern, then indicate to the caller
             if(just_paren) *just_paren = (leading.size() == 1);
-            return AST::Pattern::TuplePat { mv$(leading), false, {} };
+            return AST::Pattern::TuplePat { mv_str(leading), false, {} };
         }
     }
 
@@ -483,7 +483,7 @@ AST::Pattern Parse_PatternReal_Slice(TokenStream& lex)
         GET_TOK(tok, lex);
 
         CHECK_TOK(tok, TOK_PAREN_CLOSE);
-        return AST::Pattern::TuplePat { mv$(leading), false, {} };
+        return AST::Pattern::TuplePat { mv_str(leading), false, {} };
     }
     GET_CHECK_TOK(tok, lex, TOK_DOUBLE_DOT);
 
@@ -503,7 +503,7 @@ AST::Pattern Parse_PatternReal_Slice(TokenStream& lex)
     }
 
     CHECK_TOK(tok, TOK_PAREN_CLOSE);
-    return ::AST::Pattern::TuplePat { mv$(leading), true, mv$(trailing) };
+    return ::AST::Pattern::TuplePat { mv_str(leading), true, mv_str(trailing) };
 }
 
 AST::Pattern Parse_PatternStruct(TokenStream& lex, ProtoSpan ps, AST::Path path)
@@ -521,7 +521,7 @@ AST::Pattern Parse_PatternStruct(TokenStream& lex, ProtoSpan ps, AST::Path path)
             unsigned int ofs = static_cast<unsigned int>(tok.intval().truncate_u64());
             GET_CHECK_TOK(tok, lex, TOK_COLON);
             auto val = Parse_Pattern(lex);
-            if( ! pats.insert( ::std::make_pair(ofs, mv$(val)) ).second ) {
+            if( ! pats.insert( ::std::make_pair(ofs, mv_str(val)) ).second ) {
                 ERROR(lex.point_span(), E0000, "Duplicate index");
             }
 
@@ -549,15 +549,15 @@ AST::Pattern Parse_PatternStruct(TokenStream& lex, ProtoSpan ps, AST::Path path)
                 i = p.first;
             }
             if( ! has_split ) {
-                leading.push_back( mv$(p.second) );
+                leading.push_back( mv_str(p.second) );
             }
             else {
-                trailing.push_back( mv$(p.second) );
+                trailing.push_back( mv_str(p.second) );
             }
             i ++;
         }
 
-        return AST::Pattern(AST::Pattern::TagNamedTuple(), lex.end_span(ps), mv$(path),  AST::Pattern::TuplePat { mv$(leading), has_split, mv$(trailing) });
+        return AST::Pattern(AST::Pattern::TagNamedTuple(), lex.end_span(ps), mv_str(path),  AST::Pattern::TuplePat { mv_str(leading), has_split, mv_str(trailing) });
     }
 
     bool is_exhaustive = true;
@@ -617,19 +617,19 @@ AST::Pattern Parse_PatternStruct(TokenStream& lex, ProtoSpan ps, AST::Path path)
             PUTBACK(tok, lex);
             pat = AST::Pattern(lex.end_span(inner_ps), {});
             field_name = field_ident.name;
-            pat.bindings().push_back( AST::PatternBinding(mv$(field_ident), bind_type, is_mut) );
+            pat.bindings().push_back( AST::PatternBinding(mv_str(field_ident), bind_type, is_mut) );
             if( is_box )
             {
-                pat = AST::Pattern(AST::Pattern::TagBox(), lex.end_span(inner_ps), mv$(pat));
+                pat = AST::Pattern(AST::Pattern::TagBox(), lex.end_span(inner_ps), mv_str(pat));
             }
         }
         else {
             CHECK_TOK(tok, TOK_COLON);
-            field_name = mv$(field_ident.name);
+            field_name = mv_str(field_ident.name);
             pat = Parse_Pattern(lex);
         }
 
-        subpats.push_back(AST::StructPatternEntry { mv$(attrs), mv$(field_name), mv$(pat) });
+        subpats.push_back(AST::StructPatternEntry { mv_str(attrs), mv_str(field_name), mv_str(pat) });
     } while( GET_TOK(tok, lex) == TOK_COMMA );
     CHECK_TOK(tok, TOK_BRACE_CLOSE);
 

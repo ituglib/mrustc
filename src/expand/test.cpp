@@ -34,7 +34,7 @@ class CTestHandler:
             }
             td.path = path;
 
-            crate.m_tests.push_back( mv$(td) );
+            crate.m_tests.push_back( mv_str(td) );
         }
         else
         {

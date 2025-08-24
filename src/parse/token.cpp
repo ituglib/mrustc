@@ -54,12 +54,12 @@ Token::Token(enum eTokenType type):
 }
 Token::Token(enum eTokenType type, Ident i):
     m_type(type),
-    m_data(mv$(i))
+    m_data(mv_str(i))
 {
 }
 Token::Token(enum eTokenType type, ::std::string str, Ident::Hygiene h)
     : m_type(type)
-    , m_data(Data::make_String(mv$(str)))
+    , m_data(Data::make_String(mv_str(str)))
     , m_hygiene(std::move(h))
 {
 }
@@ -122,7 +122,7 @@ Token::Token(const InterpolatedFragment& frag)
         m_type = TOK_INTERPOLATED_ITEM;
         const auto& named = *reinterpret_cast<const AST::Named<AST::Item>*>(frag.m_ptr);
         auto item = named.data.clone();
-        m_data = new AST::Named<AST::Item>( named.span, named.attrs.clone(), named.vis, named.name, mv$(item) );
+        m_data = new AST::Named<AST::Item>( named.span, named.attrs.clone(), named.vis, named.name, mv_str(item) );
         break; }
     }
 }
@@ -272,18 +272,18 @@ AST::ExprNode& Token::frag_node()
     assert( m_type == TOK_INTERPOLATED_ITEM );
     auto ptr = reinterpret_cast<AST::Named<AST::Item>*>(m_data.as_Fragment());
     m_data.as_Fragment() = nullptr;
-    auto rv = mv$( *ptr );
+    auto rv = mv_str( *ptr );
     delete ptr;
-    return mv$(rv);
+    return mv_str(rv);
 }
 ::AST::Visibility Token::take_frag_vis()
 {
     assert( m_type == TOK_INTERPOLATED_VIS );
     auto ptr = reinterpret_cast<AST::Visibility*>(m_data.as_Fragment());
     m_data.as_Fragment() = nullptr;
-    auto rv = mv$( *ptr );
+    auto rv = mv_str( *ptr );
     delete ptr;
-    return mv$(rv);
+    return mv_str(rv);
 }
 
 const char* Token::typestr(enum eTokenType type)

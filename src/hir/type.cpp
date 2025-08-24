@@ -189,7 +189,7 @@ bool ::HIR::TypeData_ErasedType_AliasInner::is_public_to(const HIR::SimplePath& 
             HIR::GenericParams(),   // TODO: Get HRLs
             false, false,
             RcString::new_interned(ABI_RUST),
-            ::HIR::TypeRef::new_path( ::HIR::GenericPath(mv$(enum_path), e.m_params.clone()), ::HIR::TypePathBinding::make_Enum(&enm) ),
+            ::HIR::TypeRef::new_path( ::HIR::GenericPath(mv_str(enum_path), e.m_params.clone()), ::HIR::TypePathBinding::make_Enum(&enm) ),
             {}
             };
         for( const auto& arg : var_data )
@@ -1194,7 +1194,7 @@ HIR::TypeData_NamedFunction_Ty HIR::TypeData_NamedFunction_Ty::clone() const {
         for(const auto& trait : e.m_markers)
             rv.m_markers.push_back( trait.clone() );
         rv.m_lifetime = e.m_lifetime;
-        return ::HIR::TypeRef( TypeData::make_TraitObject( mv$(rv) ) );
+        return ::HIR::TypeRef( TypeData::make_TraitObject( mv_str(rv) ) );
         }
     TU_ARMA(ErasedType, e) {
         ::std::vector< ::HIR::TraitPath>    traits;
@@ -1220,9 +1220,9 @@ HIR::TypeData_NamedFunction_Ty HIR::TypeData_NamedFunction_Ty::clone() const {
         }
         return ::HIR::TypeRef( TypeData::make_ErasedType({
             e.m_is_sized,
-            mv$(traits),
+            mv_str(traits),
             e.m_lifetimes,
-            mv$(inner)
+            mv_str(inner)
             }) );
         }
     TU_ARMA(Array, e) {
@@ -1235,7 +1235,7 @@ HIR::TypeData_NamedFunction_Ty HIR::TypeData_NamedFunction_Ty::clone() const {
         ::std::vector< ::HIR::TypeRef>  types;
         for(const auto& t : e)
             types.push_back( t.clone() );
-        return ::HIR::TypeRef( TypeData::make_Tuple(mv$(types)) );
+        return ::HIR::TypeRef( TypeData::make_Tuple(mv_str(types)) );
         }
     TU_ARMA(Borrow, e) {
         return ::HIR::TypeRef( TypeData::make_Borrow({e.lifetime, e.type, e.inner.clone()}) );
@@ -1257,7 +1257,7 @@ HIR::TypeData_NamedFunction_Ty HIR::TypeData_NamedFunction_Ty::clone() const {
             };
         for(const auto& a : e.m_arg_types)
             ft.m_arg_types.push_back( a.clone() );
-        return ::HIR::TypeRef(TypeData::make_Function( mv$(ft) ));
+        return ::HIR::TypeRef(TypeData::make_Function( mv_str(ft) ));
         }
     TU_ARMA(Closure, e) {
         TypeData::Data_Closure  oe;
@@ -1265,12 +1265,12 @@ HIR::TypeData_NamedFunction_Ty HIR::TypeData_NamedFunction_Ty::clone() const {
         //oe.m_closure_rettype = e.m_closure_rettype.clone();
         //for(const auto& a : e.m_closure_arg_types)
         //    oe.m_closure_arg_types.push_back( a.clone() );
-        return ::HIR::TypeRef(TypeData::make_Closure( mv$(oe) ));
+        return ::HIR::TypeRef(TypeData::make_Closure( mv_str(oe) ));
         }
     TU_ARMA(Generator, e) {
         TypeData::Data_Generator    oe;
         oe.node = e.node;
-        return ::HIR::TypeRef(TypeData::make_Generator( mv$(oe) ));
+        return ::HIR::TypeRef(TypeData::make_Generator( mv_str(oe) ));
         }
     }
     throw "";

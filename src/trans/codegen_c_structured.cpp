@@ -16,7 +16,7 @@ NodeRef::NodeRef(size_t idx):
     DEBUG("NodeRef(" << idx << ")");
 }
 NodeRef::NodeRef(Node node_data):
-    node(new Node(mv$(node_data))),
+    node(new Node(mv_str(node_data))),
     bb_idx(SIZE_MAX)
 {
     DEBUG("NodeRef(node)");
@@ -173,7 +173,7 @@ public:
                     DEBUG("If targets NONE, NONE");
                     stop = true;
                 }
-                refs.push_back(Node::make_If({ bb_idx, &te.cond, mv$(arm_t), mv$(arm_f) }));
+                refs.push_back(Node::make_If({ bb_idx, &te.cond, mv_str(arm_t), mv_str(arm_f) }));
                 ),
             (Switch,
                 ::std::vector<NodeRef>  arms;
@@ -211,7 +211,7 @@ public:
                         exit_bb = cur;
                     }
                 }
-                refs.push_back(Node::make_Switch({ exit_bb, &te.val, mv$(arms) }));
+                refs.push_back(Node::make_Switch({ exit_bb, &te.val, mv_str(arms) }));
                 bb_idx = exit_bb;
                 if( bb_idx == SIZE_MAX )
                     stop = true;
@@ -259,7 +259,7 @@ public:
                     }
                 }
 
-                refs.push_back(Node::make_SwitchValue({ exit_bb, &te.val, mv$(def_arm), mv$(arms), &te.values }));
+                refs.push_back(Node::make_SwitchValue({ exit_bb, &te.val, mv_str(def_arm), mv_str(arms), &te.values }));
                 stop = true;
 
                 ),
@@ -284,11 +284,11 @@ public:
                 ::std::vector<NodeRef> loop_blocks;
                 loop_blocks.reserve(refs.end() - it);
                 for(auto it2 = it; it2 != refs.end(); ++it2)
-                    loop_blocks.push_back( mv$(*it2) );
+                    loop_blocks.push_back( mv_str(*it2) );
                 refs.erase(it, refs.end());
-                auto loop_node = NodeRef( Node::make_Block({ SIZE_MAX, mv$(loop_blocks) }) );
+                auto loop_node = NodeRef( Node::make_Block({ SIZE_MAX, mv_str(loop_blocks) }) );
 
-                refs.push_back( Node::make_Loop({ SIZE_MAX, mv$(loop_node) }) );
+                refs.push_back( Node::make_Loop({ SIZE_MAX, mv_str(loop_node) }) );
                 // TODO: If there is only one `goto` in the above loop, assume it's the target
                 DEBUG("Loop");
                 break;
@@ -313,7 +313,7 @@ public:
         }
         for(auto& v : refs)
             ASSERT_BUG(Span(), v.node || v.bb_idx != SIZE_MAX, (&v - refs.data()));
-        return Node::make_Block({ bb_idx, mv$(refs) });
+        return Node::make_Block({ bb_idx, mv_str(refs) });
     }
 };
 

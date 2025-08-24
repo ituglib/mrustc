@@ -9,7 +9,7 @@
 #ifndef _SYNEXT_MACRO_HPP_
 #define _SYNEXT_MACRO_HPP_
 
-//#include "../common.hpp"   // for mv$ and other things
+//#include "../common.hpp"   // for mv_str and other things
 #include <string>
 #include <memory>
 #include <span.hpp>

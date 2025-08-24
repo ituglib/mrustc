@@ -194,12 +194,12 @@ namespace { ::HIR::Pattern::Data clone_pattern_data(const ::HIR::Pattern::Data& 
         }
     TU_ARMA(Box, e) {
         return ::HIR::Pattern::Data::make_Box({
-            box$( e.sub->clone() )
+            box_str( e.sub->clone() )
             });
         }
     TU_ARMA(Ref, e) {
         return ::HIR::Pattern::Data::make_Ref({
-            e.type, box$(e.sub->clone())
+            e.type, box_str(e.sub->clone())
             });
         }
     TU_ARMA(Tuple, e) {
@@ -245,8 +245,8 @@ namespace { ::HIR::Pattern::Data clone_pattern_data(const ::HIR::Pattern::Data& 
         }
     TU_ARMA(Range, e) {
         return ::HIR::Pattern::Data::make_Range({
-            box$(clone_patval(*e.start)),
-            box$(clone_patval(*e.end)),
+            box_str(clone_patval(*e.start)),
+            box_str(clone_patval(*e.end)),
             e.is_inclusive
             });
         }

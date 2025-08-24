@@ -224,17 +224,17 @@ HIR::PathParams::PathParams(::HIR::LifetimeRef lft)
 {
 }
 ::HIR::GenericPath::GenericPath(::HIR::SimplePath sp):
-    m_path( mv$(sp) )
+    m_path( mv_str(sp) )
 {
 }
 ::HIR::GenericPath::GenericPath(::HIR::SimplePath sp, ::HIR::PathParams params):
-    m_path( mv$(sp) ),
-    m_params( mv$(params) )
+    m_path( mv_str(sp) ),
+    m_params( mv_str(params) )
 {
 }
 ::HIR::GenericPath::GenericPath(::HIR::GenericParams hrls, ::HIR::SimplePath sp, ::HIR::PathParams params):
-    m_path( mv$(sp) ),
-    m_params( mv$(params) )
+    m_path( mv_str(sp) ),
+    m_params( mv_str(params) )
 {
 }
 ::HIR::GenericPath HIR::GenericPath::clone() const
@@ -253,7 +253,7 @@ Ordering HIR::GenericPath::ord(const HIR::GenericPath& x) const
 ::HIR::TraitPath HIR::TraitPath::clone() const
 {
     ::HIR::TraitPath    rv {
-        m_hrtbs ? box$(m_hrtbs->clone()) : nullptr,
+        m_hrtbs ? box_str(m_hrtbs->clone()) : nullptr,
         m_path.clone(),
         {},
         {},
@@ -293,23 +293,23 @@ Ordering HIR::TraitPath::ord(const TraitPath& x) const
 }
 
 ::HIR::Path::Path(::HIR::GenericPath gp):
-    m_data( ::HIR::Path::Data::make_Generic( mv$(gp) ) )
+    m_data( ::HIR::Path::Data::make_Generic( mv_str(gp) ) )
 {
 }
 ::HIR::Path::Path(::HIR::SimplePath sp):
-    m_data( ::HIR::Path::Data::make_Generic(::HIR::GenericPath(mv$(sp))) )
+    m_data( ::HIR::Path::Data::make_Generic(::HIR::GenericPath(mv_str(sp))) )
 {
 }
 ::HIR::Path::Path(TypeRef ty, RcString item, PathParams item_params):
-    m_data(Data::make_UfcsInherent({ mv$(ty), mv$(item), mv$(item_params) }))
+    m_data(Data::make_UfcsInherent({ mv_str(ty), mv_str(item), mv_str(item_params) }))
 {
 }
 ::HIR::Path::Path(TypeRef ty, GenericPath trait, RcString item, PathParams item_params):
-    m_data( Data::make_UfcsKnown({ mv$(ty), mv$(trait), mv$(item), mv$(item_params) }) )
+    m_data( Data::make_UfcsKnown({ mv_str(ty), mv_str(trait), mv_str(item), mv_str(item_params) }) )
 {
 }
 ::HIR::Path::Path(TypeRef ty, GenericParams hrtbs, GenericPath trait, RcString item, PathParams item_params):
-    m_data( Data::make_UfcsKnown({ mv$(ty), mv$(trait), mv$(item), mv$(item_params), box$(hrtbs) }) )
+    m_data( Data::make_UfcsKnown({ mv_str(ty), mv_str(trait), mv_str(item), mv_str(item_params), box_str(hrtbs) }) )
 {
 }
 ::HIR::Path HIR::Path::clone() const
@@ -332,7 +332,7 @@ Ordering HIR::TraitPath::ord(const TraitPath& x) const
             e.trait.clone(),
             e.item,
             e.params.clone(),
-            e.hrtbs ? box$(e.hrtbs->clone()) : nullptr,
+            e.hrtbs ? box_str(e.hrtbs->clone()) : nullptr,
             }));
         }
     TU_ARMA(UfcsUnknown, e) {

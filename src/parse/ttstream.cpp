@@ -10,7 +10,7 @@
 
 TTStream::TTStream(Span parent, ParseState ps, const TokenTree& input_tt):
     TokenStream(ps),
-    m_parent_span( mv$(parent) )
+    m_parent_span( mv_str(parent) )
 {
     DEBUG("parent " << m_parent_span);
     for(auto s = m_parent_span; s; s = s->parent_span) {
@@ -86,8 +86,8 @@ Ident::Hygiene TTStream::realGetHygiene() const
 
 TTStreamO::TTStreamO(Span parent, ParseState ps, TokenTree input_tt):
     TokenStream(ps),
-    m_parent_span( mv$(parent) ),
-    m_input_tt( mv$(input_tt) )
+    m_parent_span( mv_str(parent) ),
+    m_input_tt( mv_str(input_tt) )
 {
     assert(m_parent_span);
     m_stack.push_back( ::std::make_pair(0, nullptr) );
@@ -108,7 +108,7 @@ Token TTStreamO::realGetToken()
             m_last_pos = tree.tok().get_pos();
             m_edition = tree.get_edition();
             m_hygiene_ptr = &tree.hygiene();
-            return mv$(tree.tok());
+            return mv_str(tree.tok());
         }
 
         if(idx < tree.size())
@@ -119,7 +119,7 @@ Token TTStreamO::realGetToken()
                 m_last_pos = subtree.tok().get_pos();
                 m_edition = subtree.get_edition();
                 m_hygiene_ptr = &subtree.hygiene();
-                return mv$( subtree.tok() );
+                return mv_str( subtree.tok() );
             }
             else {
                 m_stack.push_back( ::std::make_pair(0, &subtree) );

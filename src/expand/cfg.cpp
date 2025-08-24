@@ -32,13 +32,13 @@ void Cfg_Dump(::std::ostream& os) {
     // NOTE: `g_cfg_value_fcns` is only used for feature flags, which minicargo doesn't need
 }
 void Cfg_SetFlag(::std::string name) {
-    g_cfg_flags.insert( mv$(name) );
+    g_cfg_flags.insert( mv_str(name) );
 }
 void Cfg_SetValue(::std::string name, ::std::string val) {
-    g_cfg_values.insert( ::std::make_pair(mv$(name), mv$(val)) );
+    g_cfg_values.insert( ::std::make_pair(mv_str(name), mv_str(val)) );
 }
 void Cfg_SetValueCb(::std::string name, ::std::function<bool(const ::std::string&)> cb) {
-    g_cfg_value_fcns.insert( ::std::make_pair(mv$(name), mv$(cb)) );
+    g_cfg_value_fcns.insert( ::std::make_pair(mv_str(name), mv_str(cb)) );
 }
 
 namespace {
@@ -210,7 +210,7 @@ class CCfgExpander:
         bool rv = check_cfg_inner(lex);
         lex.getTokenCheck(TOK_EOF);
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015,{}, rv ? TOK_RWORD_TRUE : TOK_RWORD_FALSE )) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015,{}, rv ? TOK_RWORD_TRUE : TOK_RWORD_FALSE )) );
     }
 };
 

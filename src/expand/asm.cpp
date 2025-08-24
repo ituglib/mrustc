@@ -30,7 +30,7 @@ namespace
             ERROR(sp, E0000, "asm! requires a string literal - got " << *n);
         }
         //const auto& format_string_sp = format_string_np->span();
-        return mv$( format_string_np->m_value );
+        return mv_str( format_string_np->m_value );
     }
 
     RcString get_tok_ident_rword(TokenStream& lex)
@@ -74,13 +74,13 @@ public:
             {
                 //auto name = get_string(sp, lex);
                 GET_CHECK_TOK(tok, lex, TOK_STRING);
-                auto name = mv$(tok.str());
+                auto name = mv_str(tok.str());
 
                 GET_CHECK_TOK(tok, lex, TOK_PAREN_OPEN);
                 auto val = Parse_Expr0(lex);
                 GET_CHECK_TOK(tok, lex, TOK_PAREN_CLOSE);
 
-                outputs.push_back( ::AST::ExprNode_Asm::ValRef { mv$(name), mv$(val) } );
+                outputs.push_back( ::AST::ExprNode_Asm::ValRef { mv_str(name), mv_str(val) } );
 
                 if( lex.lookahead(0) != TOK_COMMA )
                     break;
@@ -105,13 +105,13 @@ public:
             while( lex.lookahead(0) == TOK_STRING )
             {
                 GET_CHECK_TOK(tok, lex, TOK_STRING);
-                auto name = mv$(tok.str());
+                auto name = mv_str(tok.str());
 
                 GET_CHECK_TOK(tok, lex, TOK_PAREN_OPEN);
                 auto val = Parse_Expr0(lex);
                 GET_CHECK_TOK(tok, lex, TOK_PAREN_CLOSE);
 
-                inputs.push_back( ::AST::ExprNode_Asm::ValRef { mv$(name), mv$(val) } );
+                inputs.push_back( ::AST::ExprNode_Asm::ValRef { mv_str(name), mv_str(val) } );
 
                 if( lex.lookahead(0) != TOK_COMMA )
                     break;
@@ -135,7 +135,7 @@ public:
             while( lex.lookahead(0) == TOK_STRING )
             {
                 GET_CHECK_TOK(tok, lex, TOK_STRING);
-                clobbers.push_back( mv$(tok.str()) );
+                clobbers.push_back( mv_str(tok.str()) );
 
                 if( lex.lookahead(0) != TOK_COMMA )
                     break;
@@ -159,7 +159,7 @@ public:
             while( lex.lookahead(0) == TOK_STRING )
             {
                 GET_CHECK_TOK(tok, lex, TOK_STRING);
-                flags.push_back( mv$(tok.str()) );
+                flags.push_back( mv_str(tok.str()) );
 
                 if( lex.lookahead(0) != TOK_COMMA )
                     break;
@@ -200,8 +200,8 @@ public:
         }
 
         // Convert this into an AST node and insert as an intepolated expression
-        ::AST::ExprNodeP rv = ::AST::ExprNodeP( new ::AST::ExprNode_Asm { mv$(template_text), mv$(outputs), mv$(inputs), mv$(clobbers), mv$(flags) } );
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, rv.release()) ))));
+        ::AST::ExprNodeP rv = ::AST::ExprNodeP( new ::AST::ExprNode_Asm { mv_str(template_text), mv_str(outputs), mv_str(inputs), mv_str(clobbers), mv_str(flags) } );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, rv.release()) ))));
     }
 };
 
@@ -408,17 +408,17 @@ public:
                         GET_TOK(tok, lex);
                         if(lex.lookahead(0) == TOK_UNDERSCORE) {
                             GET_TOK(tok, lex);
-                            param_spec = AST::ExprNode_Asm2::Param::make_Reg({ dir, std::move(reg_spec), mv$(e), nullptr });
+                            param_spec = AST::ExprNode_Asm2::Param::make_Reg({ dir, std::move(reg_spec), mv_str(e), nullptr });
                         }
                         else {
                             auto e2  = Parse_Expr0(lex);
-                            param_spec = AST::ExprNode_Asm2::Param::make_Reg({ dir, std::move(reg_spec), mv$(e), mv$(e2) });
+                            param_spec = AST::ExprNode_Asm2::Param::make_Reg({ dir, std::move(reg_spec), mv_str(e), mv_str(e2) });
                         }
                     }
                     else
                     {
                         // Note: Different variant to handle `inout(reg) foo` without duplicating
-                        param_spec = AST::ExprNode_Asm2::Param::make_RegSingle({ dir, std::move(reg_spec), mv$(e) });
+                        param_spec = AST::ExprNode_Asm2::Param::make_RegSingle({ dir, std::move(reg_spec), mv_str(e) });
                     }
                 }
             }
@@ -549,8 +549,8 @@ public:
         }
 
         // Convert this into an AST node and insert as an intepolated expression
-        ::AST::ExprNodeP rv = ::AST::ExprNodeP( new ::AST::ExprNode_Asm2 { mv$(options), mv$(lines), mv$(params) } );
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, rv.release()) ))));
+        ::AST::ExprNodeP rv = ::AST::ExprNodeP( new ::AST::ExprNode_Asm2 { mv_str(options), mv_str(lines), mv_str(params) } );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, rv.release()) ))));
     }
 };
 class CGlobalAsmExpander:
@@ -579,7 +579,7 @@ public:
             sp, {}, AST::Visibility::make_bare_private(), "",
             AST::Item(std::move(global_asm))
         );
-        return box$( TTStreamO(sp, ParseState(), TokenTree(Token( Token::TagTakeIP(), InterpolatedFragment(std::move(named_item)) )) ) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(Token( Token::TagTakeIP(), InterpolatedFragment(std::move(named_item)) )) ) );
     }
 };
 

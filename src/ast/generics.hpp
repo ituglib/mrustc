@@ -227,7 +227,7 @@ public:
     void add_ty_param(TypeParam param, size_t bounds_start, size_t bounds_end) { add_param( ::std::move(param), bounds_start, bounds_end); }
 
     void add_value_param(Span sp, AttributeList attrs, Ident name, TypeRef ty, Expr val) {
-        m_params.push_back(ValueParam(mv$(sp), mv$(attrs), mv$(name), mv$(ty), mv$(val)));
+        m_params.push_back(ValueParam(mv_str(sp), mv_str(attrs), mv_str(name), mv_str(ty), mv_str(val)));
     }
 
     void add_bound(GenericBound bound) {

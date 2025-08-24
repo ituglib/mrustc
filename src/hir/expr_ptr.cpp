@@ -10,7 +10,7 @@
 #include <hir/expr_state.hpp>
 
 ::HIR::ExprPtr::ExprPtr(::std::unique_ptr< ::HIR::ExprNode> v):
-    node( mv$(v) )
+    node( mv_str(v) )
 {
 }
 ::std::unique_ptr< ::HIR::ExprNode> HIR::ExprPtr::into_unique()

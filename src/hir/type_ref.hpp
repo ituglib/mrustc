@@ -109,7 +109,7 @@ public:
     static TypeRef new_borrow(BorrowType bt, TypeRef inner);
     static TypeRef new_borrow(BorrowType bt, TypeRef inner, HIR::LifetimeRef lft);
     static TypeRef new_pointer(BorrowType bt, TypeRef inner);
-    static TypeRef new_tuple(::std::vector< ::HIR::TypeRef> sts) { return TypeRef(mv$(sts)); }
+    static TypeRef new_tuple(::std::vector< ::HIR::TypeRef> sts) { return TypeRef(mv_str(sts)); }
     static TypeRef new_slice(TypeRef inner);
     static TypeRef new_array(TypeRef inner, uint64_t size);
     static TypeRef new_array(TypeRef inner, ::HIR::ConstGeneric size_expr);

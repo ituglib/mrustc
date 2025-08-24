@@ -46,7 +46,7 @@ void TraitResolveCommon::prep_indexes__add_equality(const Span& sp, const ::HIR:
         hrtbs = &empty_hrtbs;
     }
     // TODO: Sort the two types by "complexity" (most of the time long >= short)
-    this->m_type_equalities.insert(::std::make_pair( mv$(long_ty), CachedEquality { hrtbs->clone(), mv$(short_ty) } ));
+    this->m_type_equalities.insert(::std::make_pair( mv_str(long_ty), CachedEquality { hrtbs->clone(), mv_str(short_ty) } ));
 }
 void TraitResolveCommon::prep_indexes__add_trait_bound(const Span& sp, const ::HIR::GenericParams* outer_hrtbs, ::HIR::TypeRef type, ::HIR::TraitPath trait_path, bool add_parents/*=true*/)
 {
@@ -91,7 +91,7 @@ void TraitResolveCommon::prep_indexes__add_trait_bound(const Span& sp, const ::H
         push_type(tb.first, trait_path.m_hrtbs.get(), tb.second);
 
         auto ty_l = ::HIR::TypeRef::new_path( ::HIR::Path( type.clone(), tb.second.source_trait.clone(), tb.first ), ::HIR::TypePathBinding::make_Opaque({}) );
-        prep_indexes__add_equality( sp, trait_path.m_hrtbs.get(), mv$(ty_l), tb.second.type.clone() );
+        prep_indexes__add_equality( sp, trait_path.m_hrtbs.get(), mv_str(ty_l), tb.second.type.clone() );
     }
     // ATY Trait bounds
     for( const auto& tb : trait_path.m_trait_bounds )
@@ -134,7 +134,7 @@ void TraitResolveCommon::prep_indexes__add_trait_bound(const Span& sp, const ::H
                     TODO(sp, "Double-layerd HRLs - outer=" << outer_hrtbs->fmt_args() << " and inner=" << trait_mono.m_hrtbs->fmt_args());
                 }
                 auto* inner_hrtbs = outer_hrtbs ? outer_hrtbs : a_ty_b.m_hrtbs.get();
-                prep_indexes__add_equality( sp, inner_hrtbs, mv$(ty_l), std::move(tb.second.type) );
+                prep_indexes__add_equality( sp, inner_hrtbs, mv_str(ty_l), std::move(tb.second.type) );
             }
         }
     }
