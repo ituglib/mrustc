@@ -211,11 +211,11 @@ src/main.cpp: $(PCHS:%=src/%.gch)
 ifeq ($(OS),NONSTOP_KERNEL)
 %.hpp.gch: %.hpp
 	@echo [CXX] -o $@
-	  $V$(CXX) -Wcplusplus -o $@ $< $(CPPFLAGS) $(CPREPFLAGS)
+	  $V$(CXX) -Wcplusplus -o $@ $< $(CPPFLAGS) $(DEPFLAGS)
 else
 %.hpp.gch: %.hpp
         @echo [CXX] -o $@
-	  $V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) $(CPREPFLAGS) $@.dep
+	  $V$(CXX) -std=c++14 -o $@ $< $(CPPFLAGS) $(DEPFLAGS) 
 endif
 
 bin/common_lib.a: $(wildcard tools/common/*)
