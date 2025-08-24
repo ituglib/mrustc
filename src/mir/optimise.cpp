@@ -858,13 +858,13 @@ namespace
     {
         TU_MATCH_HDRA( (param), { )
         TU_ARMA(LValue, lv) {
-            return mv$(lv);
+            return mv_str(lv);
             }
         TU_ARMA(Borrow, e) {
-            return ::MIR::RValue::make_Borrow({ e.type, mv$(e.val) });
+            return ::MIR::RValue::make_Borrow({ e.type, mv_str(e.val) });
             }
         TU_ARMA(Constant, c) {
-            return mv$(c);
+            return mv_str(c);
             }
         }
         throw std::runtime_error("Corrupted MIR::Param");
@@ -1005,12 +1005,12 @@ bool MIR_Optimise_BlockSimplify(::MIR::TypeResolve& state, ::MIR::Function& fcn)
 
                     assert( &fcn.blocks[tgt] != &block );
                     // Move contents of source block, then set the TAGDEAD terminator to Incomplete
-                    auto src_block = mv$(fcn.blocks[tgt]);
+                    auto src_block = mv_str(fcn.blocks[tgt]);
                     fcn.blocks[tgt].terminator = ::MIR::Terminator::make_Incomplete({});
 
                     for(auto& stmt : src_block.statements)
-                        block.statements.push_back( mv$(stmt) );
-                    block.terminator = mv$( src_block.terminator );
+                        block.statements.push_back( mv_str(stmt) );
+                    block.terminator = mv_str( src_block.terminator );
                     changed = true;
                 }
             }
@@ -1374,8 +1374,8 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                     rv.push_back(::MIR::AsmParam::make_Reg({
                         v.dir,
                         v.spec.clone(),
-                        v.input  ? box$(this->clone_param(*v.input)) : std::unique_ptr<MIR::Param>(),
-                        v.output ? box$(this->clone_lval(*v.output)) : std::unique_ptr<MIR::LValue>()
+                        v.input  ? box_str(this->clone_param(*v.input)) : std::unique_ptr<MIR::Param>(),
+                        v.output ? box_str(this->clone_lval(*v.output)) : std::unique_ptr<MIR::LValue>()
                         }));
                 }
             }
@@ -1430,7 +1430,7 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                     new_se.slots.reserve(se.slots.size());
                     for(auto idx : se.slots)
                         new_se.slots.push_back(this->var_base + idx);
-                    rv.statements.push_back(::MIR::Statement( mv$(new_se) ));
+                    rv.statements.push_back(::MIR::Statement( mv_str(new_se) ));
                     )
                 )
                 DEBUG("-> " << rv.statements.back());
@@ -1475,14 +1475,14 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                 arms.reserve(se.targets.size());
                 for(const auto& bbi : se.targets)
                     arms.push_back( bbi + this->bb_base );
-                return ::MIR::Terminator::make_Switch({ this->clone_lval(se.val), mv$(arms) });
+                return ::MIR::Terminator::make_Switch({ this->clone_lval(se.val), mv_str(arms) });
                 ),
             (SwitchValue,
                 ::std::vector<::MIR::BasicBlockId>  arms;
                 arms.reserve(se.targets.size());
                 for(const auto& bbi : se.targets)
                     arms.push_back( bbi + this->bb_base );
-                return ::MIR::Terminator::make_SwitchValue({ this->clone_lval(se.val), se.def_target + this->bb_base, mv$(arms), se.values.clone() });
+                return ::MIR::Terminator::make_SwitchValue({ this->clone_lval(se.val), se.def_target + this->bb_base, mv_str(arms), se.values.clone() });
                 ),
             (Call,
                 ::MIR::CallTarget   tgt;
@@ -1501,7 +1501,7 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                     this->bb_base + se.ret_block,
                     this->bb_base + se.panic_block,
                     this->clone_lval(se.ret_val),
-                    mv$(tgt),
+                    mv_str(tgt),
                     this->clone_param_vec(se.args)
                     });
                 )
@@ -1544,25 +1544,25 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
             }
             TU_MATCHA( (src.m_root), (se),
             (Return,
-                return this->retval.clone_wrapped( mv$(wrappers) );
+                return this->retval.clone_wrapped( mv_str(wrappers) );
                 ),
             (Argument,
                 const auto& arg = this->te.args.at(se);
                 if( this->copy_args[se] != ~0u )
                 {
-                    return ::MIR::LValue( ::MIR::LValue::Storage::new_Local(this->copy_args[se]), mv$(wrappers) );
+                    return ::MIR::LValue( ::MIR::LValue::Storage::new_Local(this->copy_args[se]), mv_str(wrappers) );
                 }
                 else
                 {
                     assert( !arg.is_Constant() );   // Should have been handled in the above
-                    return arg.as_LValue().clone_wrapped( mv$(wrappers) );
+                    return arg.as_LValue().clone_wrapped( mv_str(wrappers) );
                 }
                 ),
             (Local,
-                return ::MIR::LValue( ::MIR::LValue::Storage::new_Local(this->var_base + se), mv$(wrappers) );
+                return ::MIR::LValue( ::MIR::LValue::Storage::new_Local(this->var_base + se), mv_str(wrappers) );
                 ),
             (Static,
-                return ::MIR::LValue( ::MIR::LValue::Storage::new_Static(this->monomorph(se)), mv$(wrappers) );
+                return ::MIR::LValue( ::MIR::LValue::Storage::new_Static(this->monomorph(se)), mv_str(wrappers) );
                 )
             )
             throw "";
@@ -1577,7 +1577,7 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
             TU_ARMA(Bytes, ce) return ::MIR::Constant(ce);
             TU_ARMA(StaticString, ce) return ::MIR::Constant(ce);
             TU_ARMA(Const, ce) {
-                return ::MIR::Constant::make_Const({ box$(this->monomorph(*ce.p)) });
+                return ::MIR::Constant::make_Const({ box_str(this->monomorph(*ce.p)) });
                 }
             TU_ARMA(Generic, ce) {
                 const HIR::GenericParams* p;
@@ -1631,12 +1631,12 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                 }
                 }
             TU_ARMA(Function, ce) {
-                return ::MIR::Constant::make_Function({ box$(this->monomorph(*ce.p)) });
+                return ::MIR::Constant::make_Function({ box_str(this->monomorph(*ce.p)) });
                 }
             TU_ARMA(ItemAddr, ce) {
                 if(!ce)
                     return ::MIR::Constant::make_ItemAddr({});
-                return ::MIR::Constant::make_ItemAddr(box$(this->monomorph(*ce)));
+                return ::MIR::Constant::make_ItemAddr(box_str(this->monomorph(*ce)));
                 }
             }
             throw "";
@@ -1802,11 +1802,11 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
                 ::HIR::TypeRef  tmp;
                 auto ty = val.is_Constant() ? state.get_const_type(val.as_Constant()) : state.get_lvalue_type(tmp, val.as_LValue()).clone();
                 auto lv = ::MIR::LValue::new_Local( static_cast<unsigned>(fcn.locals.size()) );
-                fcn.locals.push_back( mv$(ty) );
-                auto rval = val.is_Constant() ? ::MIR::RValue(mv$(val.as_Constant())) : ::MIR::RValue( mv$(val.as_LValue()) );
-                auto stmt = ::MIR::Statement::make_Assign({ mv$(lv), mv$(rval) });
+                fcn.locals.push_back( mv_str(ty) );
+                auto rval = val.is_Constant() ? ::MIR::RValue(mv_str(val.as_Constant())) : ::MIR::RValue( mv_str(val.as_LValue()) );
+                auto stmt = ::MIR::Statement::make_Assign({ mv_str(lv), mv_str(rval) });
                 DEBUG("++ " << stmt);
-                new_blocks[0].statements.insert( new_blocks[0].statements.begin(), mv$(stmt) );
+                new_blocks[0].statements.insert( new_blocks[0].statements.begin(), mv_str(stmt) );
             }
             cloner.const_assignments.clear();
 
@@ -1826,7 +1826,7 @@ bool MIR_Optimise_Inlining(::MIR::TypeResolve& state, ::MIR::Function& fcn, bool
             fcn.blocks.reserve( fcn.blocks.size() + new_blocks.size() );
             for(auto& b : new_blocks)
             {
-                fcn.blocks.push_back( mv$(b) );
+                fcn.blocks.push_back( mv_str(b) );
             }
             fcn.blocks[i].terminator = ::MIR::Terminator::make_Goto( cloner.bb_base );
             inline_happened = true;
@@ -2580,8 +2580,8 @@ bool MIR_Optimise_DeTemporary_ReborrowOfUnused(::MIR::TypeResolve& state, ::MIR:
         bool    used;
         Poss(StmtRef pos, ::MIR::LValue::Storage slot, ::MIR::LValue::Storage replace)
             : pos(pos)
-            , slot(mv$(slot))
-            , replace(mv$(replace))
+            , slot(mv_str(slot))
+            , replace(mv_str(replace))
             , used(false)
         {
         }
@@ -3044,7 +3044,7 @@ bool MIR_Optimise_UnifyTemporaries(::MIR::TypeResolve& state, ::MIR::Function& f
 
     // TODO: Only calculate lifetimes for replacable locals
     auto lifetimes = MIR_Helper_GetLifetimes(state, fcn, /*dump_debug=*/true, /*mask=*/&replacable);
-    ::std::vector<::MIR::ValueLifetime>  slot_lifetimes = mv$(lifetimes.m_slots);
+    ::std::vector<::MIR::ValueLifetime>  slot_lifetimes = mv_str(lifetimes.m_slots);
 
     // 2. Unify variables of the same type with distinct non-overlapping lifetimes
     ::std::map<unsigned int, unsigned int> replacements;
@@ -3283,7 +3283,7 @@ bool MIR_Optimise_UnifyBlocks(::MIR::TypeResolve& state, ::MIR::Function& fcn)
         for(const auto& r : replacements)
         {
             fcn.blocks[r.first] = ::MIR::BasicBlock {};
-            //auto _ = mv$(fcn.blocks[r.first].terminator);
+            //auto _ = mv_str(fcn.blocks[r.first].terminator);
         }
 
         changed = true;
@@ -3485,7 +3485,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
             {
                 DEBUG("size_of = " << size_val);
                 auto val = ::MIR::Constant::make_Uint({ U128(size_val), ::HIR::CoreType::Usize });
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(val) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(val) }));
                 bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
                 changed = true;
             }
@@ -3497,7 +3497,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
             {
                 DEBUG("size_of_val = " << size_val);
                 auto val = ::MIR::Constant::make_Uint({ U128(size_val), ::HIR::CoreType::Usize });
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(val) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(val) }));
                 bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
                 changed = true;
             }
@@ -3509,7 +3509,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
             {
                 DEBUG("align_of = " << align_val);
                 auto val = ::MIR::Constant::make_Uint({ U128(align_val), ::HIR::CoreType::Usize });
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(val) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(val) }));
                 bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
                 changed = true;
             }
@@ -3523,7 +3523,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
             {
                 DEBUG("min_align_of_val = " << align_val);
                 auto val = ::MIR::Constant::make_Uint({ U128(align_val), ::HIR::CoreType::Usize });
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(val) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(val) }));
                 bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
                 changed = true;
             }
@@ -3533,9 +3533,9 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
         {
             DEBUG("bswap<u8> is a no-op");
             if( auto* e = te.args.at(0).opt_LValue() )
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(*e) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(*e) }));
             else
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), mv$(te.args.at(0).as_Constant()) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), mv_str(te.args.at(0).as_Constant()) }));
             bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
             changed = true;
         }
@@ -3543,7 +3543,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
         {
             MIR_ASSERT(state, te.args.at(0).is_LValue(), "Argument to `mrustc_slice_len` must be a lvalue");
             auto& e = te.args.at(0).as_LValue();
-            bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), ::MIR::RValue::make_DstMeta({ mv$(e) }) }));
+            bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), ::MIR::RValue::make_DstMeta({ mv_str(e) }) }));
             bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
             changed = true;
         }
@@ -3559,7 +3559,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                 }) )
             {
                 bool needs_drop = state.m_resolve.type_needs_drop_glue(state.sp, ty);
-                bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(te.ret_val), ::MIR::RValue::make_Constant(::MIR::Constant::make_Bool({needs_drop})) }));
+                bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(te.ret_val), ::MIR::RValue::make_Constant(::MIR::Constant::make_Bool({needs_drop})) }));
                 bb.terminator = ::MIR::Terminator::make_Goto(te.ret_block);
                 changed = true;
             }
@@ -3677,7 +3677,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                 }
                 else
                 {
-                    p = mv$(nv);
+                    p = mv_str(nv);
                     changed = true;
                 }
             }
@@ -3799,7 +3799,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                     }
                     else
                     {
-                        e->src = ::MIR::RValue::make_Constant(mv$(nv));
+                        e->src = ::MIR::RValue::make_Constant(mv_str(nv));
                         changed = true;
                     }
                     }
@@ -3813,7 +3813,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                     // Shared borrows of statics can be better represented with the ItemAddr constant
                     if( se.type == HIR::BorrowType::Shared && se.val.m_wrappers.empty() && se.val.m_root.is_Static() )
                     {
-                        e->src = ::MIR::RValue::make_Constant( ::MIR::Constant::make_ItemAddr({ box$(se.val.m_root.as_Static()) }) );
+                        e->src = ::MIR::RValue::make_Constant( ::MIR::Constant::make_ItemAddr({ box_str(se.val.m_root.as_Static()) }) );
                         changed = true;
                     }
                     else if( se.type == HIR::BorrowType::Unique ) {
@@ -3971,7 +3971,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                     if( new_value != MIR::Constant() )
                     {
                         DEBUG(state << " " << e->src << " = " << new_value);
-                        e->src = mv$(new_value);
+                        e->src = mv_str(new_value);
                         changed = true;
                     }
                     }
@@ -4227,7 +4227,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                             if( new_value != ::MIR::Constant() )
                             {
                                 DEBUG(state << " " << e->src << " = " << new_value);
-                                e->src = mv$(new_value);
+                                e->src = mv_str(new_value);
                                 changed = true;
                             }
                         }
@@ -4243,7 +4243,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                         case ::MIR::eBinOp::ADD:
                         case ::MIR::eBinOp::SUB:
                             if( se.val_r.is_Constant() && se.val_r.as_Constant().is_Uint() && se.val_r.as_Constant().as_Uint().v == 0 ) {
-                                new_value = mv$(se.val_l);
+                                new_value = mv_str(se.val_l);
                             }
                             break;
                         // `foo % 1 == 0`
@@ -4255,7 +4255,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                         // `foo / 1 == foo`
                         case ::MIR::eBinOp::DIV:
                             if( se.val_r.is_Constant() && se.val_r.as_Constant().is_Uint() && se.val_r.as_Constant().as_Uint().v == 1 ) {
-                                new_value = mv$(se.val_l);
+                                new_value = mv_str(se.val_l);
                             }
                             break;
                         // `foo * 0 == 0`
@@ -4269,7 +4269,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                                     new_value = ::MIR::Constant::make_Uint({ U128(0), v.t });
                                 }
                                 else if( v.v == 1 ) {
-                                    new_value = mv$(se.val_l);
+                                    new_value = mv_str(se.val_l);
                                 }
                                 else {
                                 }
@@ -4280,7 +4280,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                                     new_value = ::MIR::Constant::make_Uint({ U128(0), v.t });
                                 }
                                 else if( v.v == 1 ) {
-                                    new_value = mv$(se.val_r);
+                                    new_value = mv_str(se.val_r);
                                 }
                                 else {
                                 }
@@ -4293,9 +4293,9 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                         {
                             DEBUG(state << " " << e->src << " = " << new_value);
                             TU_MATCH_HDRA( (new_value), {)
-                            TU_ARMA(LValue, v)   e->src = mv$(v);
+                            TU_ARMA(LValue, v)   e->src = mv_str(v);
                             TU_ARMA(Borrow, _)  throw "";
-                            TU_ARMA(Constant, v)   e->src = mv$(v);
+                            TU_ARMA(Constant, v)   e->src = mv_str(v);
                             }
                             changed = true;
                         }
@@ -4417,7 +4417,7 @@ bool MIR_Optimise_ConstPropagate(::MIR::TypeResolve& state, ::MIR::Function& fcn
                         if( replace )
                         {
                             DEBUG(state << " " << e->src << " = " << new_value);
-                            e->src = mv$(new_value);
+                            e->src = mv_str(new_value);
                             changed = true;
                         }
                     }
@@ -4820,7 +4820,7 @@ bool MIR_Optimise_SplitAggregates(::MIR::TypeResolve& state, ::MIR::Function& fc
                 vals = std::move(se->vals);
             }
             else if( auto* se = src.opt_UnionVariant() ) {
-                vals.push_back( mv$(se->val) );
+                vals.push_back( mv_str(se->val) );
             }
             else {
                 MIR_BUG(state, "Unexpected rvalue type in SplitAggregates - " << src);
@@ -4853,7 +4853,7 @@ bool MIR_Optimise_SplitAggregates(::MIR::TypeResolve& state, ::MIR::Function& fc
             fcn.locals[new_local] = state.get_param_type(tmp, vals[i]).clone();
             p.second.replacements[i] = new_local;
             // Set the relevant statement to be an assignment to that new local
-            block.statements[stmt_idx + i] = MIR::Statement::make_Assign({ MIR::LValue::new_Local(new_local), param_to_rvalue(mv$(vals[i])) });
+            block.statements[stmt_idx + i] = MIR::Statement::make_Assign({ MIR::LValue::new_Local(new_local), param_to_rvalue(mv_str(vals[i])) });
             DEBUG("+ BB" << bb_idx << "/" << (stmt_idx + i) << ": " << block.statements[stmt_idx + i]);
         }
 
@@ -4897,9 +4897,9 @@ bool MIR_Optimise_SplitAggregates(::MIR::TypeResolve& state, ::MIR::Function& fc
                 }
                 auto new_wrappers = std::vector<MIR::LValue::Wrapper>(lv.m_wrappers.begin() + ndel, lv.m_wrappers.end());
                 auto new_root = MIR::LValue::Storage::new_Local(it->second.replacements.at(field_idx));
-                auto new_lv = MIR::LValue(mv$(new_root), mv$(new_wrappers));
+                auto new_lv = MIR::LValue(mv_str(new_root), mv_str(new_wrappers));
                 DEBUG(state << " " << lv << " -> " << new_lv);
-                lv = mv$(new_lv);
+                lv = mv_str(new_lv);
             }
         }
         return true;
@@ -5205,7 +5205,7 @@ bool MIR_Optimise_PropagateSingleAssignments(::MIR::TypeResolve& state, ::MIR::F
                         if( it != replacements.end() )
                         {
                             MIR_ASSERT(state, it->second.tag() != ::MIR::RValue::TAGDEAD, "Replacement of  " << it->first << " fired twice");
-                            e.src = mv$(it->second);
+                            e.src = mv_str(it->second);
                             replaced += 1;
                         }
                     }
@@ -5310,7 +5310,7 @@ bool MIR_Optimise_PropagateSingleAssignments(::MIR::TypeResolve& state, ::MIR::F
                     if( ! was_invalidated )
                     {
                         DEBUG(state << "Replace assignment of " << to_replace_lval << " with " << new_dst_lval);
-                        it->as_Assign().dst = mv$(it2->as_Assign().dst);
+                        it->as_Assign().dst = mv_str(it2->as_Assign().dst);
                         block.statements.erase(it2);
                         replacement_happend = true;
                         break;
@@ -5757,8 +5757,8 @@ bool MIR_Optimise_NoopRemoval(::MIR::TypeResolve& state, ::MIR::Function& fcn)
                 )
             {
                 DEBUG(state << "No-op cast, replace with assignment - " << *it);
-                auto v = mv$(it->as_Assign().src.as_Cast().val);
-                it->as_Assign().src = MIR::RValue::make_Use({ mv$(v) });
+                auto v = mv_str(it->as_Assign().src.as_Cast().val);
+                it->as_Assign().src = MIR::RValue::make_Use({ mv_str(v) });
                 changed = true;
 
                 ++ it;
@@ -5942,8 +5942,8 @@ bool MIR_Optimise_GotoAssign(::MIR::TypeResolve& state, ::MIR::Function& fcn)
         if( false && state.lvalue_is_copy(dst) )
         {
             auto d = dst.clone();
-            dst = mv$(src);
-            src = mv$(d);
+            dst = mv_str(src);
+            src = mv_str(d);
             DEBUG(state << "- Updated (" << stmt << ")");
         }
         else
@@ -6066,7 +6066,7 @@ bool MIR_Optimise_UselessReborrows(::MIR::TypeResolve& state, ::MIR::Function& f
             }
             // Update the initial assignment
             DEBUG(state << "Updating assignment");
-            src_rv = ::MIR::RValue::make_Use(mv$(src_slot));
+            src_rv = ::MIR::RValue::make_Use(mv_str(src_slot));
 
             changed = true;
         }
@@ -6471,13 +6471,13 @@ void MIR_SortBlocks(const StaticTraitResolve& resolve, const ::HIR::ItemPath& pa
     for(auto idx : idxes)
     {
         auto fix_bb_idx = [&](auto idx){ return ::std::find(idxes.begin(), idxes.end(), idx) - idxes.begin(); };
-        new_block_list.push_back( mv$(fcn.blocks[idx]) );
+        new_block_list.push_back( mv_str(fcn.blocks[idx]) );
         new_block_list.back().statements.shrink_to_fit();   // Save some memory
         visit_terminator_target_mut(new_block_list.back().terminator, [&](auto& te){
             te = fix_bb_idx(te);
             });
     }
-    fcn.blocks = mv$(new_block_list);
+    fcn.blocks = mv_str(new_block_list);
 }
 
 

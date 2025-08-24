@@ -61,7 +61,7 @@ namespace {
             for(size_t i = 0; i < n; i ++)
             {
                 auto s = m_in.read_string();
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -76,7 +76,7 @@ namespace {
             {
                 auto s = m_in.read_string();
                 DEBUG("- " << s);
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -91,7 +91,7 @@ namespace {
             {
                 auto s = m_in.read_string();
                 DEBUG("- " << s);
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -106,7 +106,7 @@ namespace {
             for(size_t i = 0; i < n; i ++)
             {
                 auto s = m_in.read_istring();
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -121,7 +121,7 @@ namespace {
             {
                 auto s = m_in.read_istring();
                 DEBUG("- " << s);
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -136,7 +136,7 @@ namespace {
             {
                 auto s = m_in.read_istring();
                 DEBUG("- " << s);
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -150,7 +150,7 @@ namespace {
             for(size_t i = 0; i < n; i ++)
             {
                 auto s = deserialise_simplepath();
-                rv.insert( ::std::make_pair( mv$(s), D<V>::des(*this) ) );
+                rv.insert( ::std::make_pair( mv_str(s), D<V>::des(*this) ) );
             }
             return rv;
         }
@@ -219,7 +219,7 @@ namespace {
 
         template<typename T>
         ::std::unique_ptr<T> deserialise_ptr() {
-            return box$( D<T>::des(*this) );
+            return box_str( D<T>::des(*this) );
         }
 
 
@@ -272,7 +272,7 @@ namespace {
             for(size_t i = 0; i < method_count; i ++)
             {
                 auto name = m_in.read_istring();
-                rv.m_methods.insert( ::std::make_pair( mv$(name), ::HIR::TypeImpl::VisImplEnt< ::HIR::Function> {
+                rv.m_methods.insert( ::std::make_pair( mv_str(name), ::HIR::TypeImpl::VisImplEnt< ::HIR::Function> {
                     deserialise_pub(), m_in.read_bool(), deserialise_function()
                     } ) );
             }
@@ -280,7 +280,7 @@ namespace {
             for(size_t i = 0; i < const_count; i ++)
             {
                 auto name = m_in.read_istring();
-                rv.m_constants.insert( ::std::make_pair( mv$(name), ::HIR::TypeImpl::VisImplEnt< ::HIR::Constant> {
+                rv.m_constants.insert( ::std::make_pair( mv_str(name), ::HIR::TypeImpl::VisImplEnt< ::HIR::Constant> {
                     deserialise_pub(), m_in.read_bool(), deserialise_constant()
                     } ) );
             }
@@ -304,7 +304,7 @@ namespace {
                 auto name = m_in.read_istring();
                 auto is_spec = m_in.read_bool();
                 DEBUG((is_spec ? "default " : "") << "fn " << name);
-                rv.m_methods.insert( ::std::make_pair( mv$(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Function> {
+                rv.m_methods.insert( ::std::make_pair( mv_str(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Function> {
                     is_spec, deserialise_function()
                     } ) );
             }
@@ -314,7 +314,7 @@ namespace {
                 auto name = m_in.read_istring();
                 auto is_spec = m_in.read_bool();
                 DEBUG((is_spec ? "default " : "") << "const " << name);
-                rv.m_constants.insert( ::std::make_pair( mv$(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Constant> {
+                rv.m_constants.insert( ::std::make_pair( mv_str(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Constant> {
                     is_spec, deserialise_constant()
                     } ) );
             }
@@ -324,7 +324,7 @@ namespace {
                 auto name = m_in.read_istring();
                 auto is_spec = m_in.read_bool();
                 DEBUG((is_spec ? "default " : "") << "static " << name);
-                rv.m_statics.insert( ::std::make_pair( mv$(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Static> {
+                rv.m_statics.insert( ::std::make_pair( mv_str(name), ::HIR::TraitImpl::ImplEnt< ::HIR::Static> {
                     is_spec, deserialise_static()
                     } ) );
             }
@@ -334,7 +334,7 @@ namespace {
                 auto name = m_in.read_istring();
                 auto is_spec = m_in.read_bool();
                 DEBUG((is_spec ? "default " : "") << "type " << name);
-                rv.m_types.insert( ::std::make_pair( mv$(name), ::HIR::TraitImpl::ImplEnt< ::HIR::TypeRef> {
+                rv.m_types.insert( ::std::make_pair( mv_str(name), ::HIR::TraitImpl::ImplEnt< ::HIR::TypeRef> {
                     is_spec, deserialise_type()
                     } ) );
             }
@@ -348,7 +348,7 @@ namespace {
             auto params = deserialise_pathparams();
             auto is_neg = m_in.read_bool();
             auto ty = deserialise_type();
-            return ::HIR::MarkerImpl { mv$(generics), mv$(params), is_neg, mv$(ty) };
+            return ::HIR::MarkerImpl { mv_str(generics), mv_str(params), is_neg, mv_str(ty) };
         }
 
         Ident::Hygiene deserialise_hygine()
@@ -367,7 +367,7 @@ namespace {
                     assert(m_crate_name != "");
                     mp.crate = m_crate_name;
                 }
-                rv.set_mod_path(mv$(mp));
+                rv.set_mod_path(mv_str(mp));
             }
             return rv;
         }
@@ -431,7 +431,7 @@ namespace {
             auto s = m_in.read_istring();
             auto n = static_cast<unsigned int>(m_in.read_count());
             auto type = static_cast< ::MacroPatEnt::Type>(m_in.read_tag());
-            ::MacroPatEnt   rv(Span(), mv$(s), mv$(n), mv$(type));
+            ::MacroPatEnt   rv(Span(), mv_str(s), mv_str(n), mv_str(type));
             switch(rv.type)
             {
             case ::MacroPatEnt::PAT_TOKEN:
@@ -480,7 +480,7 @@ namespace {
                 auto controllers = deserialise_set<unsigned int>();
 
                 return ::MacroExpansionEnt::make_Loop({
-                    mv$(entries), mv$(joiner), mv$(controllers)
+                    mv_str(entries), mv_str(joiner), mv_str(controllers)
                     });
                 }
             default:
@@ -576,7 +576,7 @@ namespace {
         {
             auto root_v = m_in.read_count();
             auto root = (root_v == 3 ? ::MIR::LValue::Storage::new_Static(deserialise_path()) : ::MIR::LValue::Storage::from_inner(root_v));
-            return ::MIR::LValue( mv$(root), deserialise_vec<::MIR::LValue::Wrapper>() );
+            return ::MIR::LValue( mv_str(root), deserialise_vec<::MIR::LValue::Wrapper>() );
         }
         ::MIR::RValue deserialise_mir_rvalue()
         {
@@ -669,13 +669,13 @@ namespace {
                 ::std::vector<unsigned char>    bytes;
                 bytes.resize( m_in.read_count() );
                 m_in.read( bytes.data(), bytes.size() );
-                return ::MIR::Constant::make_Bytes( mv$(bytes) );
+                return ::MIR::Constant::make_Bytes( mv_str(bytes) );
                 }
             _(StaticString, m_in.read_string() )
-            _(Const,  { box$(deserialise_path()) } )
+            _(Const,  { box_str(deserialise_path()) } )
             _(Generic,  deserialise_genericref())
-            _(Function, { box$(deserialise_path()) } )
-            _(ItemAddr, box$(deserialise_path()) )
+            _(Function, { box_str(deserialise_path()) } )
+            _(ItemAddr, box_str(deserialise_path()) )
             #undef _
             default:
                 BUG(Span(), "Bad tag for MIR::Const - " << tag);
@@ -704,7 +704,7 @@ namespace {
             case 0: {
                 auto spath = deserialise_simplepath();
                 auto is_variant = m_in.read_bool();
-                return ::HIR::TypeItem::make_Import({ mv$(spath), is_variant, static_cast<unsigned int>(m_in.read_count()) });
+                return ::HIR::TypeItem::make_Import({ mv_str(spath), is_variant, static_cast<unsigned int>(m_in.read_count()) });
                 }
             case 1:
                 return ::HIR::TypeItem( deserialise_module() );
@@ -733,7 +733,7 @@ namespace {
             case 0: {
                 auto spath = deserialise_simplepath();
                 auto is_variant = m_in.read_bool();
-                return ::HIR::ValueItem::make_Import({ mv$(spath), is_variant, static_cast<unsigned int>(m_in.read_count()) });
+                return ::HIR::ValueItem::make_Import({ mv_str(spath), is_variant, static_cast<unsigned int>(m_in.read_count()) });
                 }
             case 1:
                 return ::HIR::ValueItem( deserialise_constant() );
@@ -850,7 +850,7 @@ namespace {
             BIT(1, save_literal);
             #undef BIT
             auto ty = deserialise_type();
-            auto rv = ::HIR::Static(mv$(linkage), is_mut, mv$(ty), {});
+            auto rv = ::HIR::Static(mv_str(linkage), is_mut, mv_str(ty), {});
             if(params.is_generic())
             {
                 rv.m_value = deserialise_exprptr();
@@ -964,7 +964,7 @@ namespace {
     template<typename T, typename U>
     struct D< ::std::pair<T,U> > { static ::std::pair<T,U> des(HirDeserialiser& d) {
         auto a = D<T>::des(d);
-        return ::std::make_pair( mv$(a), D<U>::des(d) );
+        return ::std::make_pair( mv_str(a), D<U>::des(d) );
         }};
 
     template<typename T>
@@ -1006,14 +1006,14 @@ namespace {
     template<> DEF_D( ::HIR::TraitPath::AtyEqual,
         auto src = d.deserialise_genericpath();
         return ::HIR::TraitPath::AtyEqual {
-            mv$(src),
+            mv_str(src),
             d.deserialise_type()
         };
     )
     template<> DEF_D( ::HIR::TraitPath::AtyBound,
         auto src = d.deserialise_genericpath();
         return ::HIR::TraitPath::AtyBound {
-            mv$(src),
+            mv_str(src),
             d.deserialise_vec<HIR::TraitPath>()
         };
     );
@@ -1098,7 +1098,7 @@ namespace {
         _(Path, {
             deserialise_path(),
             {},
-            m_in.read_bool() ? box$(deserialise_genericparams()) : nullptr
+            m_in.read_bool() ? box_str(deserialise_genericparams()) : nullptr
             })
         _(Generic, deserialise_genericref())
         _(TraitObject, {
@@ -1185,11 +1185,11 @@ namespace {
     ::HIR::TraitPath HirDeserialiser::deserialise_traitpath()
     {
         auto _ = m_in.open_object("HIR::TraitPath");
-        auto hrls = m_in.read_bool() ? box$(deserialise_genericparams()) : std::unique_ptr<HIR::GenericParams>();
+        auto hrls = m_in.read_bool() ? box_str(deserialise_genericparams()) : std::unique_ptr<HIR::GenericParams>();
         auto gpath = deserialise_genericpath();
         auto tys = deserialise_istrmap< ::HIR::TraitPath::AtyEqual>();
         auto bounds = deserialise_istrmap< ::HIR::TraitPath::AtyBound>();
-        return ::HIR::TraitPath { std::move(hrls), mv$(gpath), mv$(tys), mv$(bounds) };
+        return ::HIR::TraitPath { std::move(hrls), mv_str(gpath), mv_str(tys), mv_str(bounds) };
     }
     ::HIR::Path HirDeserialiser::deserialise_path()
     {
@@ -1260,7 +1260,7 @@ namespace {
             return ::HIR::GenericBound::make_TypeLifetime({ deserialise_type(), deserialise_lifetimeref() });
         case 2:
             return ::HIR::GenericBound::make_TraitBound({
-                m_in.read_bool() ? box$(deserialise_genericparams()) : nullptr,
+                m_in.read_bool() ? box_str(deserialise_genericparams()) : nullptr,
                 deserialise_type(),
                 deserialise_traitpath()
                 });
@@ -1307,7 +1307,7 @@ namespace {
         auto name = m_in.read_istring();
         DEBUG("Enum::DataVariant " << name);
         return ::HIR::Enum::DataVariant {
-            mv$(name),
+            mv_str(name),
             m_in.read_bool(),
             deserialise_type()
             };
@@ -1317,7 +1317,7 @@ namespace {
         auto name = m_in.read_istring();
         DEBUG("Enum::ValueVariant " << name);
         return ::HIR::Enum::ValueVariant {
-            mv$(name),
+            mv_str(name),
             ::HIR::ExprPtr {},
             m_in.read_u64()
             };
@@ -1331,7 +1331,7 @@ namespace {
         auto markings = deserialise_markings();
 
         return ::HIR::Union {
-            mv$(params), repr, mv$(variants), mv$(markings)
+            mv_str(params), repr, mv_str(variants), mv_str(markings)
             };
     }
     ::HIR::Struct HirDeserialiser::deserialise_struct()
@@ -1367,7 +1367,7 @@ namespace {
         auto str_markings = deserialise_str_markings();
 
         auto rv = ::HIR::Struct {
-            mv$(params), repr, mv$(data), forced_alignment, mv$(markings), mv$(str_markings)
+            mv_str(params), repr, mv_str(data), forced_alignment, mv_str(markings), mv_str(str_markings)
             };
         rv.m_max_field_alignment = max_field_alignment;
         return rv;
@@ -1453,7 +1453,7 @@ namespace {
         rv.drop_flags = deserialise_vec<bool>();
         rv.blocks = deserialise_vec< ::MIR::BasicBlock>( );
 
-        return ::MIR::FunctionPointer( new ::MIR::Function(mv$(rv)) );
+        return ::MIR::FunctionPointer( new ::MIR::Function(mv_str(rv)) );
     }
     ::MIR::BasicBlock HirDeserialiser::deserialise_mir_basicblock()
     {
@@ -1708,7 +1708,7 @@ namespace {
                 auto ext_crate = ::HIR::ExternCrate {};
                 ext_crate.m_basename = ext_crate_file;
                 ext_crate.m_path = ext_crate_file;
-                rv.m_ext_crates.insert( ::std::make_pair( mv$(ext_crate_name), mv$(ext_crate) ) );
+                rv.m_ext_crates.insert( ::std::make_pair( mv_str(ext_crate_name), mv_str(ext_crate) ) );
             }
         }
 
@@ -1730,7 +1730,7 @@ namespace {
 
         ::HIR::Crate    rv = s.deserialise_crate();
 
-        return ::HIR::CratePtr( mv$(rv) );
+        return ::HIR::CratePtr( mv_str(rv) );
     }
     catch(int)
     { ::std::abort(); }

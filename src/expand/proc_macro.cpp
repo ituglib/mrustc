@@ -72,7 +72,7 @@ public:
         }
         lex.getTokenCheck(TOK_PAREN_CLOSE);
 
-        crate.m_proc_macros.push_back(AST::ProcMacroDef { AST::ProcMacroTy::Derive, RcString::new_interned(FMT(trait_name)), path, mv$(attributes) });
+        crate.m_proc_macros.push_back(AST::ProcMacroDef { AST::ProcMacroTy::Derive, RcString::new_interned(FMT(trait_name)), path, mv_str(attributes) });
     }
 };
 STATIC_DECORATOR("proc_macro_derive", Decorator_ProcMacroDerive)
@@ -142,7 +142,7 @@ void Expand_ProcMacro(::AST::Crate& crate)
                         )
                     )
                 );
-        main_fn.set_code( mv$(call_node) );
+        main_fn.set_code( mv_str(call_node) );
     }
 
 
@@ -169,9 +169,9 @@ void Expand_ProcMacro(::AST::Crate& crate)
                 )
                 )});
 
-        test_nodes.push_back( NEWNODE(_StructLiteral,  ::AST::Path(crate.m_ext_cratename_procmacro, { ::AST::PathNode("MacroDesc")}), nullptr, mv$(desc_vals) ) );
+        test_nodes.push_back( NEWNODE(_StructLiteral,  ::AST::Path(crate.m_ext_cratename_procmacro, { ::AST::PathNode("MacroDesc")}), nullptr, mv_str(desc_vals) ) );
     }
-    auto* tests_array = new ::AST::ExprNode_Array(mv$(test_nodes));
+    auto* tests_array = new ::AST::ExprNode_Array(mv_str(test_nodes));
 
     size_t test_count = tests_array->m_values.size();
     auto tests_list = ::AST::Static { ::AST::Static::Class::STATIC,
@@ -179,7 +179,7 @@ void Expand_ProcMacro(::AST::Crate& crate)
                 TypeRef(Span(), ::AST::Path(crate.m_ext_cratename_procmacro, { ::AST::PathNode("MacroDesc") })),
                 ::std::shared_ptr<::AST::ExprNode>( new ::AST::ExprNode_Integer(U128(test_count), CORETYPE_UINT) )
                ),
-        ::AST::Expr( mv$(tests_array) )
+        ::AST::Expr( mv_str(tests_array) )
         };
 
     // ---- module ----
@@ -189,10 +189,10 @@ void Expand_ProcMacro(::AST::Crate& crate)
     auto vis_private = AST::Visibility::make_restricted(AST::Visibility::Ty::Private, newmod.path());
     newmod.add_ext_crate(Span(), vis_private, crate.m_ext_cratename_procmacro, "proc_macro", {});
 
-    newmod.add_item(Span(), vis_private, "main", mv$(main_fn), {});
-    newmod.add_item(Span(), vis_private, "MACROS", mv$(tests_list), {});
+    newmod.add_item(Span(), vis_private, "main", mv_str(main_fn), {});
+    newmod.add_item(Span(), vis_private, "MACROS", mv_str(tests_list), {});
 
-    crate.m_root_module.add_item(Span(), vis_private, "proc_macro#", mv$(newmod), {});
+    crate.m_root_module.add_item(Span(), vis_private, "proc_macro#", mv_str(newmod), {});
     crate.m_lang_items["mrustc-main"] = ::AST::AbsolutePath("", { "proc_macro#", "main" });
 }
 
@@ -1607,7 +1607,7 @@ namespace {
     cb(v);
     pmi.send_done();
     // 3. Return boxed invocation instance
-    return box$(pmi);
+    return box_str(pmi);
 }
 // --- Derive inputs
 ::std::unique_ptr<TokenStream> ProcMacro_Invoke(const Span& sp, const ::AST::Crate& crate, const ::std::vector<RcString>& mac_path, slice<const AST::Attribute> attrs, const AST::Visibility& vis, const ::std::string& item_name, const ::AST::Struct& i)
@@ -2029,11 +2029,11 @@ Token ProcMacroInv::realGetToken_() {
         }
     case TokenClass::String: {
         auto val = this->recv_bytes();
-        return Token(TOK_STRING, mv$(val), this->get_hygiene());
+        return Token(TOK_STRING, mv_str(val), this->get_hygiene());
         }
     case TokenClass::ByteString: {
         auto val = this->recv_bytes();
-        return Token(TOK_BYTESTRING, mv$(val), this->get_hygiene());
+        return Token(TOK_BYTESTRING, mv_str(val), this->get_hygiene());
         }
     case TokenClass::CharLit: {
         auto val = this->recv_v128u();

@@ -555,7 +555,7 @@ Token Lexer::getTokenInt()
                                 str += ch;
                             }
                         }
-                        return Token(TOK_BYTESTRING, mv$(str), realGetHygiene());
+                        return Token(TOK_BYTESTRING, mv_str(str), realGetHygiene());
                     }
                     // Byte constant
                     else if( ch == '\'' ) {
@@ -636,7 +636,7 @@ Token Lexer::getTokenInt()
                 {
                     //# [ doc = "commment data" ]
                     m_next_tokens.push_back(TOK_SQUARE_CLOSE);
-                    m_next_tokens.push_back(Token(TOK_STRING, mv$(str), realGetHygiene()));
+                    m_next_tokens.push_back(Token(TOK_STRING, mv_str(str), realGetHygiene()));
                     m_next_tokens.push_back(TOK_EQUAL);
                     m_next_tokens.push_back(Token(TOK_IDENT, RcString::new_interned("doc")));
                     m_next_tokens.push_back(TOK_SQUARE_OPEN);
@@ -705,7 +705,7 @@ Token Lexer::getTokenInt()
                 {
                     //# [ doc = "commment data" ]
                     m_next_tokens.push_back(TOK_SQUARE_CLOSE);
-                    m_next_tokens.push_back(Token(TOK_STRING, mv$(str), realGetHygiene()));
+                    m_next_tokens.push_back(Token(TOK_STRING, mv_str(str), realGetHygiene()));
                     m_next_tokens.push_back(TOK_EQUAL);
                     m_next_tokens.push_back(Token(TOK_IDENT, RcString::new_interned("doc")));
                     m_next_tokens.push_back(TOK_SQUARE_OPEN);
@@ -767,7 +767,7 @@ Token Lexer::getTokenInt()
                         str += ch;
                     }
                 }
-                return Token(TOK_STRING, mv$(str), realGetHygiene());
+                return Token(TOK_STRING, mv_str(str), realGetHygiene());
                 }
             default:
                 assert(!"bugcheck");
@@ -855,7 +855,7 @@ Token Lexer::getTokenInt_RawString(bool is_byte)
             }
         }
     }
-    return Token(is_byte ? TOK_BYTESTRING : TOK_STRING, mv$(val), realGetHygiene());
+    return Token(is_byte ? TOK_BYTESTRING : TOK_STRING, mv_str(val), realGetHygiene());
 }
 Token Lexer::getTokenInt_Identifier(Codepoint leader, Codepoint leader2, bool parse_reserved_word)
 {

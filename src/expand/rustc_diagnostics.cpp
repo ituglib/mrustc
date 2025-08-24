@@ -16,7 +16,7 @@ class CExpanderRegisterDiagnostic:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree()) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree()) );
     }
 };
 class CExpanderDiagnosticUsed:
@@ -24,7 +24,7 @@ class CExpanderDiagnosticUsed:
 {
     ::std::unique_ptr<TokenStream> expand(const Span& sp, const AST::Crate& crate, const TokenTree& tt, AST::Module& mod) override
     {
-        return box$( TTStreamO(sp, ParseState(), TokenTree()) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree()) );
     }
 };
 class CExpanderBuildDiagnosticArray:
@@ -37,7 +37,7 @@ class CExpanderBuildDiagnosticArray:
         Token   tok;
 
         GET_CHECK_TOK(tok, lex, TOK_IDENT);
-        //auto crate_name = mv$(tok.str());
+        //auto crate_name = mv_str(tok.str());
         GET_CHECK_TOK(tok, lex, TOK_COMMA);
         GET_CHECK_TOK(tok, lex, TOK_IDENT);
         auto item_name = tok.ident();
@@ -64,7 +64,7 @@ class CExpanderBuildDiagnosticArray:
         toks.push_back( TOK_SQUARE_CLOSE );
         toks.push_back( TOK_SEMICOLON );
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree( AST::Edition::Rust2015, lex.get_hygiene(), mv$(toks) )) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree( AST::Edition::Rust2015, lex.get_hygiene(), mv_str(toks) )) );
     }
 };
 

@@ -171,7 +171,7 @@ HIR::PathParams HIR::GenericParams::make_nop_params(unsigned level, bool lifetim
         }
     TU_ARMA(TraitBound, e) {
         return ::HIR::GenericBound::make_TraitBound({
-            e.hrtbs ? box$(e.hrtbs->clone()) : nullptr,
+            e.hrtbs ? box_str(e.hrtbs->clone()) : nullptr,
             e.type.clone(),
             e.trait.clone()
             });

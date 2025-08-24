@@ -230,7 +230,7 @@ bool StaticTraitResolve::find_impl(
             params.m_types.push_back(HIR::TypeRef::new_tuple(std::move(arg_types)));
             ::HIR::TraitPath::assoc_list_t  assoc;
             assoc.insert( ::std::make_pair("Output", ::HIR::TraitPath::AtyEqual { ::HIR::GenericPath(m_lang_FnOnce, params.clone()), e.m_rettype.clone() }) );
-            return found_cb( ImplRef(e.hrls.clone(), type.clone(), mv$(params), mv$(assoc)), false );
+            return found_cb( ImplRef(e.hrls.clone(), type.clone(), mv_str(params), mv_str(assoc)), false );
         }
         // 1.74: Magic impls of `eq` for function pointers
         if( trait_path == this->m_crate.get_lang_item_path_opt("fn_ptr_trait" ) ) {
@@ -266,7 +266,7 @@ bool StaticTraitResolve::find_impl(
             params.m_types.push_back(HIR::TypeRef::new_tuple(std::move(arg_types)));
             ::HIR::TraitPath::assoc_list_t  assoc;
             assoc.insert( ::std::make_pair("Output", ::HIR::TraitPath::AtyEqual { ::HIR::GenericPath(m_lang_FnOnce, params.clone()), e.m_rettype.clone() }) );
-            return found_cb( ImplRef(e.hrls.clone(), type.clone(), mv$(params), mv$(assoc)), false );
+            return found_cb( ImplRef(e.hrls.clone(), type.clone(), mv_str(params), mv_str(assoc)), false );
         }
         }
     TU_ARMA(Closure, e) {
@@ -306,7 +306,7 @@ bool StaticTraitResolve::find_impl(
             }
             ::HIR::TraitPath::assoc_list_t  assoc;
             assoc.insert( ::std::make_pair("Output", ::HIR::TraitPath::AtyEqual { ::HIR::GenericPath(m_lang_FnOnce, trait_params->clone()), e.node->m_return.clone() }) );
-            return found_cb( ImplRef(type.clone(), trait_params->clone(), mv$(assoc)), false );
+            return found_cb( ImplRef(type.clone(), trait_params->clone(), mv_str(assoc)), false );
         }
         }
     TU_ARMA(Generator, e) {
@@ -320,7 +320,7 @@ bool StaticTraitResolve::find_impl(
             {
                 params.m_types.push_back(e.node->m_resume_ty.clone());
             }
-            return found_cb( ImplRef(type.clone(), mv$(params), mv$(assoc)), ::HIR::Compare::Equal );
+            return found_cb( ImplRef(type.clone(), mv_str(params), mv_str(assoc)), ::HIR::Compare::Equal );
         }
         }
     // ----
@@ -357,9 +357,9 @@ bool StaticTraitResolve::find_impl(
                 // HACK! Just add all the associated type bounds (only inserted if not already present)
                 for(const auto& e2 : e.m_trait.m_type_bounds)
                     assoc_clone.insert( ::std::make_pair(e2.first, e2.second.clone()) );
-                ImplRef ir { e.m_trait.m_hrtbs ? e.m_trait.m_hrtbs->clone() : HIR::GenericParams(), type.clone(), i_params.clone(), mv$(assoc_clone) };
+                ImplRef ir { e.m_trait.m_hrtbs ? e.m_trait.m_hrtbs->clone() : HIR::GenericParams(), type.clone(), i_params.clone(), mv_str(assoc_clone) };
                 DEBUG("[TraitObject] - ir = " << ir);
-                rv = found_cb( mv$(ir), false );
+                rv = found_cb( mv_str(ir), false );
                 return true;
             });
         if( is_supertrait )
@@ -387,9 +387,9 @@ bool StaticTraitResolve::find_impl(
                     // HACK! Just add all the associated type bounds (only inserted if not already present)
                     for(const auto& e2 : trait.m_type_bounds)
                         assoc_clone.insert( ::std::make_pair(e2.first, e2.second.clone()) );
-                    auto ir = ImplRef(trait.m_hrtbs ? trait.m_hrtbs->clone() : HIR::GenericParams(), type.clone(), i_params.clone(), mv$(assoc_clone));
+                    auto ir = ImplRef(trait.m_hrtbs ? trait.m_hrtbs->clone() : HIR::GenericParams(), type.clone(), i_params.clone(), mv_str(assoc_clone));
                     DEBUG("[ErasedType] - ir = " << ir);
-                    rv = found_cb( mv$(ir), false );
+                    rv = found_cb( mv_str(ir), false );
                     return true;
                 });
             if( is_supertrait )
@@ -438,10 +438,10 @@ bool StaticTraitResolve::find_impl(
                                     auto aty = monomorph_cb.monomorph_type(sp, tb.second.type, false);
                                     expand_associated_types(sp, aty);
                                     expand_associated_types_params(sp, src.m_params);
-                                    atys.insert(::std::make_pair( tb.first, ::HIR::TraitPath::AtyEqual { mv$(src), mv$(aty) } ));
+                                    atys.insert(::std::make_pair( tb.first, ::HIR::TraitPath::AtyEqual { mv_str(src), mv_str(aty) } ));
                                 }
                             }
-                            if( found_cb( ImplRef(type.clone(), mv$(params_mono_o), mv$(atys)), false ) )
+                            if( found_cb( ImplRef(type.clone(), mv_str(params_mono_o), mv_str(atys)), false ) )
                                 return true;
                             params_mono_o = monomorph_cb.monomorph_path_params(sp, b_params, false);
                         }
@@ -478,7 +478,7 @@ bool StaticTraitResolve::find_impl(
                         {
                             // TODO: Monomorphse trait params
                             //DEBUG("impl " << trait_path << i_params << " for " << type << " -- desired " << trait_path << *trait_params);
-                            return found_cb( ImplRef(type.clone(), mv$(pt_mono.m_path.m_params), {}), false );
+                            return found_cb( ImplRef(type.clone(), mv_str(pt_mono.m_path.m_params), {}), false );
                         }
                     }
                     return false;
@@ -611,7 +611,7 @@ bool StaticTraitResolve::find_impl(
                 {
                     return self.find_impl__check_crate_raw(sp, trait_path, trait_params, type, impl.m_params, impl.m_trait_args, impl.m_type,
                         [&](auto impl_params, auto cmp)->bool {
-                            //rv = found_cb( ImplRef(impl_params, trait_path, impl, mv$(placeholders)), (cmp == ::HIR::Compare::Fuzzy) );
+                            //rv = found_cb( ImplRef(impl_params, trait_path, impl, mv_str(placeholders)), (cmp == ::HIR::Compare::Fuzzy) );
                             out_rv = found_cb(ImplRef(nullptr, &type, trait_params, &null_assoc), cmp == ::HIR::Compare::Fuzzy);
                             return out_rv;
                         });
@@ -782,7 +782,7 @@ bool StaticTraitResolve::find_impl__bounds(
                         }
                         DEBUG("- tp_mono = " << tp_mono);
                         // TODO: Instead of using `type` here, build the real type
-                        if( found_cb( ImplRef(type.clone(), mv$(tp_mono.m_path.m_params), mv$(tp_mono.m_type_bounds)), false ) ) {
+                        if( found_cb( ImplRef(type.clone(), mv_str(tp_mono.m_path.m_params), mv_str(tp_mono.m_type_bounds)), false ) ) {
                             return true;
                         }
                     }
@@ -1300,7 +1300,7 @@ bool StaticTraitResolve::find_impl__check_crate_raw(
         }
     }
 
-    return found_cb( mv$(impl_params), match );
+    return found_cb( mv_str(impl_params), match );
 }
 
 bool StaticTraitResolve::find_impl__check_crate(
@@ -1317,7 +1317,7 @@ bool StaticTraitResolve::find_impl__check_crate(
         trait_path, trait_params, type,
         impl.m_params, impl.m_trait_args, impl.m_type,
         [&](auto impl_params, auto match) {
-            return found_cb( ImplRef(mv$(impl_params), m_crate.get_trait_by_path(sp, trait_path), trait_path, impl), (match == ::HIR::Compare::Fuzzy) );
+            return found_cb( ImplRef(mv_str(impl_params), m_crate.get_trait_by_path(sp, trait_path), trait_path, impl), (match == ::HIR::Compare::Fuzzy) );
         });
 }
 
@@ -1866,7 +1866,7 @@ bool StaticTraitResolve::expand_associated_types__UfcsKnown(const Span& sp, ::HI
     ::HIR::GenericPath  trait_path;
     if( !this->trait_contains_type(sp, e2.trait, this->m_crate.get_trait_by_path(sp, e2.trait.m_path), e2.item.c_str(), trait_path) )
         BUG(sp, "Cannot find associated type " << e2.item << " anywhere in trait " << e2.trait);
-    //e2.trait = mv$(trait_path);
+    //e2.trait = mv_str(trait_path);
 
     bool replacement_happened = true;
     ::ImplRef  best_impl;
@@ -1897,7 +1897,7 @@ bool StaticTraitResolve::expand_associated_types__UfcsKnown(const Span& sp, ::HI
 
         if( impl.type_is_specialisable(e2.item.c_str()) ) {
             if( impl.more_specific_than(best_impl) ) {
-                best_impl = mv$(impl);
+                best_impl = mv_str(impl);
                 DEBUG("- Still specialisable");
             }
             return false;
@@ -1910,7 +1910,7 @@ bool StaticTraitResolve::expand_associated_types__UfcsKnown(const Span& sp, ::HI
                     replacement_happened = false;
                     return true;
                 }
-                input = mv$(nt);
+                input = mv_str(nt);
                 replacement_happened = true;
             }
             else {
@@ -2034,7 +2034,7 @@ bool StaticTraitResolve::find_named_trait_in_trait(const Span& sp,
             // pt_mono.m_path.m_params == des_params )
             if( cmp != ::HIR::Compare::Unequal )
             {
-                return callback( pt_mono.m_path.m_params, mv$(pt_mono.m_type_bounds) );
+                return callback( pt_mono.m_path.m_params, mv_str(pt_mono.m_type_bounds) );
             }
         }
     }
@@ -3291,7 +3291,7 @@ StaticTraitResolve::ValuePtr StaticTraitResolve::get_value(const Span& sp, const
                 else {
                     DEBUG("- More specific (is_spec=" << is_spec << ")");
                     best_is_spec = is_spec;
-                    best_impl = mv$(impl);
+                    best_impl = mv_str(impl);
                     rv = std::move(this_rv);
                     // NOTE: There could be an overlapping and more-specific impl without `default` being involved
                     //return !is_spec;

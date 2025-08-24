@@ -105,7 +105,7 @@ NODE(ExprNode_Block, {
     ::std::vector<ExprNodeP>    nodes;
     for(const auto& n : m_nodes)
         nodes.push_back( n->clone() );
-    return NEWNODE(ExprNode_Block, m_block_type, m_yields_final_value, mv$(nodes), m_local_mod);
+    return NEWNODE(ExprNode_Block, m_block_type, m_yields_final_value, mv_str(nodes), m_local_mod);
 })
 
 NODE(ExprNode_Try, {
@@ -147,7 +147,7 @@ NODE(ExprNode_Asm, {
     ::std::vector<ExprNode_Asm::ValRef> inputs;
     for(const auto& v : m_input)
         inputs.push_back( ExprNode_Asm::ValRef { v.name, v.value->clone() });
-    return NEWNODE(ExprNode_Asm, m_text, mv$(outputs), mv$(inputs), m_clobbers, m_flags);
+    return NEWNODE(ExprNode_Asm, m_text, mv_str(outputs), mv_str(inputs), m_clobbers, m_flags);
 })
 }
 
@@ -281,7 +281,7 @@ NODE(ExprNode_CallPath, {
     for(const auto& a : m_args) {
         args.push_back( a->clone() );
     }
-    return NEWNODE(ExprNode_CallPath, AST::Path(m_path), mv$(args));
+    return NEWNODE(ExprNode_CallPath, AST::Path(m_path), mv_str(args));
 })
 
 NODE(ExprNode_CallMethod, {
@@ -295,7 +295,7 @@ NODE(ExprNode_CallMethod, {
     for(const auto& a : m_args) {
         args.push_back( a->clone() );
     }
-    return NEWNODE(ExprNode_CallMethod, m_val->clone(), m_method, mv$(args));
+    return NEWNODE(ExprNode_CallMethod, m_val->clone(), m_method, mv_str(args));
 })
 
 NODE(ExprNode_CallObject, {
@@ -309,7 +309,7 @@ NODE(ExprNode_CallObject, {
     for(const auto& a : m_args) {
         args.push_back( a->clone() );
     }
-    return NEWNODE(ExprNode_CallObject, m_val->clone(), mv$(args));
+    return NEWNODE(ExprNode_CallObject, m_val->clone(), mv_str(args));
 })
 
 NODE(ExprNode_Loop, {
@@ -357,7 +357,7 @@ NODE(ExprNode_WhileLet, {
     os << " { " << *m_code << " }";
     },{
         auto new_conds = clone_iflet_conditions(m_conditions);
-        return NEWNODE(ExprNode_WhileLet, m_label, mv$(new_conds), m_code->clone());
+        return NEWNODE(ExprNode_WhileLet, m_label, mv_str(new_conds), m_code->clone());
     })
 
 NODE(ExprNode_Match, {
@@ -382,10 +382,10 @@ NODE(ExprNode_Match, {
         for( const auto& pat : arm.m_patterns ) {
             patterns.push_back( pat.clone() );
         }
-        arms.push_back( ExprNode_Match_Arm( mv$(patterns), clone_iflet_conditions(arm.m_guard), arm.m_code->clone() ) );
+        arms.push_back( ExprNode_Match_Arm( mv_str(patterns), clone_iflet_conditions(arm.m_guard), arm.m_code->clone() ) );
         arms.back().m_attrs = arm.m_attrs.clone();
     }
-    return NEWNODE(ExprNode_Match, m_val->clone(), mv$(arms));
+    return NEWNODE(ExprNode_Match, m_val->clone(), mv_str(arms));
 })
 
 NODE(ExprNode_If, {
@@ -402,7 +402,7 @@ NODE(ExprNode_IfLet, {
     if(m_false) os << " else { " << *m_false << " }";
 },{
     auto new_conds = clone_iflet_conditions(m_conditions);
-    return NEWNODE(ExprNode_IfLet, mv$(new_conds), m_true->clone(), OPT_CLONE(m_false));
+    return NEWNODE(ExprNode_IfLet, mv_str(new_conds), m_true->clone(), OPT_CLONE(m_false));
 })
 
 NODE(ExprNode_WildcardPattern, {
@@ -463,7 +463,7 @@ NODE(ExprNode_Closure, {
     for(const auto& a : m_args) {
         args.push_back( ::std::make_pair(a.first.clone(), a.second.clone()) );
     }
-    return NEWNODE(ExprNode_Closure, mv$(args), m_return.clone(), m_code->clone(), m_is_move, m_is_pinned);
+    return NEWNODE(ExprNode_Closure, mv_str(args), m_return.clone(), m_code->clone(), m_is_move, m_is_pinned);
 });
 
 NODE(ExprNode_StructLiteral, {
@@ -484,7 +484,7 @@ NODE(ExprNode_StructLiteral, {
         vals.push_back({ v.attrs.clone(), v.name, v.value->clone() });
     }
 
-    return NEWNODE(ExprNode_StructLiteral, AST::Path(m_path), OPT_CLONE(m_base_value), mv$(vals) );
+    return NEWNODE(ExprNode_StructLiteral, AST::Path(m_path), OPT_CLONE(m_base_value), mv_str(vals) );
 })
 NODE(ExprNode_StructLiteralPattern, {
     os << m_path << " /*pat*/ { ";
@@ -500,7 +500,7 @@ NODE(ExprNode_StructLiteralPattern, {
         vals.push_back({ v.attrs.clone(), v.name, v.value->clone() });
     }
 
-    return NEWNODE(ExprNode_StructLiteralPattern, AST::Path(m_path), mv$(vals) );
+    return NEWNODE(ExprNode_StructLiteralPattern, AST::Path(m_path), mv_str(vals) );
 })
 
 NODE(ExprNode_Array, {
@@ -521,7 +521,7 @@ NODE(ExprNode_Array, {
         ::std::vector<ExprNodeP>    nodes;
         for(const auto& n : m_values)
             nodes.push_back( n->clone() );
-        return NEWNODE(ExprNode_Array, mv$(nodes));
+        return NEWNODE(ExprNode_Array, mv_str(nodes));
     }
 })
 
@@ -535,7 +535,7 @@ NODE(ExprNode_Tuple, {
     ::std::vector<ExprNodeP>    nodes;
     for(const auto& n : m_values)
         nodes.push_back( n->clone() );
-    return NEWNODE(ExprNode_Tuple, mv$(nodes));
+    return NEWNODE(ExprNode_Tuple, mv_str(nodes));
 })
 
 NODE(ExprNode_NamedValue, {

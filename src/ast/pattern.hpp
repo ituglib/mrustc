@@ -111,45 +111,45 @@ public:
     Pattern& operator=(Pattern&&) = default;
 
     Pattern(Span sp, Data dat):
-        m_span( mv$(sp) ),
-        m_data( mv$(dat) )
+        m_span( mv_str(sp) ),
+        m_data( mv_str(dat) )
     {};
 
     struct TagMaybeBind {};
     Pattern(TagMaybeBind, Span sp, Ident name):
-        m_span( mv$(sp) ),
-        m_data( Data::make_MaybeBind({ mv$(name) }) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_MaybeBind({ mv_str(name) }) )
     {}
 
     struct TagMacro {};
     Pattern(TagMacro, Span sp, unique_ptr<::AST::MacroInvocation> inv):
-        m_span( mv$(sp) ),
-        m_data( Data::make_Macro({ mv$(inv) }) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_Macro({ mv_str(inv) }) )
     {}
 
     struct TagBind {};
     Pattern(TagBind, Span sp, Ident name, PatternBinding::Type ty = PatternBinding::Type::MOVE, bool is_mut=false):
-        m_span( mv$(sp) )
+        m_span( mv_str(sp) )
     {
-        m_bindings.push_back( PatternBinding(mv$(name), ty, is_mut) );
+        m_bindings.push_back( PatternBinding(mv_str(name), ty, is_mut) );
     }
 
     struct TagBox {};
     Pattern(TagBox, Span sp, Pattern sub):
-        m_span( mv$(sp) ),
-        m_data( Data::make_Box({ unique_ptr<Pattern>(new Pattern(mv$(sub))) }) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_Box({ unique_ptr<Pattern>(new Pattern(mv_str(sub))) }) )
     {}
 
     struct TagValue {};
     Pattern(TagValue, Span sp, Value val, Value end = Value()):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data( Data::make_Value({ ::std::move(val), ::std::move(end) }) )
     {}
 
 
     struct TagReference {};
     Pattern(TagReference, Span sp, bool is_mutable, Pattern sub_pattern):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data( Data::make_Ref( /*Data::Data_Ref */ {
             is_mutable, unique_ptr<Pattern>(new Pattern(::std::move(sub_pattern)))
             }) )
@@ -158,27 +158,27 @@ public:
 
     struct TagTuple {};
     Pattern(TagTuple, Span sp, ::std::vector<Pattern> pats):
-        m_span( mv$(sp) ),
-        m_data( Data::make_Tuple( TuplePat { mv$(pats), false, {} } ) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_Tuple( TuplePat { mv_str(pats), false, {} } ) )
     {}
     Pattern(TagTuple, Span sp, TuplePat pat):
-        m_span( mv$(sp) ),
-        m_data( Data::make_Tuple( mv$(pat) ) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_Tuple( mv_str(pat) ) )
     {}
 
     struct TagNamedTuple {};
     Pattern(TagNamedTuple, Span sp, Path path, ::std::vector<Pattern> pats):
-        m_span( mv$(sp) ),
-        m_data( Data::make_StructTuple( { mv$(path), TuplePat { mv$(pats), false, {} } } ) )
+        m_span( mv_str(sp) ),
+        m_data( Data::make_StructTuple( { mv_str(path), TuplePat { mv_str(pats), false, {} } } ) )
     {}
     Pattern(TagNamedTuple, Span sp, Path path, TuplePat pat = TuplePat { {}, false, {} }):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data( Data::make_StructTuple( { ::std::move(path), ::std::move(pat) } ) )
     {}
 
     struct TagStruct {};
     Pattern(TagStruct, Span sp, Path path, ::std::vector<StructPatternEntry> sub_patterns, bool is_exhaustive):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data( Data::make_Struct( { ::std::move(path), ::std::move(sub_patterns), is_exhaustive } ) )
     {}
 

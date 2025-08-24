@@ -154,7 +154,7 @@ class ValueLifetime
 
 public:
     ValueLifetime(::std::vector<bool> stmts):
-        statements( mv$(stmts) )
+        statements( mv_str(stmts) )
     {}
 
     bool valid_at(size_t ofs) const {

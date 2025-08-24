@@ -12,7 +12,7 @@ struct Reloc {
     ::std::string   bytes;
 
     static Reloc new_named(size_t ofs, size_t len, ::HIR::Path p) {
-        return Reloc { ofs, len, box$(p), "" };
+        return Reloc { ofs, len, box_str(p), "" };
     }
     static Reloc new_bytes(size_t ofs, size_t len, ::std::string bytes) {
         return Reloc { ofs, len, nullptr, ::std::move(bytes) };

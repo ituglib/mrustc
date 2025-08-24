@@ -47,17 +47,17 @@ struct ImplRef
         m_data(Data::make_TraitImpl({ {}, nullptr, nullptr, nullptr }))
     {}
     ImplRef(HIR::PathParams impl_params, const HIR::Trait& trait_ref, const ::HIR::SimplePath& trait, const ::HIR::TraitImpl& impl):
-        m_data(Data::make_TraitImpl({ mv$(impl_params), &trait_ref, &trait, &impl }))
+        m_data(Data::make_TraitImpl({ mv_str(impl_params), &trait_ref, &trait, &impl }))
 
     {}
     ImplRef(const ::HIR::GenericParams* hrls, const ::HIR::TypeRef* type, const ::HIR::PathParams* args, const ::HIR::TraitPath::assoc_list_t* assoc):
         m_data(Data::make_BoundedPtr({ hrls, type, args, assoc }))
     {}
     ImplRef(::HIR::TypeRef type, ::HIR::PathParams args, ::HIR::TraitPath::assoc_list_t assoc):
-        m_data(Data::make_Bounded({ ::HIR::GenericParams(), mv$(type), mv$(args), mv$(assoc) }))
+        m_data(Data::make_Bounded({ ::HIR::GenericParams(), mv_str(type), mv_str(args), mv_str(assoc) }))
     {}
     ImplRef(::HIR::GenericParams hrls, ::HIR::TypeRef type, ::HIR::PathParams args, ::HIR::TraitPath::assoc_list_t assoc):
-        m_data(Data::make_Bounded({ mv$(hrls), mv$(type), mv$(args), mv$(assoc) }))
+        m_data(Data::make_Bounded({ mv_str(hrls), mv_str(type), mv_str(args), mv_str(assoc) }))
     {}
 
     bool is_valid() const {

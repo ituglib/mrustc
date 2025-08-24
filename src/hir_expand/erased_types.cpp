@@ -50,7 +50,7 @@ namespace {
             }
         };
         M().monomorph_type(sp, new_ty);
-        ty = mv$(new_ty);
+        ty = mv_str(new_ty);
     }
 
     void visit_type(const Span& sp, const StaticTraitResolve& resolve, ::HIR::TypeRef& ty) {

@@ -22,7 +22,7 @@
 extern RcString    g_core_crate;    // Defined in hir/from_ast.cpp
 
 namespace {
-    inline HIR::ExprNodeP mk_exprnodep(HIR::ExprNode* en, ::HIR::TypeRef ty){ en->m_res_type = mv$(ty); return HIR::ExprNodeP(en); }
+    inline HIR::ExprNodeP mk_exprnodep(HIR::ExprNode* en, ::HIR::TypeRef ty){ en->m_res_type = mv_str(ty); return HIR::ExprNodeP(en); }
 }
 #define NEWNODE(TY, CLASS, ...)  mk_exprnodep(new HIR::ExprNode_##CLASS(__VA_ARGS__), TY)
 
@@ -61,7 +61,7 @@ namespace static_borrow_constants {
                     m_lang_RangeFull = ti.as_Import().path;
                 }
                 else {
-                    m_lang_RangeFull = mv$(sp);
+                    m_lang_RangeFull = mv_str(sp);
                 }
             }
         }
@@ -609,7 +609,7 @@ namespace static_borrow_constants {
         ExprVisitor_Mutate(const StaticTraitResolve& resolve, const ::HIR::TypeRef* self_type, t_new_static_cb new_static_cb, const ::HIR::ExprPtr& expr_ptr)
             :m_resolve(resolve)
             ,m_self_type(self_type)
-            ,m_new_static_cb( mv$(new_static_cb) )
+            ,m_new_static_cb( mv_str(new_static_cb) )
             ,m_expr_ptr(expr_ptr)
         {
             m_lang_RangeFull = m_resolve.m_crate.get_lang_item_path_opt("range_full");
@@ -621,7 +621,7 @@ namespace static_borrow_constants {
                     m_lang_RangeFull = ti.as_Import().path;
                 }
                 else {
-                    m_lang_RangeFull = mv$(sp);
+                    m_lang_RangeFull = mv_str(sp);
                 }
             }
         }
@@ -779,7 +779,7 @@ namespace static_borrow_constants {
                 TU_ARMA(TraitBound, e)
                     if( e.hrtbs ) {
                         auto _h = monomorph_cb.push_hrb(*e.hrtbs);
-                        return ::HIR::GenericBound::make_TraitBound({ box$(e.hrtbs->clone()), monomorph_cb.monomorph_type(sp, e.type), monomorph_cb.monomorph_traitpath(sp, e.trait, false) });
+                        return ::HIR::GenericBound::make_TraitBound({ box_str(e.hrtbs->clone()), monomorph_cb.monomorph_type(sp, e.type), monomorph_cb.monomorph_traitpath(sp, e.trait, false) });
                     }
                     else {
                         return ::HIR::GenericBound::make_TraitBound({ nullptr               , monomorph_cb.monomorph_type(sp, e.type), monomorph_cb.monomorph_traitpath(sp, e.trait, false) });
@@ -887,7 +887,7 @@ namespace static_borrow_constants {
                 DEBUG("Generic static");
             }
 
-            auto val_expr = HIR::ExprPtr(mv$(node));
+            auto val_expr = HIR::ExprPtr(mv_str(node));
             val_expr.m_state = m_expr_ptr.m_state.clone();
             val_expr.m_state->stage = ::HIR::ExprState::Stage::Sbc;
 
@@ -973,12 +973,12 @@ namespace static_borrow_constants {
                 //auto new_res_ty = m2.monomorph_type(sp, static_ty, false);
                 //DEBUG("new_res_ty = " << new_res_ty);
 
-                auto path = m_new_static_cb(sp, mv$(static_ty), mv$(val_expr), mv$(params_def), false);
+                auto path = m_new_static_cb(sp, mv_str(static_ty), mv_str(val_expr), mv_str(params_def), false);
                 DEBUG("> " << path << constr_params);
                 // Update the `m_value` to point to a new node
-                auto new_node = NEWNODE(std::move(new_res_ty), PathValue, sp, HIR::GenericPath(mv$(path), mv$(constr_params)), HIR::ExprNode_PathValue::STATIC);
+                auto new_node = NEWNODE(std::move(new_res_ty), PathValue, sp, HIR::GenericPath(mv_str(path), mv_str(constr_params)), HIR::ExprNode_PathValue::STATIC);
                 new_node->m_usage = usage;
-                value_ptr = mv$(new_node);
+                value_ptr = mv_str(new_node);
             }
         }
         void visit(::HIR::ExprNode_ConstBlock& node) {
@@ -1006,12 +1006,12 @@ namespace static_borrow_constants {
                 auto new_res_ty = m2.monomorph_type(sp, static_ty, false);
                 DEBUG("new_res_ty = " << new_res_ty);
 
-                auto path = m_new_static_cb(sp, mv$(static_ty), mv$(val_expr), mv$(params_def), true);
+                auto path = m_new_static_cb(sp, mv_str(static_ty), mv_str(val_expr), mv_str(params_def), true);
                 DEBUG("> " << path << constr_params);
                 // Update the `m_value` to point to a new node
-                auto new_node = NEWNODE(std::move(new_res_ty), PathValue, sp, HIR::GenericPath(std::move(path), mv$(constr_params)), HIR::ExprNode_PathValue::CONSTANT);
+                auto new_node = NEWNODE(std::move(new_res_ty), PathValue, sp, HIR::GenericPath(std::move(path), mv_str(constr_params)), HIR::ExprNode_PathValue::CONSTANT);
                 new_node->m_usage = usage;
-                node.m_inner = mv$(new_node);
+                node.m_inner = mv_str(new_node);
             }
         }
     };
@@ -1054,10 +1054,10 @@ namespace static_borrow_constants {
                 auto new_static = HIR::Static(
                     HIR::Linkage(),
                     /*is_mut=*/false,
-                    mv$(ty),
-                    /*m_value=*/mv$(val_expr)
+                    mv_str(ty),
+                    /*m_value=*/mv_str(val_expr)
                     );
-                new_static.m_params = mv$(generics);
+                new_static.m_params = mv_str(generics);
                 new_static.m_save_literal = m_is_const;
                 DEBUG(path << " = " << new_static.m_value_res);
                 list.push_back(NewStatic { path, std::move(new_static), is_const });
@@ -1107,7 +1107,7 @@ namespace static_borrow_constants {
                         new_static.m_value_generated = true;
                         new_static.m_value_res = ::std::move(value);
                         DEBUG(path << " = " << new_static.m_value_res);
-                        m_current_module.m_value_items.insert(std::make_pair( name, box$(HIR::VisEnt<HIR::ValueItem> {
+                        m_current_module.m_value_items.insert(std::make_pair( name, box_str(HIR::VisEnt<HIR::ValueItem> {
                                 HIR::Publicity::new_none(), // Should really be private, but we're well after checking
                                 HIR::ValueItem(::std::move(new_static))
                             })) );
@@ -1144,7 +1144,7 @@ namespace static_borrow_constants {
                     auto new_ent = new_static_pair.is_const
                         ? HIR::ValueItem(H::to_const(new_static))
                         : HIR::ValueItem(std::move(new_static_pair.data));
-                    mod.m_value_items.insert(std::make_pair( mv$(new_static_pair.path.components().back()), box$(HIR::VisEnt<HIR::ValueItem> {
+                    mod.m_value_items.insert(std::make_pair( mv_str(new_static_pair.path.components().back()), box_str(HIR::VisEnt<HIR::ValueItem> {
                         HIR::Publicity::new_none(), // Should really be private, but we're well after checking
                         std::move(new_ent)
                         })) );
@@ -1321,10 +1321,10 @@ void HIR_Expand_StaticBorrowConstants_Expr(const ::HIR::Crate& crate, const ::HI
         auto new_static = HIR::Static(
             HIR::Linkage(),
             /*is_mut=*/false,
-            mv$(ty),
-            /*m_value=*/mv$(val_expr)
+            mv_str(ty),
+            /*m_value=*/mv_str(val_expr)
             );
-        new_static.m_params = mv$(generics);
+        new_static.m_params = mv_str(generics);
         // - Since this was neeed in consteval, it's going to need to be saved?
         new_static.m_save_literal = true;
 
@@ -1349,7 +1349,7 @@ void HIR_Expand_StaticBorrowConstants_Expr(const ::HIR::Crate& crate, const ::HI
                 new_static.m_value_generated = true;
                 new_static.m_value_res = ::std::move(value);
                 DEBUG(path << " = " << new_static.m_value_res);
-                crate.m_new_values.push_back(std::make_pair( name, box$(HIR::VisEnt<HIR::ValueItem> {
+                crate.m_new_values.push_back(std::make_pair( name, box_str(HIR::VisEnt<HIR::ValueItem> {
                     HIR::Publicity::new_none(), // Should really be private, but we're well after checking
                     HIR::ValueItem(::std::move(new_static))
                 }) ));
@@ -1372,8 +1372,8 @@ void HIR_Expand_StaticBorrowConstants_Expr(const ::HIR::Crate& crate, const ::HI
             ? HIR::ValueItem(HIR::Constant { std::move(new_static.m_params), std::move(new_static.m_type), std::move(new_static.m_value) })
             : HIR::ValueItem(std::move(new_static))
             ;
-        auto boxed = box$(( ::HIR::VisEnt< ::HIR::ValueItem> { ::HIR::Publicity::new_none(), std::move(vi) } ));
-        crate.m_new_values.push_back( ::std::make_pair(name, mv$(boxed)) );
+        auto boxed = box_str(( ::HIR::VisEnt< ::HIR::ValueItem> { ::HIR::Publicity::new_none(), std::move(vi) } ));
+        crate.m_new_values.push_back( ::std::make_pair(name, mv_str(boxed)) );
         {
             auto& s = crate.m_new_values.back().second->ent.as_Static();
             s.m_value.m_state->m_impl_generics = nullptr;
@@ -1396,12 +1396,12 @@ void HIR_Expand_StaticBorrowConstants(::HIR::Crate& crate)
     // Consteval can run again, creating new items
     for(auto& new_ty_pair : crate.m_new_types)
     {
-        crate.m_root_module.m_mod_items.insert( mv$(new_ty_pair) );
+        crate.m_root_module.m_mod_items.insert( mv_str(new_ty_pair) );
     }
     crate.m_new_types.clear();
     for(auto& new_val_pair : crate.m_new_values)
     {
-        crate.m_root_module.m_value_items.insert( mv$(new_val_pair) );
+        crate.m_root_module.m_value_items.insert( mv_str(new_val_pair) );
     }
     crate.m_new_values.clear();
 }

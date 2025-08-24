@@ -29,7 +29,7 @@ public:
 
     AttributeList() {}
     AttributeList(::std::vector<Attribute> items):
-        m_items( mv$(items) )
+        m_items( mv_str(items) )
     {
     }
 

@@ -83,7 +83,7 @@ void MirBuilder::final_cleanup()
     else
     {
         terminate_scope(sp, ScopeHandle(*this, 1), /*emit_cleanup=*/false);
-        terminate_scope(sp, mv$(m_fcn_scope), /*emit_cleanup=*/false);
+        terminate_scope(sp, mv_str(m_fcn_scope), /*emit_cleanup=*/false);
     }
 }
 
@@ -185,11 +185,11 @@ void MirBuilder::define_variable(unsigned int idx)
 ::MIR::LValue MirBuilder::lvalue_or_temp(const Span& sp, const ::HIR::TypeRef& ty, ::MIR::RValue val)
 {
     TU_IFLET(::MIR::RValue, val, Use, e,
-        return mv$(e);
+        return mv_str(e);
     )
     else {
         auto temp = new_temporary(ty);
-        push_stmt_assign( sp, temp.clone(), mv$(val) );
+        push_stmt_assign( sp, temp.clone(), mv_str(val) );
         return temp;
     }
 }
@@ -199,7 +199,7 @@ void MirBuilder::define_variable(unsigned int idx)
     if(!m_result_valid) {
         BUG(sp, "No value avaliable");
     }
-    auto rv = mv$(m_result);
+    auto rv = mv_str(m_result);
     m_result_valid = false;
     DEBUG(rv);
     return rv;
@@ -209,7 +209,7 @@ void MirBuilder::define_variable(unsigned int idx)
 {
     auto rv = get_result(sp);
     TU_IFLET(::MIR::RValue, rv, Use, e,
-        return mv$(e);
+        return mv_str(e);
     )
     else {
         BUG(sp, "LValue expected, got RValue");
@@ -223,11 +223,11 @@ void MirBuilder::define_variable(unsigned int idx)
     }
     auto rv = get_result(sp);
     TU_IFLET(::MIR::RValue, rv, Use, e,
-        return mv$(e);
+        return mv_str(e);
     )
     else {
         auto temp = new_temporary(ty);
-        push_stmt_assign( sp, ::MIR::LValue(temp.clone()), mv$(rv) );
+        push_stmt_assign( sp, ::MIR::LValue(temp.clone()), mv_str(rv) );
         return temp;
     }
 }
@@ -241,17 +241,17 @@ void MirBuilder::define_variable(unsigned int idx)
     auto rv = get_result(sp);
     if( auto* e = rv.opt_Constant() )
     {
-        return mv$(*e);
+        return mv_str(*e);
     }
     //else if( auto* e = rv.opt_Use() )
     //{
-    //    return mv$(*e);
+    //    return mv_str(*e);
     //}
     else
     {
         auto temp = new_temporary(ty);
-        push_stmt_assign( sp, ::MIR::LValue(temp.clone()), mv$(rv) );
-        return ::MIR::Param( mv$(temp) );
+        push_stmt_assign( sp, ::MIR::LValue(temp.clone()), mv_str(rv) );
+        return ::MIR::Param( mv_str(temp) );
     }
 }
 void MirBuilder::set_result(const Span& sp, ::MIR::RValue val)
@@ -259,7 +259,7 @@ void MirBuilder::set_result(const Span& sp, ::MIR::RValue val)
     if(m_result_valid) {
         BUG(sp, "Pushing a result over an existing result");
     }
-    m_result = mv$(val);
+    m_result = mv_str(val);
     m_result_valid = true;
     DEBUG(m_result);
 }
@@ -352,7 +352,7 @@ void MirBuilder::push_stmt_assign(const Span& sp, ::MIR::LValue dst, ::MIR::RVal
     {
         mark_value_assigned(sp, dst);
     }
-    this->push_stmt( sp, ::MIR::Statement::make_Assign({ mv$(dst), mv$(val) }) );
+    this->push_stmt( sp, ::MIR::Statement::make_Assign({ mv_str(dst), mv_str(val) }) );
 }
 void MirBuilder::push_stmt_drop(const Span& sp, ::MIR::LValue val, unsigned int flag/*=~0u*/)
 {
@@ -363,7 +363,7 @@ void MirBuilder::push_stmt_drop(const Span& sp, ::MIR::LValue val, unsigned int 
         return ;
     }
 
-    this->push_stmt(sp, ::MIR::Statement::make_Drop({ ::MIR::eDropKind::DEEP, mv$(val), flag }));
+    this->push_stmt(sp, ::MIR::Statement::make_Drop({ ::MIR::eDropKind::DEEP, mv_str(val), flag }));
 }
 void MirBuilder::push_stmt_drop_shallow(const Span& sp, ::MIR::LValue val, unsigned int flag/*=~0u*/)
 {
@@ -371,7 +371,7 @@ void MirBuilder::push_stmt_drop_shallow(const Span& sp, ::MIR::LValue val, unsig
 
     // TODO: Ensure that the type is a Box?
 
-    this->push_stmt(sp, ::MIR::Statement::make_Drop({ ::MIR::eDropKind::SHALLOW, mv$(val), flag }));
+    this->push_stmt(sp, ::MIR::Statement::make_Drop({ ::MIR::eDropKind::SHALLOW, mv_str(val), flag }));
 }
 void MirBuilder::push_stmt_asm(const Span& sp, ::MIR::Statement::Data_Asm data)
 {
@@ -382,7 +382,7 @@ void MirBuilder::push_stmt_asm(const Span& sp, ::MIR::Statement::Data_Asm data)
         mark_value_assigned(sp, v.second);
 
     // 2. Push
-    this->push_stmt(sp, ::MIR::Statement::make_Asm( mv$(data) ));
+    this->push_stmt(sp, ::MIR::Statement::make_Asm( mv_str(data) ));
 }
 void MirBuilder::push_stmt_set_dropflag_val(const Span& sp, unsigned int idx, bool value)
 {
@@ -401,7 +401,7 @@ void MirBuilder::push_stmt(const Span& sp, ::MIR::Statement stmt)
     ASSERT_BUG(sp, m_block_active, "Pushing statement with no active block");
     auto& blk = m_output.blocks.at(m_current_block);
     DEBUG("BB" << m_current_block << "/" << blk.statements.size() << " = " << stmt);
-    blk.statements.push_back( mv$(stmt) );
+    blk.statements.push_back( mv_str(stmt) );
 }
 
 void MirBuilder::mark_value_assigned(const Span& sp, const ::MIR::LValue& dst)
@@ -659,7 +659,7 @@ void MirBuilder::end_block(::MIR::Terminator term)
         BUG(Span(), "Terminating block when none active");
     }
     DEBUG("BB" << m_current_block << " END -> " << term);
-    m_output.blocks.at(m_current_block).terminator = mv$(term);
+    m_output.blocks.at(m_current_block).terminator = mv_str(term);
     m_block_active = false;
     m_current_block = 0;
 }
@@ -801,7 +801,7 @@ void MirBuilder::terminate_scope(const Span& sp, ScopeHandle scope, bool emit_cl
         }
         // Only push the ScopeEnd if there were variables to end
         if( !se.vars.empty() || !se.tmps.empty() ) {
-            this->push_stmt(sp, ::MIR::Statement( mv$(se) ));
+            this->push_stmt(sp, ::MIR::Statement( mv_str(se) ));
         }
         #endif
     }
@@ -886,7 +886,7 @@ void MirBuilder::raise_all(const Span& sp, ScopeHandle source, const ScopeHandle
             auto& arm = sd_split->arms.back();
             for(auto idx : src_list)
             {
-                arm.states.insert(::std::make_pair( idx, mv$(m_slot_states.at(idx)) ));
+                arm.states.insert(::std::make_pair( idx, mv_str(m_slot_states.at(idx)) ));
                 m_slot_states.at(idx) = VarState(InvalidType::Uninit);
             }
         }
@@ -1005,7 +1005,7 @@ namespace
                 const auto& nse = new_state.as_MovedOut();
 
                 // Create a new state that is internally valid and uses the same drop flag
-                old_state = VarState::make_MovedOut({ box$(old_state.clone()), nse.outer_flag });
+                old_state = VarState::make_MovedOut({ box_str(old_state.clone()), nse.outer_flag });
                 auto& ose = old_state.as_MovedOut();
                 if( ose.outer_flag != ~0u )
                 {
@@ -1051,7 +1051,7 @@ namespace
                     ::std::vector<VarState> inner; inner.reserve( nse.inner_states.size() );
                     for(size_t i = 0; i < nse.inner_states.size(); i++)
                         inner.push_back( old_state.clone() );
-                    old_state = VarState::make_Partial({ mv$(inner) });
+                    old_state = VarState::make_Partial({ mv_str(inner) });
                 }
                 auto& ose = old_state.as_Partial();
                 if( is_enum ) {
@@ -1101,7 +1101,7 @@ namespace
                 const auto& nse = new_state.as_MovedOut();
 
                 // Create a new state that is internally valid and uses the same drop flag
-                old_state = VarState::make_MovedOut({ box$(VarState::make_Valid({})), nse.outer_flag });
+                old_state = VarState::make_MovedOut({ box_str(VarState::make_Valid({})), nse.outer_flag });
                 auto& ose = old_state.as_MovedOut();
                 if( ose.outer_flag != ~0u )
                 {
@@ -1145,7 +1145,7 @@ namespace
                     ::std::vector<VarState> inner; inner.reserve( nse.inner_states.size() );
                     for(size_t i = 0; i < nse.inner_states.size(); i++)
                         inner.push_back( VarState::make_Valid({}) );
-                    old_state = VarState::make_Partial({ mv$(inner) });
+                    old_state = VarState::make_Partial({ mv_str(inner) });
                 }
                 auto& ose = old_state.as_Partial();
                 if( is_enum ) {
@@ -1229,7 +1229,7 @@ namespace
                         builder.push_stmt_set_dropflag_other(sp, new_flag,  old_state.as_Optional());
                         inner.push_back(VarState::make_Optional( new_flag ));
                     }
-                    old_state = VarState::make_Partial({ mv$(inner) });
+                    old_state = VarState::make_Partial({ mv_str(inner) });
                 }
                 auto& ose = old_state.as_Partial();
                 // Propagate to inners
@@ -1449,7 +1449,7 @@ void MirBuilder::end_split_arm(const Span& sp, const ScopeHandle& handle, bool r
                     const auto& src_state = (it != states.end() ? it->second : get_slot_state(sp, idx, type, 1));
 
                     auto lv = (type == SlotType::Local ? ::MIR::LValue::new_Local(idx) : ::MIR::LValue::new_Argument(idx));
-                    merge_state(sp, *this, mv$(lv), out_state, src_state);
+                    merge_state(sp, *this, mv_str(lv), out_state, src_state);
                 }
                 };
             merge_list(this_arm_state.states, sd_split.end_state.states, SlotType::Local);
@@ -1502,7 +1502,7 @@ void MirBuilder::end_split_arm(const Span& sp, const ScopeHandle& handle, bool r
             DEBUG(" Condition Argument(" << ent.first << ") = " << ent.second);
             arm.arg_states.insert(::std::make_pair( ent.first, ent.second.clone() ));
         }
-        sd_split.arms.push_back(mv$(arm));
+        sd_split.arms.push_back(mv_str(arm));
     }
 }
 void MirBuilder::end_split_arm_early(const Span& sp)
@@ -1563,7 +1563,7 @@ void MirBuilder::end_split_condition(const Span& sp, const ScopeHandle& handle)
             const auto& src_state = (it != states.end() ? it->second : get_slot_state(sp, idx, type, 1));
 
             auto lv = (type == SlotType::Local ? ::MIR::LValue::new_Local(idx) : ::MIR::LValue::new_Argument(idx));
-            merge_state(sp, *this, mv$(lv), out_state, src_state);
+            merge_state(sp, *this, mv_str(lv), out_state, src_state);
         }
         };
     merge_list(this_arm_state.states, sd_split.cond_state.states, SlotType::Local);
@@ -1958,7 +1958,7 @@ VarState& MirBuilder::get_slot_state_mut(const Span& sp, unsigned int idx, SlotT
                 if( states.count(idx) == 0 )
                 {
                     auto state = e->exit_state_valid ? get_slot_state(sp, idx, type).clone() : VarState::make_Valid({});
-                    states.insert(::std::make_pair( idx, mv$(state) ));
+                    states.insert(::std::make_pair( idx, mv_str(state) ));
                 }
             }
         }
@@ -1987,7 +1987,7 @@ VarState& MirBuilder::get_slot_state_mut(const Span& sp, unsigned int idx, SlotT
                 if( states.count(idx) == 0 )
                 {
                     auto state = get_slot_state(sp, idx, type).clone();
-                    states.insert(::std::make_pair( idx, mv$(state) ));
+                    states.insert(::std::make_pair( idx, mv_str(state) ));
                 }
                 ret = &states[idx];
                 break;  // Stop searching
@@ -2108,7 +2108,7 @@ VarState* MirBuilder::get_val_state_mut_p(const Span& sp, const ::MIR::LValue& l
                 ::std::vector<VarState> inner_vs; inner_vs.reserve(n_flds);
                 for(size_t i = 0; i < n_flds; i++)
                     inner_vs.push_back( tpl.clone() );
-                ivs = VarState::make_Partial({ mv$(inner_vs) });
+                ivs = VarState::make_Partial({ mv_str(inner_vs) });
             }
             vs = &ivs.as_Partial().inner_states.at(field_index);
             }
@@ -2131,7 +2131,7 @@ VarState* MirBuilder::get_val_state_mut_p(const Span& sp, const ::MIR::LValue& l
                     ::std::vector<VarState> inner;
                     inner.push_back(VarState::make_Valid({}));
                     unsigned int drop_flag = (ivs.is_Optional() ? ivs.as_Optional() : ~0u);
-                    ivs = VarState::make_MovedOut({ box$(VarState::make_Valid({})), drop_flag });
+                    ivs = VarState::make_MovedOut({ box_str(VarState::make_Valid({})), drop_flag });
                 }
                 vs = &*ivs.as_MovedOut().inner_state;
             }
@@ -2176,8 +2176,8 @@ VarState* MirBuilder::get_val_state_mut_p(const Span& sp, const ::MIR::LValue& l
                 {
                     inner.push_back( VarState::make_Invalid(InvalidType::Uninit) );
                 }
-                inner[variant_index] = mv$(ivs);
-                ivs = VarState::make_Partial({ mv$(inner) });
+                inner[variant_index] = mv_str(ivs);
+                ivs = VarState::make_Partial({ mv_str(inner) });
             }
 
             vs = &ivs.as_Partial().inner_states.at(variant_index);
@@ -2194,7 +2194,7 @@ void MirBuilder::drop_value_from_state(const Span& sp, const VarState& vs, ::MIR
     (Invalid,
         ),
     (Valid,
-        push_stmt_drop(sp, mv$(lv));
+        push_stmt_drop(sp, mv_str(lv));
         ),
     (MovedOut,
         bool is_box = false;
@@ -2204,7 +2204,7 @@ void MirBuilder::drop_value_from_state(const Span& sp, const VarState& vs, ::MIR
         if( is_box )
         {
             drop_value_from_state(sp, *vse.inner_state, ::MIR::LValue::new_Deref(lv.clone()));
-            push_stmt_drop_shallow(sp, mv$(lv), vse.outer_flag);
+            push_stmt_drop_shallow(sp, mv_str(lv), vse.outer_flag);
         }
         else
         {
@@ -2239,7 +2239,7 @@ void MirBuilder::drop_value_from_state(const Span& sp, const VarState& vs, ::MIR
         }
         ),
     (Optional,
-        push_stmt_drop(sp, mv$(lv), vse);
+        push_stmt_drop(sp, mv_str(lv), vse);
         )
     )
 }
@@ -2313,7 +2313,7 @@ std::map<unsigned, MirBuilder::SavedActiveLocal> MirBuilder::get_active_locals()
 }
 void MirBuilder::drop_actve_local(const Span& sp, ::MIR::LValue lv, const SavedActiveLocal& loc)
 {
-    this->drop_value_from_state(sp, loc.state, mv$(lv));
+    this->drop_value_from_state(sp, loc.state, mv_str(lv));
 }
 
 // --------------------------------------------------------------------
@@ -2345,14 +2345,14 @@ VarState VarState::clone() const
         return VarState(e);
         ),
     (MovedOut,
-        return VarState::make_MovedOut({ box$(e.inner_state->clone()), e.outer_flag });
+        return VarState::make_MovedOut({ box_str(e.inner_state->clone()), e.outer_flag });
         ),
     (Partial,
         ::std::vector<VarState> n;
         n.reserve(e.inner_states.size());
         for(const auto& a : e.inner_states)
             n.push_back( a.clone() );
-        return VarState::make_Partial({ mv$(n) });
+        return VarState::make_Partial({ mv_str(n) });
         )
     )
     throw "";

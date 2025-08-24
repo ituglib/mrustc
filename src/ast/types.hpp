@@ -76,11 +76,11 @@ struct Type_Function
 
     Type_Function() {}
     Type_Function(AST::HigherRankedBounds hrbs, bool is_unsafe, ::std::string abi, ::std::unique_ptr<TypeRef> ret, ::std::vector<TypeRef> args, bool is_variadic):
-        hrbs(mv$(hrbs)),
+        hrbs(mv_str(hrbs)),
         is_unsafe(is_unsafe),
-        m_abi(mv$(abi)),
-        m_rettype(mv$(ret)),
-        m_arg_types(mv$(args)),
+        m_abi(mv_str(abi)),
+        m_rettype(mv_str(ret)),
+        m_arg_types(mv_str(args)),
         is_variadic(is_variadic)
     {}
     Type_Function(Type_Function&& other) = default;
@@ -171,23 +171,23 @@ public:
         *this = other.clone();
     }
     TypeRef& operator=(const TypeRef& other) {
-        m_data = mv$(other.clone().m_data);
+        m_data = mv_str(other.clone().m_data);
         return *this;
     }
     #endif
 
     TypeRef(Span sp):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data( TypeData::make_Any({}) )
     {}
     TypeRef(Span sp, TypeData data):
-        m_span( mv$(sp) ),
-        m_data( mv$(data) )
+        m_span( mv_str(sp) ),
+        m_data( mv_str(data) )
     {}
 
     struct TagInvalid {};
     TypeRef(TagInvalid, Span sp):
-        m_span(mv$(sp)),
+        m_span(mv_str(sp)),
         m_data(TypeData::make_None({}))
     {}
 
@@ -196,59 +196,59 @@ public:
 
     struct TagUnit {};  // unit maps to a zero-length tuple, just easier to type
     TypeRef(TagUnit, Span sp):
-        m_span(mv$(sp)),
+        m_span(mv_str(sp)),
         m_data(TypeData::make_Unit({}))
     {}
 
     struct TagPrimitive {};
     TypeRef(TagPrimitive, Span sp, enum eCoreType type):
-        m_span(mv$(sp)),
+        m_span(mv_str(sp)),
         m_data(TypeData::make_Primitive({type}))
     {}
     TypeRef(Span sp, enum eCoreType type):
-        m_span(mv$(sp)),
+        m_span(mv_str(sp)),
         m_data(TypeData::make_Primitive({type}))
     {}
 
     struct TagTuple {};
     TypeRef(TagTuple , Span sp, ::std::vector<TypeRef> inner_types):
-        m_span(mv$(sp)),
+        m_span(mv_str(sp)),
         m_data(TypeData::make_Tuple({::std::move(inner_types)}))
     {}
     struct TagFunction {};
     TypeRef(TagFunction, Span sp, AST::HigherRankedBounds hrbs, bool is_unsafe, ::std::string abi, ::std::vector<TypeRef> args, bool is_variadic, TypeRef ret):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_Function({ Type_Function( mv$(hrbs), is_unsafe, abi, box$(ret), mv$(args), is_variadic ) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_Function({ Type_Function( mv_str(hrbs), is_unsafe, abi, box_str(ret), mv_str(args), is_variadic ) }))
     {}
 
     struct TagReference {};
     TypeRef(TagReference , Span sp, AST::LifetimeRef lft, bool is_mut, TypeRef inner_type):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_Borrow({ ::std::move(lft), is_mut, ::make_unique_ptr(mv$(inner_type)) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_Borrow({ ::std::move(lft), is_mut, ::make_unique_ptr(mv_str(inner_type)) }))
     {}
     struct TagPointer {};
     TypeRef(TagPointer , Span sp, bool is_mut, TypeRef inner_type):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_Pointer({ is_mut, ::make_unique_ptr(mv$(inner_type)) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_Pointer({ is_mut, ::make_unique_ptr(mv_str(inner_type)) }))
     {}
     struct TagSizedArray {};
     TypeRef(TagSizedArray , Span sp, TypeRef inner_type, ::std::shared_ptr<AST::ExprNode> size):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_Array({ ::make_unique_ptr(mv$(inner_type)), mv$(size) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_Array({ ::make_unique_ptr(mv_str(inner_type)), mv_str(size) }))
     {}
     struct TagUnsizedArray {};
     TypeRef(TagUnsizedArray , Span sp, TypeRef inner_type):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_Slice({ ::make_unique_ptr(mv$(inner_type)) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_Slice({ ::make_unique_ptr(mv_str(inner_type)) }))
     {}
 
     struct TagArg {};
     TypeRef(TagArg, Span sp, RcString name, unsigned int binding = ~0u):
-        m_span( mv$(sp) ),
+        m_span( mv_str(sp) ),
         m_data(TypeData::make_Generic({ name, binding }))
     {}
     TypeRef(Span sp, RcString name, unsigned int binding = ~0u):
-        TypeRef(TagArg(), mv$(sp), mv$(name), binding)
+        TypeRef(TagArg(), mv_str(sp), mv_str(name), binding)
     {}
 
     struct TagPath {};
@@ -256,8 +256,8 @@ public:
     TypeRef(Span sp, AST::Path path);
 
     TypeRef( Span sp, ::std::vector<Type_TraitPath> traits, ::std::vector<AST::LifetimeRef> lifetimes ):
-        m_span(mv$(sp)),
-        m_data(TypeData::make_TraitObject({ ::std::move(traits), mv$(lifetimes) }))
+        m_span(mv_str(sp)),
+        m_data(TypeData::make_TraitObject({ ::std::move(traits), mv_str(lifetimes) }))
     {}
 
 

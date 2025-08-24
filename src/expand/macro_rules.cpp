@@ -31,7 +31,7 @@ class CMacroRulesExpander:
         TTStream    lex(sp, ParseState(), tt);
         auto mac = Parse_MacroRules(lex);
         DEBUG("macro_rules! " << mod.path() + ident << " " << &*mac);
-        mod.add_macro( false, ident, mv$(mac) );
+        mod.add_macro( false, ident, mv_str(mac) );
 
         return ::std::unique_ptr<TokenStream>( new TTStreamO(sp, ParseState(), TokenTree()) );
     }
@@ -150,7 +150,7 @@ class CMacroUseHandler:
                 {
                     auto mi = AST::Module::MacroImport{ false, name, std::move(path), std::move(mr) };
                     DEBUG("Import macro " << mi.path);
-                    mod.m_macro_imports.push_back(mv$(mi));
+                    mod.m_macro_imports.push_back(mv_str(mi));
                 }
             }
         }
@@ -241,7 +241,7 @@ class CMacroExportHandler:
             mi.name = u->entries.front().name;
             mi.path.crate = p.crate;
             mi.path.nodes.push_back(name);
-            crate.m_root_module.m_macro_imports.push_back(mv$(mi));
+            crate.m_root_module.m_macro_imports.push_back(mv_str(mi));
 
             crate.m_root_module.add_item(sp, AST::Visibility::make_global(), name, i.clone(), {});
         }
@@ -256,7 +256,7 @@ class CMacroExportHandler:
             // AND move it to the root module
             auto it = ::std::find_if( mod.macros().begin(), mod.macros().end(), [&](const auto& x){ return x.name == name; } );
             ASSERT_BUG(sp, it != mod.macros().end(), "Macro '" << name << "' not defined in this module");
-            auto e = mv$(*it);
+            auto e = mv_str(*it);
             mod.macros().erase(it);
 
             // Leave an alias here, so existing references are valid
@@ -268,12 +268,12 @@ class CMacroExportHandler:
                 // Empty node list, will search the crate root
                 // TODO: Strictly speaking, this shouldn't apply to non-macro paths
                 DEBUG("#[macro_export(local_inner_macros)] mp=" << mp);
-                e.data->m_hygiene.set_mod_path(mv$(mp));
+                e.data->m_hygiene.set_mod_path(mv_str(mp));
             }
 
             e.data->m_exported = true;
             DEBUG("- Export macro " << name << "!");
-            crate.m_root_module.macros().push_back( mv$(e) );
+            crate.m_root_module.macros().push_back( mv_str(e) );
         }
         else if( i.is_Macro() ) {
             const auto& name = path.nodes.back();
@@ -282,7 +282,7 @@ class CMacroExportHandler:
                 i.as_Macro()->m_exported = true;
                 ASSERT_BUG(sp, path.nodes.size() == 1, "");
                 DEBUG("- Export macro (item) " << name << "!");
-                //crate.m_root_module.macros().push_back( mv$(*i.as_Macro()) );
+                //crate.m_root_module.macros().push_back( mv_str(*i.as_Macro()) );
             }
         }
         else {
@@ -341,7 +341,7 @@ class CBuiltinMacroHandler:
         ui.entries.back().name = name;
         ui.entries.back().path = AST::Path(RcString::new_interned(CRATE_BUILTINS), { name });
         DEBUG("Convert macro_rules tagged #[rustc_builtin_macro] with use - " << name);
-        i = AST::Item::make_Use(mv$(ui));
+        i = AST::Item::make_Use(mv_str(ui));
     }
 };
 

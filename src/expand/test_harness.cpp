@@ -43,7 +43,7 @@ void Expand_TestHarness(::AST::Crate& crate)
                         )
                     )
                 );
-        main_fn.set_code( mv$(call_node) );
+        main_fn.set_code( mv_str(call_node) );
     }
 
 
@@ -82,7 +82,7 @@ void Expand_TestHarness(::AST::Crate& crate)
                         );
                 break;
             }
-            desc_vals.push_back({ {}, "should_panic", mv$(should_panic_val) });
+            desc_vals.push_back({ {}, "should_panic", mv_str(should_panic_val) });
         }
         if( TARGETVER_LEAST_1_29 && TARGETVER_MOST_1_54 )
         {
@@ -106,10 +106,10 @@ void Expand_TestHarness(::AST::Crate& crate)
             desc_vals.push_back({ {}, "end_line"  , NEWNODE(_Integer, U128(sp.end_line  ), CORETYPE_UINT) });
             desc_vals.push_back({ {}, "end_col"   , NEWNODE(_Integer, U128(sp.end_ofs   ), CORETYPE_UINT) });
         }
-        auto desc_expr = NEWNODE(_StructLiteral,  ::AST::Path(c_test, { ::AST::PathNode("TestDesc")}), nullptr, mv$(desc_vals));
+        auto desc_expr = NEWNODE(_StructLiteral,  ::AST::Path(c_test, { ::AST::PathNode("TestDesc")}), nullptr, mv_str(desc_vals));
 
         ::AST::ExprNode_StructLiteral::t_values   descandfn_vals;
-        descandfn_vals.push_back({ {}, RcString::new_interned("desc"), mv$(desc_expr) });
+        descandfn_vals.push_back({ {}, RcString::new_interned("desc"), mv_str(desc_expr) });
 
         auto test_fcn_node = NEWNODE(_NamedValue, AST::Path(test.path));
         if(TARGETVER_LEAST_1_74) {
@@ -126,28 +126,28 @@ void Expand_TestHarness(::AST::Crate& crate)
                         ::make_vec1( std::move(test_fcn_node) )
                         ) });
 
-        test_nodes.push_back( NEWNODE(_StructLiteral,  ::AST::Path(c_test, { ::AST::PathNode("TestDescAndFn")}), nullptr, mv$(descandfn_vals) ) );
+        test_nodes.push_back( NEWNODE(_StructLiteral,  ::AST::Path(c_test, { ::AST::PathNode("TestDescAndFn")}), nullptr, mv_str(descandfn_vals) ) );
         // NOTE: 1.39+ needs &TestDescAndFn here
         if(TARGETVER_LEAST_1_39)
         {
-            test_nodes.back() = NEWNODE(_UniOp, ::AST::ExprNode_UniOp::REF, mv$(test_nodes.back()));
+            test_nodes.back() = NEWNODE(_UniOp, ::AST::ExprNode_UniOp::REF, mv_str(test_nodes.back()));
         }
     }
-    auto* tests_array = new ::AST::ExprNode_Array(mv$(test_nodes));
+    auto* tests_array = new ::AST::ExprNode_Array(mv_str(test_nodes));
 
     size_t test_count = tests_array->m_values.size();
     auto list_item_ty = TypeRef(Span(), ::AST::Path(c_test, { ::AST::PathNode("TestDescAndFn") }));
     // NOTE: 1.39+ needs &TestDescAndFn here
     if(TARGETVER_LEAST_1_39)
     {
-        list_item_ty = TypeRef(TypeRef::TagReference(), Span(), AST::LifetimeRef::new_static(), false, mv$(list_item_ty));
+        list_item_ty = TypeRef(TypeRef::TagReference(), Span(), AST::LifetimeRef::new_static(), false, mv_str(list_item_ty));
     }
     auto tests_list = ::AST::Static { ::AST::Static::Class::STATIC,
         TypeRef(TypeRef::TagSizedArray(), Span(),
-                mv$(list_item_ty),
+                mv_str(list_item_ty),
                 ::std::shared_ptr<::AST::ExprNode>( new ::AST::ExprNode_Integer(U128(test_count), CORETYPE_UINT) )
                ),
-        ::AST::Expr( mv$(tests_array) )
+        ::AST::Expr( mv_str(tests_array) )
         };
 
     // ---- module ----
@@ -158,9 +158,9 @@ void Expand_TestHarness(::AST::Crate& crate)
     //newmod.add_ext_crate(Span(), false, "std", "std", {});
     //newmod.add_ext_crate(Span(), false, "test", "test", {});
 
-    newmod.add_item(Span(), vis_private, "main", mv$(main_fn), {});
-    newmod.add_item(Span(), vis_private, "TESTS", mv$(tests_list), {});
+    newmod.add_item(Span(), vis_private, "main", mv_str(main_fn), {});
+    newmod.add_item(Span(), vis_private, "TESTS", mv_str(tests_list), {});
 
-    crate.m_root_module.add_item(Span(), vis_private, "test#", mv$(newmod), {});
+    crate.m_root_module.add_item(Span(), vis_private, "test#", mv_str(newmod), {});
     crate.m_lang_items["mrustc-main"] = ::AST::AbsolutePath("", { "test#", "main" });
 }

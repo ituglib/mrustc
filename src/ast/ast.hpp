@@ -54,10 +54,10 @@ struct StructItem
     //StructItem() {}
 
     StructItem(::AST::AttributeList attrs, AST::Visibility vis, RcString name, TypeRef ty):
-        m_attrs( mv$(attrs) ),
-        m_vis( mv$(vis) ),
-        m_name( mv$(name) ),
-        m_type( mv$(ty) )
+        m_attrs( mv_str(attrs) ),
+        m_vis( mv_str(vis) ),
+        m_name( mv_str(name) ),
+        m_type( mv_str(ty) )
     {
     }
 
@@ -77,9 +77,9 @@ struct TupleItem
     //TupleItem() {}
 
     TupleItem(::AST::AttributeList attrs, AST::Visibility vis, TypeRef ty):
-        m_attrs( mv$(attrs) ),
-        m_vis(mv$(vis)),
-        m_type( mv$(ty) )
+        m_attrs( mv_str(attrs) ),
+        m_vis(mv_str(vis)),
+        m_type( mv_str(ty) )
     {
     }
 
@@ -188,9 +188,9 @@ public:
         TypeRef  ty;
 
         Arg(::AST::Pattern pat, TypeRef ty, ::AST::AttributeList attrs={})
-            : attrs(mv$(attrs))
-            , pat(mv$(pat))
-            , ty(mv$(ty))
+            : attrs(mv_str(attrs))
+            , pat(mv_str(pat))
+            , ty(mv_str(ty))
         {
         }
     };
@@ -297,9 +297,9 @@ public:
         m_is_unsafe(false)
     {}
     Trait(GenericParams params, ::std::vector< Spanned<Type_TraitPath> > supertraits, ::std::vector< Spanned<LifetimeRef> > lifetimes):
-        m_params( mv$(params) ),
-        m_supertraits( mv$(supertraits) ),
-        m_lifetimes( mv$(lifetimes) ),
+        m_params( mv_str(params) ),
+        m_supertraits( mv_str(supertraits) ),
+        m_lifetimes( mv_str(lifetimes) ),
         m_is_marker(false),
         m_is_unsafe(false)
     {
@@ -358,23 +358,23 @@ struct EnumVariant
     }
 
     EnumVariant(AttributeList attrs, RcString name, Expr&& value):
-        m_attrs( mv$(attrs) ),
-        m_name( mv$(name) ),
-        m_data( EnumVariantData::make_Value({mv$(value)}) )
+        m_attrs( mv_str(attrs) ),
+        m_name( mv_str(name) ),
+        m_data( EnumVariantData::make_Value({mv_str(value)}) )
     {
     }
 
     EnumVariant(AttributeList attrs, RcString name, ::std::vector<TupleItem> sub_types):
-        m_attrs( mv$(attrs) ),
+        m_attrs( mv_str(attrs) ),
         m_name( ::std::move(name) ),
-        m_data( EnumVariantData::make_Tuple( {mv$(sub_types)} ) )
+        m_data( EnumVariantData::make_Tuple( {mv_str(sub_types)} ) )
     {
     }
 
     EnumVariant(AttributeList attrs, RcString name, ::std::vector<StructItem> fields):
-        m_attrs( mv$(attrs) ),
+        m_attrs( mv_str(attrs) ),
         m_name( ::std::move(name) ),
-        m_data( EnumVariantData::make_Struct( {mv$(fields)} ) )
+        m_data( EnumVariantData::make_Struct( {mv_str(fields)} ) )
     {
     }
 
@@ -484,11 +484,11 @@ public:
     }
     Struct( GenericParams params, ::std::vector<StructItem> fields ):
         m_params( ::std::move(params) ),
-        m_data( StructData::make_Struct({mv$(fields)}) )
+        m_data( StructData::make_Struct({mv_str(fields)}) )
     {}
     Struct( GenericParams params, ::std::vector<TupleItem> fields ):
         m_params( ::std::move(params) ),
-        m_data( StructData::make_Tuple({mv$(fields)}) )
+        m_data( StructData::make_Tuple({mv_str(fields)}) )
     {}
 
     const GenericParams& params() const { return m_params; }
@@ -530,11 +530,11 @@ class ImplDef
     TypeRef m_type;
 public:
     ImplDef(AttributeList attrs, GenericParams params, Spanned<Path> trait_type, TypeRef impl_type):
-        m_attrs( mv$(attrs) ),
+        m_attrs( mv_str(attrs) ),
         m_is_unsafe( false ),
-        m_params( mv$(params) ),
-        m_trait( mv$(trait_type) ),
-        m_type( mv$(impl_type) )
+        m_params( mv_str(params) ),
+        m_trait( mv_str(trait_type) ),
+        m_type( mv_str(impl_type) )
     {}
 
     ImplDef(ImplDef&&) /*noexcept*/ = default;
@@ -582,7 +582,7 @@ private:
 public:
     Impl(Impl&&) /*noexcept*/ = default;
     Impl(ImplDef def):
-        m_def( mv$(def) )
+        m_def( mv_str(def) )
     {}
     Impl& operator=(Impl&&) = default;
 
@@ -629,7 +629,7 @@ public:
     std::vector<Link>   m_libraries;
 
     ExternBlock(::std::string abi):
-        m_abi( mv$(abi) )
+        m_abi( mv_str(abi) )
     {}
 
     const ::std::string& abi() const { return m_abi; }
@@ -720,7 +720,7 @@ public:
 public:
     Module() {}
     Module(::AST::AbsolutePath path):
-        m_my_path( mv$(path) )
+        m_my_path( mv_str(path) )
     {
     }
 

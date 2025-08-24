@@ -588,7 +588,7 @@ int main(int argc, char *argv[])
         // Construct the HIR from the AST
         // - Note `LowerHIR_FromAST` consumes the AST
         ::HIR::CratePtr hir_crate = CompilePhase< ::HIR::CratePtr>("HIR Lower", [&]() {
-            return LowerHIR_FromAST(mv$( crate ));
+            return LowerHIR_FromAST(mv_str( crate ));
             });
         memory_dump("HIR Gen");
         if( params.debug.dump_hir )
@@ -834,7 +834,7 @@ int main(int argc, char *argv[])
                     if( const auto* e = i.second->ent.opt_ProcMacro() ) {
                         crate_for_ser.m_root_module.m_macro_items.insert(std::make_pair(
                             i.first,
-                            box$(HIR::VisEnt<HIR::MacroItem>{ i.second->publicity, *e })
+                            box_str(HIR::VisEnt<HIR::MacroItem>{ i.second->publicity, *e })
                             ));
                     }
                 }
@@ -1269,7 +1269,7 @@ ProgramParams::ProgramParams(int argc, char *argv[])
 
                 auto name = ::std::string(desc, pos);
                 auto path = ::std::string(pos+1);
-                this->crate_overrides.insert(::std::make_pair( mv$(name), mv$(path) ));
+                this->crate_overrides.insert(::std::make_pair( mv_str(name), mv_str(path) ));
             }
             // --crate-tag <name>  >> Specify a version/identifier suffix for the crate
             else if( const auto* name_str = check_with_arg("crate-tag") ) {

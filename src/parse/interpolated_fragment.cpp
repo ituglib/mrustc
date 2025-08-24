@@ -57,37 +57,37 @@ InterpolatedFragment::InterpolatedFragment(InterpolatedFragment::Type type, AST:
 }
 InterpolatedFragment::InterpolatedFragment(AST::Attribute v):
     m_type( InterpolatedFragment::META ),
-    m_ptr( new AST::Attribute(mv$(v)) )
+    m_ptr( new AST::Attribute(mv_str(v)) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(::AST::Named<::AST::Item> v):
     m_type( InterpolatedFragment::ITEM ),
-    m_ptr( new ::AST::Named<::AST::Item>( mv$(v) ) )
+    m_ptr( new ::AST::Named<::AST::Item>( mv_str(v) ) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(TokenTree v):
     m_type( InterpolatedFragment::TT ),
-    m_ptr( new TokenTree(mv$(v)) )
+    m_ptr( new TokenTree(mv_str(v)) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(AST::Path v):
     m_type( InterpolatedFragment::PATH ),
-    m_ptr( new AST::Path(mv$(v)) )
+    m_ptr( new AST::Path(mv_str(v)) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(AST::Pattern v):
     m_type( InterpolatedFragment::PAT ),
-    m_ptr( new AST::Pattern(mv$(v)) )
+    m_ptr( new AST::Pattern(mv_str(v)) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(TypeRef v):
     m_type( InterpolatedFragment::TYPE ),
-    m_ptr( new TypeRef(mv$(v)) )
+    m_ptr( new TypeRef(mv_str(v)) )
 {
 }
 InterpolatedFragment::InterpolatedFragment(AST::Visibility v):
     m_type( InterpolatedFragment::VIS ),
-    m_ptr( new AST::Visibility(mv$(v)) )
+    m_ptr( new AST::Visibility(mv_str(v)) )
 {
 }
 

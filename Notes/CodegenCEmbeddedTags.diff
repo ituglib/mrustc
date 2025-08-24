@@ -109,7 +109,7 @@ index 9af87d47..bcf296db 100644
              {
 @@ -1591,7 +1590,7 @@ namespace {
                  {
-                     auto var_lv =::MIR::LValue::new_Downcast(mv$(self), 0);
+                     auto var_lv =::MIR::LValue::new_Downcast(mv_str(self), 0);
  
 -                    m_of << "\tswitch(rv->TAG) {\n";
 +                    m_of << "\tswitch((*rv)";emit_enum_path(repr, {~0u}); m_of << ") {\n";

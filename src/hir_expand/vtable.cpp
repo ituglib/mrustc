@@ -29,21 +29,21 @@ namespace {
 
         void visit_module(::HIR::ItemPath p, ::HIR::Module& mod) override
         {
-            auto saved_nt = mv$(m_new_type);
+            auto saved_nt = mv_str(m_new_type);
 
             ::std::vector< decltype(mod.m_mod_items)::value_type> new_types;
             m_new_type = [&](bool pub, auto name, auto s)->auto {
-                auto boxed = box$( (::HIR::VisEnt< ::HIR::TypeItem> { (pub ? ::HIR::Publicity::new_global() : ::HIR::Publicity::new_none()), ::HIR::TypeItem( mv$(s) ) }) );
+                auto boxed = box_str( (::HIR::VisEnt< ::HIR::TypeItem> { (pub ? ::HIR::Publicity::new_global() : ::HIR::Publicity::new_none()), ::HIR::TypeItem( mv_str(s) ) }) );
                 auto ret = (p + name).get_simple_path();
-                new_types.push_back( ::std::make_pair( mv$(name), mv$(boxed)) );
+                new_types.push_back( ::std::make_pair( mv_str(name), mv_str(boxed)) );
                 return ret;
                 };
 
             ::HIR::Visitor::visit_module(p, mod);
             for(auto& i : new_types )
-                mod.m_mod_items.insert( mv$(i) );
+                mod.m_mod_items.insert( mv_str(i) );
 
-            m_new_type = mv$(saved_nt);
+            m_new_type = mv_str(saved_nt);
         }
 
         void visit_trait(::HIR::ItemPath p, ::HIR::Trait& tr) override
@@ -99,7 +99,7 @@ namespace {
                 visitor.add_types_from_trait(st.m_path, *st.m_trait_ptr, st.m_type_bounds);
             }
             bool has_conflicting_aty_name = visitor.has_conflict;
-            auto args = mv$(visitor.params);
+            auto args = mv_str(visitor.params);
 
             struct VtableConstruct {
                 const OuterVisitor* m_outer;
@@ -195,12 +195,12 @@ namespace {
                             ft.m_arg_types.reserve( ve.m_args.size() );
                             ft.m_arg_types.push_back( clone_ty_with(sp, m_resolve_ptr->monomorph_expand_opt(sp, tmp, ve.m_args[0].second, m), clone_self_cb) );
                             if( ve.m_receiver == ::HIR::Function::Receiver::Value ) {
-                                ft.m_arg_types[0] = HIR::TypeRef::new_borrow(HIR::BorrowType::Owned, mv$(ft.m_arg_types[0]));
+                                ft.m_arg_types[0] = HIR::TypeRef::new_borrow(HIR::BorrowType::Owned, mv_str(ft.m_arg_types[0]));
                             }
                             for(unsigned int i = 1; i < ve.m_args.size(); i ++)
                                 ft.m_arg_types.push_back( m_resolve_ptr->monomorph_expand(sp, ve.m_args[i].second, m) );
                             // Clear the first argument (the receiver)
-                            ::HIR::TypeRef  fcn_type( mv$(ft) );
+                            ::HIR::TypeRef  fcn_type( mv_str(ft) );
 
                             // Detect use of `Self` and don't create the vtable if there is.
                             // NOTE: Associated types where replaced by clone_ty_with
@@ -217,7 +217,7 @@ namespace {
                             DEBUG("- '" << vi.first << "' is @" << fields.size());
                             fields.push_back( ::std::make_pair(
                                 vi.first,
-                                ::HIR::VisEnt< ::HIR::TypeRef> { ::HIR::Publicity::new_global(), mv$(fcn_type) }
+                                ::HIR::VisEnt< ::HIR::TypeRef> { ::HIR::Publicity::new_global(), mv_str(fcn_type) }
                                 ) );
                             }
                         TU_ARMA(Static, ve) {
@@ -252,7 +252,7 @@ namespace {
             ft.m_abi = RcString::new_interned(ABI_RUST);
             ft.m_rettype = ::HIR::TypeRef::new_unit();
             ft.m_arg_types.push_back( ::HIR::TypeRef::new_pointer(::HIR::BorrowType::Owned, ::HIR::TypeRef::new_unit()) );
-            vtc.fields.push_back(::std::make_pair( RcString::new_interned("#drop_glue"), ::HIR::VisEnt<::HIR::TypeRef> { ::HIR::Publicity::new_none(), ::HIR::TypeRef(mv$(ft)) } ));
+            vtc.fields.push_back(::std::make_pair( RcString::new_interned("#drop_glue"), ::HIR::VisEnt<::HIR::TypeRef> { ::HIR::Publicity::new_none(), ::HIR::TypeRef(mv_str(ft)) } ));
             // - Size of data
             vtc.fields.push_back(::std::make_pair( RcString::new_interned("#size"), ::HIR::VisEnt<::HIR::TypeRef> { ::HIR::Publicity::new_none(), ::HIR::CoreType::Usize } ));
             // - Alignment of data
@@ -272,17 +272,17 @@ namespace {
                 const auto& pt = tr.m_all_parent_traits[i];
                 auto parent_vtable_spath = pt.m_path.m_path;
                 parent_vtable_spath.update_last_component( RcString::new_interned(FMT( parent_vtable_spath.components().back().c_str() << "#vtable" )) );
-                auto parent_vtable_path = ::HIR::GenericPath(mv$(parent_vtable_spath), pt.m_path.m_params.clone());
+                auto parent_vtable_path = ::HIR::GenericPath(mv_str(parent_vtable_spath), pt.m_path.m_params.clone());
                 auto ty = true || supertrait_flags[i]
-                    ? ::HIR::TypeRef::new_borrow( ::HIR::BorrowType::Shared, ::HIR::TypeRef::new_path(mv$(parent_vtable_path), {}) )
+                    ? ::HIR::TypeRef::new_borrow( ::HIR::BorrowType::Shared, ::HIR::TypeRef::new_path(mv_str(parent_vtable_path), {}) )
                     : ::HIR::TypeRef::new_unit()
                     ;
                 vtc.fields.push_back(::std::make_pair(
                     RcString::new_interned(FMT("#parent_" << i)),
-                    ::HIR::VisEnt<::HIR::TypeRef> { ::HIR::Publicity::new_none(), mv$(ty) }
+                    ::HIR::VisEnt<::HIR::TypeRef> { ::HIR::Publicity::new_none(), mv_str(ty) }
                     ));
             }
-            auto fields = mv$(vtc.fields);
+            auto fields = mv_str(vtc.fields);
 
             ::HIR::PathParams   params;
             {
@@ -293,22 +293,22 @@ namespace {
                 }
                 for(const auto& ty : tr.m_type_indexes) {
                     ::HIR::Path path( ::HIR::TypeRef::new_self(), trait_path.clone(), ty.first );
-                    params.m_types.push_back( ::HIR::TypeRef::new_path( mv$(path), {} ) );
+                    params.m_types.push_back( ::HIR::TypeRef::new_path( mv_str(path), {} ) );
                 }
             }
             // TODO: Would like to have access to the publicity marker
             auto item_path = m_new_type(
                 true,
                 RcString::new_interned(FMT(p.get_name() << "#vtable")),
-                ::HIR::Struct(mv$(args), ::HIR::Struct::Repr::C, ::HIR::Struct::Data(mv$(fields)))
+                ::HIR::Struct(mv_str(args), ::HIR::Struct::Repr::C, ::HIR::Struct::Data(mv_str(fields)))
                 );
             tr.m_vtable_path = item_path;
             DEBUG("Vtable structure created - " << item_path);
-            ::HIR::GenericPath  path( mv$(item_path), mv$(params) );
+            ::HIR::GenericPath  path( mv_str(item_path), mv_str(params) );
 
             tr.m_values.insert( ::std::make_pair(
                 RcString::new_interned("vtable#"),
-                ::HIR::TraitValueItem(::HIR::Static( ::HIR::Linkage(), false, ::HIR::TypeRef::new_path( mv$(path), {} ), {} ))
+                ::HIR::TraitValueItem(::HIR::Static( ::HIR::Linkage(), false, ::HIR::TypeRef::new_path( mv_str(path), {} ), {} ))
                 ) );
         }
 
@@ -335,24 +335,24 @@ namespace {
                     //ASSERT_BUG(sp, tr.m_values.at(m.first).is_Function(), "TODO: Handle generating vtables with non-function items");
                     DEBUG("- " << m.second.first << " = " << m.second.second << " :: " << m.first);
                     auto gpath = monomorphise_genericpath_with(sp, m.second.second, monomorph_cb_trait, false);
-                    vals.at(m.second.first) = ::HIR::Literal::make_BorrowOf( ::HIR::Path(impl.m_type.clone(), mv$(gpath), m.first) );
+                    vals.at(m.second.first) = ::HIR::Literal::make_BorrowOf( ::HIR::Path(impl.m_type.clone(), mv_str(gpath), m.first) );
                 }
 
                 auto vtable_sp = trait_path;
                 vtable_sp.m_components.back() += "#vtable";
                 auto vtable_params = impl.m_trait_args.clone();
                 for(const auto& ty : tr.m_type_indexes) {
-                    ::HIR::Path path( impl.m_type.clone(), mv$(trait_gpath), ty.first );
-                    vtable_params.m_types.push_back( ::HIR::TypeRef( mv$(path) ) );
+                    ::HIR::Path path( impl.m_type.clone(), mv_str(trait_gpath), ty.first );
+                    vtable_params.m_types.push_back( ::HIR::TypeRef( mv_str(path) ) );
                 }
 
                 const auto& vtable_ref = m_crate.get_struct_by_path(sp, vtable_sp);
                 impl.m_statics.insert(::std::make_pair( RcString::new_interned("vtable#"), ::HIR::TraitImpl::ImplEnt<::HIR::Static> { true, ::HIR::Static {
                     ::HIR::Linkage(),
                     false,
-                    ::HIR::TypeRef::new_path(::HIR::GenericPath(mv$(vtable_sp), mv$(vtable_params)), &vtable_ref),
+                    ::HIR::TypeRef::new_path(::HIR::GenericPath(mv_str(vtable_sp), mv_str(vtable_params)), &vtable_ref),
                     {},
-                    ::HIR::Literal::make_List( mv$(vals) )
+                    ::HIR::Literal::make_List( mv_str(vals) )
                     } } ));
             }
             #endif

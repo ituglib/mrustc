@@ -328,7 +328,7 @@ const ::HIR::TypeRef& MIR::TypeResolve::get_param_type(::HIR::TypeRef& tmp, cons
             else {
                 rv = ty.clone();
             }
-            return HIR::TypeRef::new_borrow(HIR::BorrowType::Shared, mv$(rv));
+            return HIR::TypeRef::new_borrow(HIR::BorrowType::Shared, mv_str(rv));
             }
         TU_ARMA(Static, ve) {
             const auto& ty = ve->m_type;
@@ -340,7 +340,7 @@ const ::HIR::TypeRef& MIR::TypeResolve::get_param_type(::HIR::TypeRef& tmp, cons
             else {
                 rv = ty.clone();
             }
-            return HIR::TypeRef::new_borrow(HIR::BorrowType::Shared, mv$(rv));
+            return HIR::TypeRef::new_borrow(HIR::BorrowType::Shared, mv_str(rv));
             }
         TU_ARMA(Function, ve) {
             auto rv = HIR::TypeRef((::HIR::TypeData::Data_NamedFunction{
@@ -411,31 +411,31 @@ namespace visit {
 
     bool visit_mir_lvalue(const ::MIR::LValue& lv, ValUsage u, ::std::function<bool(const ::MIR::LValue& , ValUsage)> cb)
     {
-        LValueCbVisitor v { mv$(cb) };
+        LValueCbVisitor v { mv_str(cb) };
         return v.visit_lvalue(lv, u);
     }
 
     bool visit_mir_lvalue(const ::MIR::Param& p, ValUsage u, ::std::function<bool(const ::MIR::LValue& , ValUsage)> cb)
     {
-        LValueCbVisitor v { mv$(cb) };
+        LValueCbVisitor v { mv_str(cb) };
         return v.visit_param(p, u);
     }
 
     bool visit_mir_lvalues(const ::MIR::RValue& rval, ::std::function<bool(const ::MIR::LValue& , ValUsage)> cb)
     {
-        LValueCbVisitor v { mv$(cb) };
+        LValueCbVisitor v { mv_str(cb) };
         return v.visit_rvalue(rval);
     }
 
     bool visit_mir_lvalues(const ::MIR::Statement& stmt, ::std::function<bool(const ::MIR::LValue& , ValUsage)> cb)
     {
-        LValueCbVisitor v { mv$(cb) };
+        LValueCbVisitor v { mv_str(cb) };
         return v.visit_stmt(stmt);
     }
 
     bool visit_mir_lvalues(const ::MIR::Terminator& term, ::std::function<bool(const ::MIR::LValue& , ValUsage)> cb)
     {
-        LValueCbVisitor v { mv$(cb) };
+        LValueCbVisitor v { mv_str(cb) };
         return v.visit_terminator(term);
     }
     /*
@@ -654,10 +654,10 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
 
 
     ::MIR::ValueLifetimes   rv;
-    rv.m_block_offsets = mv$(block_offsets);
+    rv.m_block_offsets = mv_str(block_offsets);
     rv.m_slots.reserve( slot_lifetimes.size() );
     for(auto& lft : slot_lifetimes)
-        rv.m_slots.push_back( ::MIR::ValueLifetime(mv$(lft.stmt_bitmap)) );
+        rv.m_slots.push_back( ::MIR::ValueLifetime(mv_str(lft.stmt_bitmap)) );
     return rv;
 }
 void MIR_Helper_GetLifetimes_DetermineValueLifetime(
@@ -694,13 +694,13 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
         State(State&& x):
             m_block_offsets(x.m_block_offsets),
             m_out_vl(x.m_out_vl),
-            bb_history( mv$(x.bb_history) ),
+            bb_history( mv_str(x.bb_history) ),
             last_read_ofs( x.last_read_ofs ),
             m_is_borrowed( x.m_is_borrowed )
         {
         }
         State& operator=(State&& x) {
-            this->bb_history = mv$(x.bb_history);
+            this->bb_history = mv_str(x.bb_history);
             this->last_read_ofs = x.last_read_ofs;
             this->m_is_borrowed = x.m_is_borrowed;
             return *this;
@@ -992,22 +992,22 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
                 state.finalise(stmt_idx);
                 }
             TU_ARMA(Goto, te) {
-                m_states_to_do.push_back( ::std::make_pair(te, mv$(state)) );
+                m_states_to_do.push_back( ::std::make_pair(te, mv_str(state)) );
                 }
             TU_ARMA(Panic, te) {
-                m_states_to_do.push_back( ::std::make_pair(te.dst, mv$(state)) );
+                m_states_to_do.push_back( ::std::make_pair(te.dst, mv_str(state)) );
                 }
             TU_ARMA(If, te) {
                 m_states_to_do.push_back( ::std::make_pair(te.bb_true, state.clone()) );
-                m_states_to_do.push_back( ::std::make_pair(te.bb_false, mv$(state)) );
+                m_states_to_do.push_back( ::std::make_pair(te.bb_false, mv_str(state)) );
                 }
             TU_ARMA(Switch, te) {
                 for(size_t i = 0; i < te.targets.size(); i ++)
                 {
                     auto s = (i == te.targets.size()-1)
-                        ? mv$(state)
+                        ? mv_str(state)
                         : state.clone();
-                    m_states_to_do.push_back( ::std::make_pair(te.targets[i], mv$(s)) );
+                    m_states_to_do.push_back( ::std::make_pair(te.targets[i], mv_str(s)) );
                 }
                 }
             TU_ARMA(SwitchValue, te) {
@@ -1015,7 +1015,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
                 {
                     m_states_to_do.push_back( ::std::make_pair(te.targets[i], state.clone()) );
                 }
-                m_states_to_do.push_back( ::std::make_pair(te.def_target, mv$(state)) );
+                m_states_to_do.push_back( ::std::make_pair(te.def_target, mv_str(state)) );
                 }
             TU_ARMA(Call, te) {
                 if( te.ret_val == m_lv )
@@ -1031,7 +1031,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
                 else {
                     m_states_to_do.push_back( ::std::make_pair(te.panic_block, state.clone()) );
                 }
-                m_states_to_do.push_back( ::std::make_pair(te.ret_block, mv$(state)) );
+                m_states_to_do.push_back( ::std::make_pair(te.ret_block, mv_str(state)) );
                 }
             }
         }
@@ -1049,7 +1049,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
     while( ! runner.m_states_to_do.empty() )
     {
         auto bb_idx = runner.m_states_to_do.back().first;
-        auto state = mv$(runner.m_states_to_do.back().second);
+        auto state = mv_str(runner.m_states_to_do.back().second);
         runner.m_states_to_do.pop_back();
 
         DEBUG("state.bb_history=[" << state.bb_history << "], -> BB" << bb_idx);
@@ -1075,7 +1075,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
             {
                 // Put this state elsewhere and check if the variable is known valid at that point.
                 DEBUG("Looped (after last read), push for later");
-                post_check_list.push_back( ::std::make_pair(bb_idx, mv$(state)) );
+                post_check_list.push_back( ::std::make_pair(bb_idx, mv_str(state)) );
                 continue ;
             }
         }
@@ -1136,7 +1136,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
         runner.m_bb_counts[bb_idx].visit_count ++;
 #endif
 
-        runner.run_block(bb_idx, 0, mv$(state));
+        runner.run_block(bb_idx, 0, mv_str(state));
     }
 
     // Iterate while there are items in the post_check list
@@ -1333,12 +1333,12 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
     State   init_state(fcn);
 
     ::std::vector<::std::pair<unsigned int, State>> todo_queue;
-    todo_queue.push_back(::std::make_pair( 0, mv$(init_state) ));
+    todo_queue.push_back(::std::make_pair( 0, mv_str(init_state) ));
 
     while(!todo_queue.empty())
     {
         auto bb_idx = todo_queue.back().first;
-        auto val_state = mv$(todo_queue.back().second);
+        auto val_state = mv_str(todo_queue.back().second);
         todo_queue.pop_back();
         state.set_cur_stmt(bb_idx, 0);
 
@@ -1456,7 +1456,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
                 apply_state(new_state);
                 return ;
             }
-            todo_queue.push_back(::std::make_pair( new_bb_idx, mv$(new_state) ));
+            todo_queue.push_back(::std::make_pair( new_bb_idx, mv_str(new_state) ));
             };
 
         // Compare this state to a composite list of lifetimes seen in this block
@@ -1597,7 +1597,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
             apply_state(val_state);
             ),
         (Goto,
-            add_to_visit(e, mv$(val_state));
+            add_to_visit(e, mv_str(val_state));
             ),
         (Panic,
             // What should be done here?
@@ -1607,7 +1607,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
 
             // Push blocks
             add_to_visit(e.bb0, val_state.clone());
-            add_to_visit(e.bb1, mv$(val_state));
+            add_to_visit(e.bb1, mv_str(val_state));
             ),
         (Switch,
             visit_mir_lvalue(e.val, ValUsage::Read, visit_lval_cb);
@@ -1617,8 +1617,8 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
 
             for(const auto& tgt : tgts)
             {
-                auto vs = (tgt == *tgts.rbegin() ? mv$(val_state) : val_state.clone());
-                add_to_visit(tgt, mv$(vs));
+                auto vs = (tgt == *tgts.rbegin() ? mv_str(val_state) : val_state.clone());
+                add_to_visit(tgt, mv_str(vs));
             }
             ),
         (Call,
@@ -1633,7 +1633,7 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
 
             // TODO: If the function returns !, don't follow the ret_block
             lvalue_set(e.ret_val);
-            add_to_visit(e.ret_block, mv$(val_state));
+            add_to_visit(e.ret_block, mv_str(val_state));
             )
         )
     }
@@ -1653,13 +1653,13 @@ void MIR_Helper_GetLifetimes_DetermineValueLifetime(
 
     // Move lifetime bitmaps into the variable for the below code
     ::MIR::ValueLifetimes   rv;
-    rv.m_block_offsets = mv$(block_offsets);
+    rv.m_block_offsets = mv_str(block_offsets);
     rv.m_temporaries.reserve( temporary_lifetimes.size() );
     for(auto& lft : temporary_lifetimes)
-        rv.m_temporaries.push_back( ::MIR::ValueLifetime(mv$(lft.stmt_bitmap)) );
+        rv.m_temporaries.push_back( ::MIR::ValueLifetime(mv_str(lft.stmt_bitmap)) );
     rv.m_variables.reserve( variable_lifetimes.size() );
     for(auto& lft : variable_lifetimes)
-        rv.m_variables.push_back( ::MIR::ValueLifetime(mv$(lft.stmt_bitmap)) );
+        rv.m_variables.push_back( ::MIR::ValueLifetime(mv_str(lft.stmt_bitmap)) );
 
     return rv;
 }

@@ -64,10 +64,10 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
             auto fcn_decl = parse_function(lex, fcn_name);
 
             auto vi = ::HIR::VisEnt<HIR::ValueItem> {
-                HIR::Publicity::new_global(), ::HIR::ValueItem(mv$(fcn_decl))
+                HIR::Publicity::new_global(), ::HIR::ValueItem(mv_str(fcn_decl))
                 };
             rv.m_crate->m_root_module.m_value_items.insert(::std::make_pair(fcn_name,
-                ::std::make_unique<decltype(vi)>(mv$(vi))
+                ::std::make_unique<decltype(vi)>(mv_str(vi))
                 ));
 
             // Attributes
@@ -79,7 +79,7 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
                     t.input_function = ::HIR::SimplePath("", { fcn_name });
                     t.output_template_function = ::HIR::SimplePath("", { RcString(attr.second) });
 
-                    rv.m_tests.push_back(mv$(t));
+                    rv.m_tests.push_back(mv_str(t));
                 }
                 else
                 {
@@ -140,10 +140,10 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
             }
             GET_CHECK_TOK(tok, lex, TOK_SEMICOLON);
             auto vi = ::HIR::VisEnt<HIR::ValueItem> {
-                HIR::Publicity::new_global(), ::HIR::ValueItem(mv$(st_decl))
+                HIR::Publicity::new_global(), ::HIR::ValueItem(mv_str(st_decl))
                 };
             rv.m_crate->m_root_module.m_value_items.insert(::std::make_pair(name,
-                ::std::make_unique<decltype(vi)>(mv$(vi))
+                ::std::make_unique<decltype(vi)>(mv_str(vi))
                 ));
         }
         else if( consume_if(lex, TOK_RWORD_CRATE) )
@@ -168,10 +168,10 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
 
                 HIR::ExternType et;
                 auto vi = ::HIR::VisEnt<HIR::TypeItem> {
-                    HIR::Publicity::new_global(), ::HIR::TypeItem(mv$(et))
+                    HIR::Publicity::new_global(), ::HIR::TypeItem(mv_str(et))
                     };
                 rv.m_crate->m_root_module.m_mod_items.insert(::std::make_pair(name,
-                    ::std::make_unique<decltype(vi)>(mv$(vi))
+                    ::std::make_unique<decltype(vi)>(mv_str(vi))
                     ));
                 continue ;
             }
@@ -224,13 +224,13 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
                 for(const auto& f : repr.fields) {
                     str_fields.push_back(HIR::VisEnt<HIR::TypeRef>{ HIR::Publicity::new_global(), f.ty.clone() });
                 }
-                auto str = HIR::Struct(HIR::GenericParams(), HIR::Struct::Repr::C, mv$(str_fields));
+                auto str = HIR::Struct(HIR::GenericParams(), HIR::Struct::Repr::C, mv_str(str_fields));
                 str.m_markings.is_copy = true;
                 auto vi = ::HIR::VisEnt<HIR::TypeItem> {
-                    HIR::Publicity::new_global(), ::HIR::TypeItem(mv$(str))
+                    HIR::Publicity::new_global(), ::HIR::TypeItem(mv_str(str))
                     };
                 rv.m_crate->m_root_module.m_mod_items.insert(::std::make_pair(name,
-                    ::std::make_unique<decltype(vi)>(mv$(vi))
+                    ::std::make_unique<decltype(vi)>(mv_str(vi))
                     ));
             }
             else if( std::all_of(repr.fields.begin(), repr.fields.end(), [&](const TypeRepr::Field& f){ return f.offset == repr.fields.front().offset; }) )
@@ -243,10 +243,10 @@ MirOptTestFile  MirOptTestFile::load_from_file(const helpers::path& p)
                     }
                     unn.m_markings.is_copy = true;
                     auto vi = ::HIR::VisEnt<HIR::TypeItem> {
-                        HIR::Publicity::new_global(), ::HIR::TypeItem(mv$(unn))
+                        HIR::Publicity::new_global(), ::HIR::TypeItem(mv_str(unn))
                         };
                     rv.m_crate->m_root_module.m_mod_items.insert(::std::make_pair(name,
-                        ::std::make_unique<decltype(vi)>(mv$(vi))
+                        ::std::make_unique<decltype(vi)>(mv_str(vi))
                         ));
                 }
                 else {
@@ -351,7 +351,7 @@ namespace {
 
             auto arg_idx = static_cast<unsigned>(args.size());
             val_name_map.insert( ::std::make_pair(name, ::MIR::LValue::Storage::new_Argument(arg_idx)) );
-            args.push_back( ::std::make_pair(HIR::Pattern(), mv$(var_ty)) );
+            args.push_back( ::std::make_pair(HIR::Pattern(), mv_str(var_ty)) );
 
             if( !consume_if(lex, TOK_COMMA) )
                 break;
@@ -381,7 +381,7 @@ namespace {
 
         if( consume_if(lex, TOK_SEMICOLON) ) {
             g_item_params = nullptr;
-            out_name = mv$(fcn_name);
+            out_name = mv_str(fcn_name);
             return fcn_decl;
         }
 
@@ -413,7 +413,7 @@ namespace {
 
                 auto var_idx = static_cast<unsigned>(mir_fcn.locals.size());
                 val_name_map.insert( ::std::make_pair(name, ::MIR::LValue::Storage::new_Local(var_idx)) );
-                mir_fcn.locals.push_back( mv$(var_ty) );
+                mir_fcn.locals.push_back( mv_str(var_ty) );
             }
         }
         // 2. List of BBs arranged with 'ident: { STMTS; TERM }'
@@ -446,7 +446,7 @@ namespace {
                     }
                     else
                     {
-                        bb.statements.push_back(::MIR::Statement::make_Drop({ MIR::eDropKind::DEEP, mv$(slot), ~0u }));
+                        bb.statements.push_back(::MIR::Statement::make_Drop({ MIR::eDropKind::DEEP, mv_str(slot), ~0u }));
                     }
                 }
                 else if( tok.ident().name == "ASM" )
@@ -550,7 +550,7 @@ namespace {
 
                     case TOK_RWORD_CONST:
                         GET_CHECK_TOK(tok, lex, TOK_AMP);
-                        src = MIR::Constant::make_ItemAddr({ box$(parse_path(lex)) });
+                        src = MIR::Constant::make_ItemAddr({ box_str(parse_path(lex)) });
                         break;
 
                     case TOK_AMP:
@@ -574,7 +574,7 @@ namespace {
                             auto v = parse_lvalue(lex, val_name_map);
                             GET_CHECK_TOK(tok, lex, TOK_RWORD_AS);
                             auto ty = parse_type(lex);
-                            src = MIR::RValue::make_Cast({ mv$(v), mv$(ty) });
+                            src = MIR::RValue::make_Cast({ mv_str(v), mv_str(ty) });
                         }
                         else if( tok.ident().name == "ADDROF" )
                         {
@@ -593,7 +593,7 @@ namespace {
                                 TODO(lex.point_span(), "MIR assign UniOp - " << tok);
                             }
                             auto r = parse_lvalue(lex, val_name_map);
-                            src = MIR::RValue::make_UniOp({ mv$(r), op });
+                            src = MIR::RValue::make_UniOp({ mv_str(r), op });
                         }
                         else if( tok.ident().name == "BINOP" )
                         {
@@ -623,12 +623,12 @@ namespace {
                                 TODO(lex.point_span(), "MIR assign BinOp - " << tok);
                             }
                             auto r = parse_param(lex, val_name_map);
-                            src = MIR::RValue::make_BinOp({ mv$(l), op, mv$(r) });
+                            src = MIR::RValue::make_BinOp({ mv_str(l), op, mv_str(r) });
                         }
                         else if( tok.ident() == "DSTPTR" )
                         {
                             auto v = parse_lvalue(lex, val_name_map);
-                            src = MIR::RValue::make_DstPtr({ mv$(v) });
+                            src = MIR::RValue::make_DstPtr({ mv_str(v) });
                         }
                         else if( consume_if(lex, TOK_PAREN_OPEN) )
                         {
@@ -637,7 +637,7 @@ namespace {
                                 auto l = parse_param(lex, val_name_map);
                                 GET_CHECK_TOK(tok, lex, TOK_COMMA);
                                 auto r = parse_param(lex, val_name_map);
-                                return MIR::RValue::make_BinOp({ mv$(l), op, mv$(r) });
+                                return MIR::RValue::make_BinOp({ mv_str(l), op, mv_str(r) });
                                 };
                             if(tok.ident().name == "ADD")
                                 src = parse_binop(lex, MIR::eBinOp::ADD);
@@ -667,7 +667,7 @@ namespace {
                         }
                         else
                         {
-                            lex.putback(mv$(tok));
+                            lex.putback(mv_str(tok));
                             src = parse_lvalue(lex, val_name_map);
                         }
                         break;
@@ -675,7 +675,7 @@ namespace {
                     case TOK_LT:
                     case TOK_DOUBLE_LT:
                     case TOK_DOUBLE_COLON:
-                        lex.putback(mv$(tok));
+                        lex.putback(mv_str(tok));
                         src = parse_lvalue(lex, val_name_map);
                         break;
                     // Tuple literal
@@ -696,14 +696,14 @@ namespace {
                             if( consume_if(lex, TOK_SEMICOLON) ) {
                                 GET_CHECK_TOK(tok, lex, TOK_INTEGER);
                                 src = MIR::RValue::make_SizedArray({
-                                    mv$(val1),
+                                    mv_str(val1),
                                     ::HIR::ArraySize( tok.intval().truncate_u64() )
                                     });
                             }
                             else {
                                 src = MIR::RValue::make_Array({});
                                 auto& vals = src.as_Array().vals;
-                                vals.push_back(mv$(val1));
+                                vals.push_back(mv_str(val1));
                                 while( consume_if(lex, TOK_COMMA) ) {
                                     if(lex.lookahead(0) == TOK_SQUARE_CLOSE )
                                         break;
@@ -720,7 +720,7 @@ namespace {
                         TODO(lex.point_span(), "MIR assign - " << tok);
                     }
 
-                    bb.statements.push_back(::MIR::Statement::make_Assign({ mv$(dst), mv$(src) }));
+                    bb.statements.push_back(::MIR::Statement::make_Assign({ mv_str(dst), mv_str(src) }));
                 }
                 else
                 {
@@ -795,7 +795,7 @@ namespace {
                     GET_TOK(tok, lex);
                     auto int_name = RcString(tok.str());
                     auto params = parse_params(lex);
-                    target = ::MIR::CallTarget::make_Intrinsic({ int_name, mv$(params) });
+                    target = ::MIR::CallTarget::make_Intrinsic({ int_name, mv_str(params) });
                 }
                 else
                 {
@@ -827,7 +827,7 @@ namespace {
                 GET_CHECK_TOK(tok, lex, TOK_RWORD_ELSE);
                 auto panic_bb = parse_bb_name(lex);
 
-                bb.terminator = ::MIR::Terminator::make_Call({ ret_bb, panic_bb, mv$(dst), mv$(target), mv$(args) });
+                bb.terminator = ::MIR::Terminator::make_Call({ ret_bb, panic_bb, mv_str(dst), mv_str(target), mv_str(args) });
             }
             else if( tok.ident().name == "IF" )
             {
@@ -845,7 +845,7 @@ namespace {
                 GET_CHECK_TOK(tok, lex, TOK_RWORD_ELSE);
                 auto bb1 = parse_bb_name(lex);
 
-                bb.terminator = ::MIR::Terminator::make_If({ mv$(v), bb0, bb1 });
+                bb.terminator = ::MIR::Terminator::make_If({ mv_str(v), bb0, bb1 });
             }
             else if( tok.ident().name == "SWITCH" )
             {
@@ -883,7 +883,7 @@ namespace {
                     }
                     GET_CHECK_TOK(tok, lex, TOK_BRACE_CLOSE);
 
-                    bb.terminator = ::MIR::Terminator::make_Switch({ mv$(v), targets });
+                    bb.terminator = ::MIR::Terminator::make_Switch({ mv_str(v), targets });
                 }
             }
             else if( tok.ident().name == "SWITCHVALUE" )
@@ -995,7 +995,7 @@ namespace {
         }
 
         DEBUG(fcn_decl.m_args << " -> " << fcn_decl.m_return);
-        out_name = mv$(fcn_name);
+        out_name = mv_str(fcn_name);
         g_item_params = nullptr;
         return fcn_decl;
     }
@@ -1050,7 +1050,7 @@ namespace {
         auto crate_name = RcString::new_interned(tok.str());
 
         GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
-        lex.putback(mv$(tok));
+        lex.putback(mv_str(tok));
 
         std::vector<RcString>   components;
         while( consume_if(lex, TOK_DOUBLE_COLON) )
@@ -1063,7 +1063,7 @@ namespace {
     HIR::GenericPath parse_genericpath(TokenStream& lex)
     {
         auto sp = parse_simplepath(lex);
-        return ::HIR::GenericPath(mv$(sp), parse_params(lex));
+        return ::HIR::GenericPath(mv_str(sp), parse_params(lex));
     }
     HIR::Path parse_path(TokenStream& lex)
     {
@@ -1130,7 +1130,7 @@ namespace {
                     break;
             }
             GET_CHECK_TOK(tok, lex, TOK_PAREN_CLOSE);
-            return HIR::TypeRef(mv$(tys));
+            return HIR::TypeRef(mv_str(tys));
             } break;
         case TOK_SQUARE_OPEN: {
             auto ity = parse_type(lex);
@@ -1141,11 +1141,11 @@ namespace {
                 auto size = tok.intval();
                 GET_CHECK_TOK(tok, lex, TOK_SQUARE_CLOSE);
                 ASSERT_BUG(lex.point_span(), size < UINT_MAX, "");
-                return HIR::TypeRef::new_array(mv$(ity), static_cast<unsigned>(size.truncate_u64()));
+                return HIR::TypeRef::new_array(mv_str(ity), static_cast<unsigned>(size.truncate_u64()));
             }
             else if( tok == TOK_SQUARE_CLOSE )
             {
-                return HIR::TypeRef::new_slice(mv$(ity));
+                return HIR::TypeRef::new_slice(mv_str(ity));
             }
             else
             {
@@ -1225,7 +1225,7 @@ namespace {
             else {
                 ft.m_rettype = HIR::TypeRef::new_unit();
             }
-            return HIR::TypeRef(mv$(ft));
+            return HIR::TypeRef(mv_str(ft));
             }
         default:
             TODO(lex.point_span(), tok);
@@ -1300,7 +1300,7 @@ namespace {
             //    wrappers.push_back(::MIR::LValue::Wrapper::new_Deref());
             //    break;
             default:
-                lex.putback(mv$(tok));
+                lex.putback(mv_str(tok));
                 while(deref--) {
                     rv.m_wrappers.push_back(::MIR::LValue::Wrapper::new_Deref());
                 }

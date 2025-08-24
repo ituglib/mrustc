@@ -108,7 +108,7 @@ void _add_item(const Span& sp, AST::Module& mod, IndexName location, const RcStr
     else
     {
         DEBUG("### " << (was_import ? "Import" : "Add") << location << " item " << mod.path() << " :: " << name << " = " << ir << vis);
-        auto rec = list.insert(::std::make_pair(name, ::AST::Module::IndexEnt { was_import, mv$(vis), mv$(ir) } ));
+        auto rec = list.insert(::std::make_pair(name, ::AST::Module::IndexEnt { was_import, mv_str(vis), mv_str(ir) } ));
         assert(rec.second);
     }
 }
@@ -119,7 +119,7 @@ void _add_item_type(const Span& sp, AST::Module& mod, const RcString& name, cons
 }
 void _add_item_value(const Span& sp, AST::Module& mod, const RcString& name, const AST::Visibility& vis, ::AST::Path ir, bool error_on_collision=true)
 {
-    _add_item(sp, mod, IndexName::Value, name, vis, mv$(ir), error_on_collision);
+    _add_item(sp, mod, IndexName::Value, name, vis, mv_str(ir), error_on_collision);
 }
 
 void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
@@ -149,7 +149,7 @@ void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
         TU_ARMA(Macro, e) {
             // Handled by `for(const auto& item : mod.macros())` below
             //p.m_bindings.macro = ::AST::PathBinding_Macro::make_MacroRules({nullptr, e ? &*e : nullptr});
-            //_add_item(i->span, mod, IndexName::Macro, i->name, i->vis, mv$(p));
+            //_add_item(i->span, mod, IndexName::Macro, i->name, i->vis, mv_str(p));
             }
 
         TU_ARMA(Use, e) {
@@ -158,7 +158,7 @@ void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
         // - Types/modules only
         TU_ARMA(Module, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_Module({&e}) );
-            _add_item(i->span, mod, IndexName::Namespace, i->name, i->vis,  mv$(p));
+            _add_item(i->span, mod, IndexName::Namespace, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Crate, e) {
             if( e.name != "" )
@@ -170,27 +170,27 @@ void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
             {
                 p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_Module({ &crate.m_root_module }) );
             }
-            _add_item(i->span, mod, IndexName::Namespace, i->name, i->vis,  mv$(p));
+            _add_item(i->span, mod, IndexName::Namespace, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Enum, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_Enum({&e}) );
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Union, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_Union({&e}) );
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Trait, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_Trait({&e}) );
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(TraitAlias, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_TraitAlias({&e}) );
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Type, e) {
             p.m_bindings.type.set( ap, ::AST::PathBinding_Type::make_TypeAlias({&e}) );
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         // - Mixed
         TU_ARMA(Struct, e) {
@@ -200,16 +200,16 @@ void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
                 p.m_bindings.value.set( ap, ::AST::PathBinding_Value::make_Struct({&e}) );
                 _add_item_value(i->span, mod, i->name, i->vis,  p);
             }
-            _add_item_type(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_type(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         // - Values only
         TU_ARMA(Function, e) {
             p.m_bindings.value.set( ap, ::AST::PathBinding_Value::make_Function({&e}) );
-            _add_item_value(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_value(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         TU_ARMA(Static, e) {
             p.m_bindings.value.set( ap, ::AST::PathBinding_Value::make_Static({&e}) );
-            _add_item_value(i->span, mod, i->name, i->vis,  mv$(p));
+            _add_item_value(i->span, mod, i->name, i->vis,  mv_str(p));
             }
         }
     }
@@ -219,7 +219,7 @@ void Resolve_Index_Module_Base(const AST::Crate& crate, AST::Module& mod)
         ::AST::Path p = mod.path() + item.name;
         p.m_bindings.macro.set( mod.path() + item.name, ::AST::PathBinding_Macro::make_MacroRules({nullptr, &*item.data}) );
         // NOTE: Macros can be freely duplicated, BUT the last entry takes precedence (TODO)
-        _add_item(item.span, mod, IndexName::Macro, item.name, item.vis, mv$(p), /*error_on_collision=*/false);
+        _add_item(item.span, mod, IndexName::Macro, item.name, item.vis, mv_str(p), /*error_on_collision=*/false);
     }
 
     bool has_pub_wildcard = false;
@@ -362,7 +362,7 @@ void Resolve_Index_Module_Wildcard__glob_in_hir_mod(
                     // Only support enums on the penultimate component
                     if( i == spath.components().size()-2 && hit->ent.is_Enum() ) {
                         pb.binding = ::AST::PathBinding_Type::make_EnumVar({nullptr, 0});
-                        _add_item_type( sp, dst_mod, it.first, vis, mv$(pb), false );
+                        _add_item_type( sp, dst_mod, it.first, vis, mv_str(pb), false );
                         hmod = nullptr;
                         break ;
                     }
@@ -406,7 +406,7 @@ void Resolve_Index_Module_Wildcard__glob_in_hir_mod(
                 pb.binding = ::AST::PathBinding_Type::make_TypeAlias({nullptr});
                 }
             }
-            _add_item_type( sp, dst_mod, it.first, vis, mv$(pb), false );
+            _add_item_type( sp, dst_mod, it.first, vis, mv_str(pb), false );
         }
     }
     for(const auto& it : hmod.m_value_items) {
@@ -428,7 +428,7 @@ void Resolve_Index_Module_Wildcard__glob_in_hir_mod(
                         auto idx = hit->ent.as_Enum().find_variant(spath.components().back());
                         ASSERT_BUG(sp, idx != SIZE_MAX, spath);
                         pb.binding = ::AST::PathBinding_Value::make_EnumVar({nullptr, static_cast<unsigned>(idx)});
-                        _add_item_value( sp, dst_mod, it.first, vis, mv$(pb), false );
+                        _add_item_value( sp, dst_mod, it.first, vis, mv_str(pb), false );
                         hmod = nullptr;
                         break ;
                     }
@@ -464,7 +464,7 @@ void Resolve_Index_Module_Wildcard__glob_in_hir_mod(
                 pb.binding = ::AST::PathBinding_Value::make_Function({nullptr});
                 }
             }
-            _add_item_value( sp, dst_mod, it.first, vis, mv$(pb), false );
+            _add_item_value( sp, dst_mod, it.first, vis, mv_str(pb), false );
         }
     }
     for(const auto& it : hmod.m_macro_items) {
@@ -491,7 +491,7 @@ void Resolve_Index_Module_Wildcard__glob_in_hir_mod(
                 pb.binding = ::AST::PathBinding_Macro::make_MacroRules({ nullptr, &*me });
                 }
             }
-            _add_item(sp, dst_mod, IndexName::Macro, it.first, vis, mv$(pb), false );
+            _add_item(sp, dst_mod, IndexName::Macro, it.first, vis, mv_str(pb), false );
         }
     }
 }
@@ -586,13 +586,13 @@ void Resolve_Index_Module_Wildcard__use_stmt(AST::Crate& crate, AST::Module& dst
                     AST::PathBinding<AST::PathBinding_Type>    pb;
                     pb.path = b.path + ev.m_name;
                     pb.binding = ::AST::PathBinding_Type::make_EnumVar({e.enum_, idx});
-                    _add_item_type( sp, dst_mod, ev.m_name, vis, mv$(pb), false );
+                    _add_item_type( sp, dst_mod, ev.m_name, vis, mv_str(pb), false );
                 }
                 else {
                     AST::PathBinding<AST::PathBinding_Value>    pb;
                     pb.path = b.path + ev.m_name;
                     pb.binding = ::AST::PathBinding_Value::make_EnumVar({e.enum_, idx});
-                    _add_item_value( sp, dst_mod, ev.m_name, vis, mv$(pb), false );
+                    _add_item_value( sp, dst_mod, ev.m_name, vis, mv_str(pb), false );
                 }
 
                 idx += 1;
@@ -610,7 +610,7 @@ void Resolve_Index_Module_Wildcard__use_stmt(AST::Crate& crate, AST::Module& dst
                     AST::PathBinding<AST::PathBinding_Value>    pb;
                     pb.path = b.path + ev.name;
                     pb.binding = ::AST::PathBinding_Value::make_EnumVar({nullptr, idx, e.hir});
-                    _add_item_value( sp, dst_mod, ev.name, vis, mv$(pb), false );
+                    _add_item_value( sp, dst_mod, ev.name, vis, mv_str(pb), false );
 
                     idx += 1;
                 }
@@ -624,13 +624,13 @@ void Resolve_Index_Module_Wildcard__use_stmt(AST::Crate& crate, AST::Module& dst
                         AST::PathBinding<AST::PathBinding_Type>    pb;
                         pb.path = b.path + ev.name;
                         pb.binding = ::AST::PathBinding_Type::make_EnumVar({nullptr, idx, e.hir});
-                        _add_item_type ( sp, dst_mod, ev.name, vis, mv$(pb), false );
+                        _add_item_type ( sp, dst_mod, ev.name, vis, mv_str(pb), false );
                     }
                     else {
                         AST::PathBinding<AST::PathBinding_Value>    pb;
                         pb.path = b.path + ev.name;
                         pb.binding = ::AST::PathBinding_Value::make_EnumVar({nullptr, idx, e.hir});
-                        _add_item_value( sp, dst_mod, ev.name, vis, mv$(pb), false );
+                        _add_item_value( sp, dst_mod, ev.name, vis, mv_str(pb), false );
                     }
 
                     idx += 1;
@@ -756,7 +756,7 @@ void Resolve_Index_Module_Normalise_Path_ext(const ::AST::Crate& crate, const Sp
                 // Replace the path with this path (maintaining binding)
                 auto bindings = path.m_bindings.clone();
                 path = hir_to_ast(e.path);
-                path.m_bindings = mv$(bindings);
+                path.m_bindings = mv_str(bindings);
             )
             return ;
         }
@@ -769,7 +769,7 @@ void Resolve_Index_Module_Normalise_Path_ext(const ::AST::Crate& crate, const Sp
                 // Replace the path with this path (maintaining binding)
                 auto bindings = path.m_bindings.clone();
                 path = hir_to_ast(e.path);
-                path.m_bindings = mv$(bindings);
+                path.m_bindings = mv_str(bindings);
             )
             return ;
         }
@@ -783,7 +783,7 @@ void Resolve_Index_Module_Normalise_Path_ext(const ::AST::Crate& crate, const Sp
                 // Replace the path with this path (maintaining binding)
                 auto bindings = path.m_bindings.clone();
                 path = hir_to_ast(e->path);
-                path.m_bindings = mv$(bindings);
+                path.m_bindings = mv_str(bindings);
             }
             return ;
         }
@@ -822,9 +822,9 @@ bool Resolve_Index_Module_Normalise_Path(const ::AST::Crate& crate, const Span& 
             // Need to replace all nodes up to and including the current with the import path
             auto new_path = ie.path;
             for(unsigned int j = i+1; j < info.nodes.size(); j ++)
-                new_path.nodes().push_back( mv$(info.nodes[j]) );
+                new_path.nodes().push_back( mv_str(info.nodes[j]) );
             new_path.m_bindings = path.m_bindings.clone();
-            path = mv$(new_path);
+            path = mv_str(new_path);
             return Resolve_Index_Module_Normalise_Path(crate, sp, path, loc);
         }
         else {

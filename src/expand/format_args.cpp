@@ -508,14 +508,14 @@ namespace {
                 }
 
                 frags.push_back( FmtFrag {
-                    mv$(cur_literal),
+                    mv_str(cur_literal),
                     index, trait_name,
-                    mv$(args)
+                    mv_str(args)
                     });
             }
         }
 
-        return ::std::make_tuple( mv$(frags), mv$(cur_literal) );
+        return ::std::make_tuple( mv_str(frags), mv_str(cur_literal) );
     }
 }
 
@@ -549,22 +549,22 @@ namespace {
         toks.push_back(Token(InterpolatedFragment( std::move(ap) )));
     }
     void push_toks(::std::vector<TokenTree>& toks, Token t1) {
-        toks.push_back( mv$(t1) );
+        toks.push_back( mv_str(t1) );
     }
     void push_toks(::std::vector<TokenTree>& toks, Token t1, Token t2) {
-        toks.push_back( mv$(t1) );
-        toks.push_back( mv$(t2) );
+        toks.push_back( mv_str(t1) );
+        toks.push_back( mv_str(t2) );
     }
     //void push_toks(::std::vector<TokenTree>& toks, Token t1, Token t2, Token t3) {
-    //    toks.push_back( mv$(t1) );
-    //    toks.push_back( mv$(t2) );
-    //    toks.push_back( mv$(t3) );
+    //    toks.push_back( mv_str(t1) );
+    //    toks.push_back( mv_str(t2) );
+    //    toks.push_back( mv_str(t3) );
     //}
     void push_toks(::std::vector<TokenTree>& toks, Token t1, Token t2, Token t3, Token t4) {
-        toks.push_back( mv$(t1) );
-        toks.push_back( mv$(t2) );
-        toks.push_back( mv$(t3) );
-        toks.push_back( mv$(t4) );
+        toks.push_back( mv_str(t1) );
+        toks.push_back( mv_str(t2) );
+        toks.push_back( mv_str(t3) );
+        toks.push_back( mv_str(t4) );
     }
 
     ::std::unique_ptr<TokenStream> expand_format_args(const Span& sp, const ::AST::Crate& crate, TTStream& lex, bool add_newline)
@@ -606,18 +606,18 @@ namespace {
 
                 auto expr_tt = TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, Parse_Expr0(lex).release()) ));
 
-                auto ins_rv = named_args_index.insert( ::std::make_pair(mv$(name), static_cast<unsigned>(named_args.size())) );
+                auto ins_rv = named_args_index.insert( ::std::make_pair(mv_str(name), static_cast<unsigned>(named_args.size())) );
                 if( ins_rv.second == false ) {
                     ERROR(sp, E0000, "Duplicate definition of named argument `" << ins_rv.first->first << "`");
                 }
-                named_args.push_back( mv$(expr_tt) );
+                named_args.push_back( mv_str(expr_tt) );
             }
             // - Free parameters
             else
             {
                 DEBUG("Free");
                 auto expr_tt = TokenTree(Token( InterpolatedFragment(InterpolatedFragment::EXPR, Parse_Expr0(lex).release()) ));
-                free_args.push_back( mv$(expr_tt) );
+                free_args.push_back( mv_str(expr_tt) );
             }
         }
         CHECK_TOK(tok, TOK_EOF);
@@ -652,13 +652,13 @@ namespace {
         for(auto& arg : free_args)
         {
             toks.push_back( TokenTree(TOK_AMP) );
-            toks.push_back( mv$(arg) );
+            toks.push_back( mv_str(arg) );
             toks.push_back( TokenTree(TOK_COMMA) );
         }
         for(auto& arg : named_args)
         {
             toks.push_back( TokenTree(TOK_AMP) );
-            toks.push_back( mv$(arg) );
+            toks.push_back( mv_str(arg) );
             toks.push_back( TokenTree(TOK_COMMA) );
         }
         toks.push_back( TokenTree(TOK_PAREN_CLOSE) );
@@ -923,7 +923,7 @@ namespace {
         toks.push_back( TokenTree(TOK_BRACE_CLOSE) );
         toks.push_back( TokenTree(TOK_BRACE_CLOSE) );
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(lex.get_edition(), Ident::Hygiene::new_scope(), mv$(toks))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(lex.get_edition(), Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 }
 

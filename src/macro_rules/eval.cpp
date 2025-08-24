@@ -224,7 +224,7 @@ void ParameterMappings::insert(unsigned int name_index, const ::std::vector<unsi
     else {
         assert(layer->as_Vals().size() == 0);
     }
-    layer->as_Vals().push_back( CapturedVal { 0,0, mv$(data) } );
+    layer->as_Vals().push_back( CapturedVal { 0,0, mv_str(data) } );
 }
 
 ParameterMappings::CapturedVal& ParameterMappings::get_cap(const Span& sp, const ::std::vector<unsigned int>& iterations, unsigned int name_idx)
@@ -500,10 +500,10 @@ public:
         TokenStream(ParseState()),
         m_log_index(s_next_log_index++),
         m_this_span(sp, crate_name, macro_name),
-        m_crate_name( mv$(crate_name) ),
+        m_crate_name( mv_str(crate_name) ),
         m_invocation_span( sp ),
         m_invocation_edition( edition ),
-        m_mappings( mv$(mappings) ),
+        m_mappings( mv_str(mappings) ),
         m_state( contents, m_mappings ),
         m_source_edition( source_edition ),
         m_is_macro_item(is_macro_item),
@@ -615,7 +615,7 @@ InterpolatedFragment Macro_HandlePatternCap(TokenStream& lex, MacroPatEnt::Type 
     DEBUG("rules.m_hygiene = " << rules.m_hygiene);
 
     ParameterMappings   bound_tts;
-    unsigned int    rule_index = Macro_InvokeRules_MatchPattern(sp, rules, mv$(input), crate, mod,  bound_tts);
+    unsigned int    rule_index = Macro_InvokeRules_MatchPattern(sp, rules, mv_str(input), crate, mod,  bound_tts);
 
     const auto& rule = rules.m_rules.at(rule_index);
 
@@ -630,7 +630,7 @@ InterpolatedFragment Macro_HandlePatternCap(TokenStream& lex, MacroPatEnt::Type 
     Macro_InvokeRules_CountSubstUses(bound_tts, rule.m_contents);
 
     TokenStream* ret_ptr = new MacroExpander(
-        name, sp, crate.m_edition, rules.m_is_macro_item, rules.m_hygiene, rule.m_contents, mv$(bound_tts), rules.m_source_crate == "" ? crate.m_crate_name_real : rules.m_source_crate,
+        name, sp, crate.m_edition, rules.m_is_macro_item, rules.m_hygiene, rule.m_contents, mv_str(bound_tts), rules.m_source_crate == "" ? crate.m_crate_name_real : rules.m_source_crate,
         rules.m_edition
         );
 
@@ -2100,7 +2100,7 @@ unsigned int Macro_InvokeRules_MatchPattern(const Span& sp, const MacroRules& ru
         const auto& history = matches[0].second;
         DEBUG("Evalulating arm " << i);
 
-        auto lex = TTStreamO(sp, ParseState(), mv$(input));
+        auto lex = TTStreamO(sp, ParseState(), mv_str(input));
         lex.parse_state().crate = &crate;
         SET_MODULE(lex, mod);
         auto arm_stream = MacroPatternStream(rules.m_rules[i].m_pattern, &history);
@@ -2142,7 +2142,7 @@ unsigned int Macro_InvokeRules_MatchPattern(const Span& sp, const MacroRules& ru
                 auto cap = Macro_HandlePatternCap(lex, e->type);
 
                 unsigned int cap_idx = captures.size();
-                captures.push_back( mv$(cap) );
+                captures.push_back( mv_str(cap) );
                 capture_info.push_back( Capture { e->idx, arm_stream.get_loop_iters(), cap_idx } );
             }
             else
@@ -2153,7 +2153,7 @@ unsigned int Macro_InvokeRules_MatchPattern(const Span& sp, const MacroRules& ru
 
         for(const auto& cap : capture_info)
         {
-            bound_tts.insert( cap.binding_idx, cap.iterations, mv$(captures[cap.cap_idx]) );
+            bound_tts.insert( cap.binding_idx, cap.iterations, mv_str(captures[cap.cap_idx]) );
         }
         bound_tts.set_loop_counts(arm_stream.take_loop_counts());
         return i;
@@ -2217,7 +2217,7 @@ Token MacroExpander::realGetToken()
     if( m_next_token.type() != TOK_NULL )
     {
         DEBUG("[" << m_log_index << "] m_next_token = " << m_next_token);
-        return mv$(m_next_token);
+        return mv_str(m_next_token);
     }
     // Then try m_ttstream
     if( m_ttstream.get() )
@@ -2314,15 +2314,15 @@ Token MacroExpander::realGetToken()
                 DEBUG("[" << m_log_index << "] Insert replacement #" << e << " = " << *frag);
                 if( frag->m_type == InterpolatedFragment::TT )
                 {
-                    auto res_tt = can_steal ? mv$(frag->as_tt()) : frag->as_tt().clone();
-                    m_ttstream.reset( new TTStreamO(this->outerSpan(), ParseState(), mv$(res_tt)) );
+                    auto res_tt = can_steal ? mv_str(frag->as_tt()) : frag->as_tt().clone();
+                    m_ttstream.reset( new TTStreamO(this->outerSpan(), ParseState(), mv_str(res_tt)) );
                     return m_ttstream->getToken();
                 }
                 else
                 {
                     if( can_steal )
                     {
-                        return Token(Token::TagTakeIP(), mv$(*frag) );
+                        return Token(Token::TagTakeIP(), mv_str(*frag) );
                     }
                     else
                     {

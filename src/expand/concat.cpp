@@ -64,7 +64,7 @@ class CConcatExpander:
         if( tok.type() != TOK_EOF )
             throw ParseError::Unexpected(lex, tok, {TOK_COMMA, TOK_EOF});
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(tt.get_edition(), Token(TOK_STRING, mv$(rv), {}))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(tt.get_edition(), Token(TOK_STRING, mv_str(rv), {}))) );
     }
 };
 
@@ -91,7 +91,7 @@ class CConcatIdentsExpander:
         if( tok.type() != TOK_EOF )
             throw ParseError::Unexpected(lex, tok, {TOK_COMMA, TOK_EOF});
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(tt.get_edition(), Token(TOK_IDENT, Ident(lex.get_hygiene(), RcString::new_interned(rv)))) ) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(tt.get_edition(), Token(TOK_IDENT, Ident(lex.get_hygiene(), RcString::new_interned(rv)))) ) );
     }
 };
 

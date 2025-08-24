@@ -219,7 +219,7 @@ class MirBuilder
         }
         ScopeDef(const Span& span, ScopeType data):
             span(span),
-            data(mv$(data))
+            data(mv_str(data))
         {
         }
     };
@@ -252,7 +252,7 @@ public:
         DEBUG("#" << idx << " = " << int(ty) << " " << lv);
         ASSERT_BUG(sp, idx < m_variable_aliases.size(), "Variable alias #" << idx << " out of bounds");
         ASSERT_BUG(sp, m_variable_aliases[idx].second == MIR::LValue(), "Variable alias #" << idx << " already exists: " << m_variable_aliases[idx].second << " setting " << lv);
-        m_variable_aliases[idx] = std::make_pair(ty, mv$(lv));
+        m_variable_aliases[idx] = std::make_pair(ty, mv_str(lv));
     }
     const var_alias_t* get_variable_alias(const Span& sp, unsigned idx) const {
         ASSERT_BUG(sp, idx < m_variable_aliases.size(), "Variable alias #" << idx << " out of bounds");
@@ -290,7 +290,7 @@ public:
         return m_if_cond_lval.clone();
     }
     ::MIR::LValue get_rval_in_if_cond(const Span& sp, ::MIR::RValue val) {
-        push_stmt_assign(sp, m_if_cond_lval.clone(), mv$(val));
+        push_stmt_assign(sp, m_if_cond_lval.clone(), mv_str(val));
         return m_if_cond_lval.clone();
     }
     ::MIR::LValue get_result_in_if_cond(const Span& sp) {
@@ -392,7 +392,7 @@ public:
     class SavedActiveLocal {
         friend class MirBuilder;
         VarState    state;
-        SavedActiveLocal(VarState vs): state(mv$(vs)) {}
+        SavedActiveLocal(VarState vs): state(mv_str(vs)) {}
     public:
     };
     std::map<unsigned, SavedActiveLocal> get_active_locals() const;

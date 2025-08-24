@@ -40,11 +40,11 @@ Token TokenStream::getToken()
         DEBUG("<= " << m_cache << " (cache)");
 #endif
         m_cache_valid = false;
-        return mv$(m_cache);
+        return mv_str(m_cache);
     }
     else if( m_lookahead.size() )
     {
-        Token ret = mv$( m_lookahead.front().tok );
+        Token ret = mv_str( m_lookahead.front().tok );
         m_edition = m_lookahead.front().edition;
         m_hygiene = m_lookahead.front().hygiene;
         m_lookahead.erase(m_lookahead.begin());
@@ -90,7 +90,7 @@ void TokenStream::putback(Token tok)
         DEBUG(">>> " << tok);
 #endif
         m_cache_valid = true;
-        m_cache = mv$(tok);
+        m_cache = mv_str(tok);
     }
 }
 
@@ -113,7 +113,7 @@ eTokenType TokenStream::lookahead(unsigned int i)
         DEBUG("lookahead - read #" << m_lookahead.size());
         auto tok = this->innerGetToken();
         auto hygiene = this->realGetHygiene();
-        m_lookahead.push_back({ mv$(tok), this->realGetEdition(), mv$(hygiene) });
+        m_lookahead.push_back({ mv_str(tok), this->realGetEdition(), mv_str(hygiene) });
     }
 
     DEBUG("lookahead(" << i << ") = " << m_lookahead[i].tok);

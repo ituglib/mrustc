@@ -112,9 +112,9 @@ struct Context
 
         void reset() {
 #if 0
-            auto tmp = mv$(this->types_default);
+            auto tmp = mv_str(this->types_default);
             *this = IVarPossible();
-            this->types_default = mv$(tmp);
+            this->types_default = mv_str(tmp);
 #else
             // Manually clear, to avoid needing to reallocate the lists all the time.
             this->force_disable = false;
@@ -218,7 +218,7 @@ struct Context
 
     // - Add a trait bound (gets encoded as an associated type bound)
     void add_trait_bound(const Span& sp, const ::HIR::TypeRef& impl_ty, const ::HIR::SimplePath& trait, ::HIR::PathParams params) {
-        equate_types_assoc(sp, ::HIR::TypeRef(), trait, mv$(params), impl_ty, "", false);
+        equate_types_assoc(sp, ::HIR::TypeRef(), trait, mv_str(params), impl_ty, "", false);
     }
 
     /// Get the `possible_ivar_vals` entry for the given ivar index

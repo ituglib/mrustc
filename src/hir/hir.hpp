@@ -385,18 +385,18 @@ public:
         );
 
     Struct(GenericParams params, Repr repr, Data data)
-        :m_params(mv$(params))
-        ,m_repr(mv$(repr))
-        ,m_data(mv$(data))
+        :m_params(mv_str(params))
+        ,m_repr(mv_str(repr))
+        ,m_data(mv_str(data))
     {
     }
     Struct(GenericParams params, Repr repr, Data data, unsigned align, TraitMarkings tm, StructMarkings sm)
-        :m_params(mv$(params))
-        ,m_repr(mv$(repr))
-        ,m_data(mv$(data))
+        :m_params(mv_str(params))
+        ,m_repr(mv_str(repr))
+        ,m_data(mv_str(data))
         ,m_forced_alignment(align)
-        ,m_markings(mv$(tm))
-        ,m_struct_markings(mv$(sm))
+        ,m_markings(mv_str(tm))
+        ,m_struct_markings(mv_str(sm))
     {
     }
 
@@ -469,9 +469,9 @@ public:
     ::HIR::SimplePath   m_vtable_path;
 
     Trait( GenericParams gps, LifetimeRef lifetime, ::std::vector< ::HIR::TraitPath> parents):
-        m_params( mv$(gps) ),
-        m_lifetime( mv$(lifetime) ),
-        m_parent_traits( mv$(parents) ),
+        m_params( mv_str(gps) ),
+        m_lifetime( mv_str(lifetime) ),
+        m_parent_traits( mv_str(parents) ),
         m_is_marker( false )
         , m_vtable_parent_traits_start(0)
     {}

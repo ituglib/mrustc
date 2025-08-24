@@ -22,7 +22,7 @@ AST::Path Parse_Path(TokenStream& lex, eParsePathGenericMode generic_mode)
     switch( GET_TOK(tok, lex) )
     {
     case TOK_INTERPOLATED_PATH:
-        return mv$(tok.frag_path());
+        return mv_str(tok.frag_path());
 
     case TOK_RWORD_SELF:
         GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
@@ -80,7 +80,7 @@ AST::Path Parse_Path(TokenStream& lex, eParsePathGenericMode generic_mode)
             ::AST::Path trait = Parse_Path(lex, PATH_GENERIC_TYPE);
             GET_CHECK_TOK(tok, lex, TOK_GT);
             GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
-            return AST::Path::new_ufcs_trait(mv$(ty), mv$(trait), Parse_PathNodes(lex, generic_mode));
+            return AST::Path::new_ufcs_trait(mv_str(ty), mv_str(trait), Parse_PathNodes(lex, generic_mode));
         }
         else {
             PUTBACK(tok, lex);
@@ -88,8 +88,8 @@ AST::Path Parse_Path(TokenStream& lex, eParsePathGenericMode generic_mode)
             // TODO: Terminating the "path" here is sometimes valid?
             GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
             // NOTE: <Foo>::BAR is actually `<Foo as _>::BAR` (in mrustc parleance)
-            //return AST::Path(AST::Path::TagUfcs(), mv$(ty), Parse_PathNodes(lex, generic_mode));
-            return AST::Path::new_ufcs_ty(mv$(ty), Parse_PathNodes(lex, generic_mode));
+            //return AST::Path(AST::Path::TagUfcs(), mv_str(ty), Parse_PathNodes(lex, generic_mode));
+            return AST::Path::new_ufcs_ty(mv_str(ty), Parse_PathNodes(lex, generic_mode));
         }
         throw ""; }
 
@@ -124,7 +124,7 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
         auto hygine = tok.ident().hygiene;
         DEBUG("hygine = " << hygine);
         PUTBACK(tok, lex);
-        return AST::Path::new_relative(mv$(hygine), Parse_PathNodes(lex, generic_mode));
+        return AST::Path::new_relative(mv_str(hygine), Parse_PathNodes(lex, generic_mode));
     }
 }
 
@@ -140,7 +140,7 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
         ::AST::PathParams   params;
 
         GET_CHECK_TOK(tok, lex, TOK_IDENT);
-        auto component = mv$( tok.ident().name );
+        auto component = mv_str( tok.ident().name );
 
         if( generic_mode == PATH_GENERIC_TYPE )
         {
@@ -188,15 +188,15 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
                 // Encode into path, by converting Fn(A,B)->C into Fn<(A,B),Ret=C>
                 params = ::AST::PathParams();
                 params.m_is_paren = true;
-                params.m_entries.push_back( TypeRef(TypeRef::TagTuple(), lex.end_span(ps), mv$(args)) );
-                params.m_entries.push_back( ::std::make_pair( RcString::new_interned("Output"), mv$(ret_type) ) );
+                params.m_entries.push_back( TypeRef(TypeRef::TagTuple(), lex.end_span(ps), mv_str(args)) );
+                params.m_entries.push_back( ::std::make_pair( RcString::new_interned("Output"), mv_str(ret_type) ) );
             }
             else
             {
             }
         }
         if( lex.lookahead(0) != TOK_DOUBLE_COLON ) {
-            ret.push_back( AST::PathNode(component, mv$(params)) );
+            ret.push_back( AST::PathNode(component, mv_str(params)) );
             break;
         }
         GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
@@ -212,13 +212,13 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
             // Expr-mode generics "::path::to::function::<Type1,Type2>(arg1, arg2)"
             params = Parse_Path_GenericList(lex);
             if( lex.lookahead(0) != TOK_DOUBLE_COLON ) {
-                ret.push_back( AST::PathNode(component, mv$(params)) );
+                ret.push_back( AST::PathNode(component, mv_str(params)) );
                 // Break out of loop down to return
                 break;
             }
             GET_CHECK_TOK(tok, lex, TOK_DOUBLE_COLON);
         }
-        ret.push_back( AST::PathNode(component, mv$(params)) );
+        ret.push_back( AST::PathNode(component, mv_str(params)) );
     }
     DEBUG("ret = " << ret);
     return ret;
@@ -256,7 +256,7 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
             {
                 auto name = tok.ident().name;
                 GET_CHECK_TOK(tok, lex, TOK_EQUAL);
-                rv.m_entries.push_back( ::std::make_pair( mv$(name), Parse_Type(lex,false) ) );
+                rv.m_entries.push_back( ::std::make_pair( mv_str(name), Parse_Type(lex,false) ) );
                 break;
             }
             if( LOOK_AHEAD(lex) == TOK_COLON )
@@ -294,7 +294,7 @@ AST::Path Parse_Path(TokenStream& lex, bool is_abs, eParsePathGenericMode generi
                 rv.m_entries.pop_back();
                 if( lex.getTokenIf(TOK_EQUAL) ) {
                     auto name = n.name();
-                    rv.m_entries.push_back( ::std::make_pair( mv$(name), Parse_Type(lex,false) ) );
+                    rv.m_entries.push_back( ::std::make_pair( mv_str(name), Parse_Type(lex,false) ) );
                 }
                 else if( lex.getTokenIf(TOK_COLON) ) {
                     auto name = n.name();

@@ -40,7 +40,7 @@ public:
 
     void set_attrs(AttributeList&& mi) {
         for(auto& i : mi.m_items)
-            m_attrs.m_items.push_back(mv$(i));
+            m_attrs.m_items.push_back(mv_str(i));
         mi.m_items.clear();
     }
     AttributeList& attrs() { return m_attrs; }
@@ -367,9 +367,9 @@ struct ExprNode_Match_Arm
     ExprNode_Match_Arm()
     {}
     ExprNode_Match_Arm(::std::vector<Pattern> patterns, std::vector<IfLet_Condition> guard, ExprNodeP code):
-        m_patterns( mv$(patterns) ),
-        m_guard( mv$(guard) ),
-        m_code( mv$(code) )
+        m_patterns( mv_str(patterns) ),
+        m_guard( mv_str(guard) ),
+        m_code( mv_str(code) )
     {}
 };
 

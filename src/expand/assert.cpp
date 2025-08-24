@@ -104,7 +104,7 @@ class CExpander_assert:
 
         toks.push_back( Token(TOK_BRACE_CLOSE) );
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv$(toks))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(AST::Edition::Rust2015, Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 };
 

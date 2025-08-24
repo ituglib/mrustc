@@ -1012,7 +1012,7 @@ namespace {
                     return false;
                 }
                 DEBUG("#" << idx << ": s=" << size << ",a=" << align << " " << ty);
-                ents.push_back(Ent { idx++, size, align, mv$(ty) });
+                ents.push_back(Ent { idx++, size, align, mv_str(ty) });
             }
             }
         TU_ARMA(Named, se) {
@@ -1027,7 +1027,7 @@ namespace {
                     return false;
                 }
                 DEBUG("#" << idx << " " << e.first << ": s=" << size << ",a=" << align << " " << ty);
-                ents.push_back(Ent { idx++, size, align, mv$(ty) });
+                ents.push_back(Ent { idx++, size, align, mv_str(ty) });
             }
             }
         }
@@ -1129,7 +1129,7 @@ namespace {
         rv.size = cur_ofs;
         rv.fields = ::std::move(fields);
         DEBUG(ty << ": size = " << rv.size << ", align = " << rv.align);
-        return box$(rv);
+        return box_str(rv);
     }
 
     // Returns NULL when the repr can't be determined
@@ -1489,7 +1489,7 @@ namespace {
                     }
                     max_size  = ::std::max(max_size , size);
                     max_align = ::std::max(max_align, align);
-                    rv.fields.push_back(TypeRepr::Field { 0, mv$(t) });
+                    rv.fields.push_back(TypeRepr::Field { 0, mv_str(t) });
                 }
                 DEBUG("max_size = " << max_size << ", max_align = " << max_align);
 
@@ -1519,7 +1519,7 @@ namespace {
                 {
                     auto t = monomorph(e[0].type);
                     const auto* inner_repr = Target_GetTypeRepr(sp, resolve, t);
-                    rv.fields.push_back(TypeRepr::Field { 0, mv$(t) });
+                    rv.fields.push_back(TypeRepr::Field { 0, mv_str(t) });
                     rv.size = inner_repr->size;
                     rv.align = inner_repr->align;
                 }
@@ -1885,7 +1885,7 @@ namespace {
                                     // NOTE: Unit type should already have a repr, but make sure
                                     Target_GetTypeRepr(sp, resolve, variants[i].type);
                                 }
-                                rv.fields.push_back(TypeRepr::Field { 0, mv$(variants[i].type) });
+                                rv.fields.push_back(TypeRepr::Field { 0, mv_str(variants[i].type) });
                             }
 
                             rv.size = max_size;
@@ -1970,9 +1970,9 @@ namespace {
                         }
 
                         // - Push the field
-                        rv.fields.push_back(TypeRepr::Field { 0, mv$(var_ty) });
+                        rv.fields.push_back(TypeRepr::Field { 0, mv_str(var_ty) });
                     }
-                    rv.fields.push_back(TypeRepr::Field { 0, mv$(tag_ty) });
+                    rv.fields.push_back(TypeRepr::Field { 0, mv_str(tag_ty) });
 
 
                     // Size must be a multiple of alignment
@@ -2084,7 +2084,7 @@ namespace {
                 << " }");
             }
         }
-        return box$(rv);
+        return box_str(rv);
     }
     ::std::unique_ptr<TypeRepr> make_type_repr_union(const Span& sp, const StaticTraitResolve& resolve, const ::HIR::TypeRef& ty)
     {
@@ -2118,7 +2118,7 @@ namespace {
         {
             rv.size += rv.align - rv.size % rv.align;
         }
-        return box$(rv);
+        return box_str(rv);
     }
     ::std::unique_ptr<TypeRepr> make_type_repr_(const Span& sp, const StaticTraitResolve& resolve, const ::HIR::TypeRef& ty)
     {
@@ -2167,14 +2167,14 @@ namespace {
 
     void set_type_repr(const Span& sp, const ::HIR::TypeRef& ty, ::std::unique_ptr<TypeRepr> repr)
     {
-        auto ires = s_cache.insert(::std::make_pair( ty.clone(), mv$(repr) ));
+        auto ires = s_cache.insert(::std::make_pair( ty.clone(), mv_str(repr) ));
         ASSERT_BUG(sp, ires.second, "set_type_repr called for type that already has a repr: " << ty);
         DEBUG("Set repr for " << ires.first->first);
     }
 }
 void Target_ForceTypeRepr(const Span& sp, const ::HIR::TypeRef& ty, TypeRepr repr)
 {
-    set_type_repr(sp, ty, box$(repr));
+    set_type_repr(sp, ty, box_str(repr));
 }
 const TypeRepr* Target_GetTypeRepr(const Span& sp, const StaticTraitResolve& resolve, const ::HIR::TypeRef& ty)
 {
@@ -2186,7 +2186,7 @@ const TypeRepr* Target_GetTypeRepr(const Span& sp, const StaticTraitResolve& res
         auto path = e->node->m_obj_path_base.clone();
         const auto& str = *e->node->m_obj_ptr;
         //DEBUG(ty << " -> " << path);
-        return Target_GetTypeRepr(sp, resolve, ::HIR::TypeRef::new_path( mv$(path), ::HIR::TypePathBinding::make_Struct(&str) ));
+        return Target_GetTypeRepr(sp, resolve, ::HIR::TypeRef::new_path( mv_str(path), ::HIR::TypePathBinding::make_Struct(&str) ));
     }
 #endif
     auto it = s_cache.find(ty);

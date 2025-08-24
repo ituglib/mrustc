@@ -936,7 +936,7 @@ namespace {
                     tup_ents.push_back( arg->m_res_type.clone() );
                 }
                 ::HIR::PathParams   params;
-                params.m_types.push_back( ::HIR::TypeRef( mv$(tup_ents) ) );
+                params.m_types.push_back( ::HIR::TypeRef( mv_str(tup_ents) ) );
 
                 bool found = m_resolve.find_impl(node.span(), trait, &params, val_ty, [&](auto , bool fuzzy)->bool{
                     ASSERT_BUG(node.span(), !fuzzy, "Fuzzy match in check pass");
@@ -947,7 +947,7 @@ namespace {
                 }
                 auto exp_ret = ::HIR::TypeRef::new_path( ::HIR::Path(
                     node.m_value->m_res_type.clone(),
-                    { m_resolve.m_crate.get_lang_item_path(node.span(), "fn_once"), mv$(params) },
+                    { m_resolve.m_crate.get_lang_item_path(node.span(), "fn_once"), mv_str(params) },
                     "Output", {}
                     ), {} );
                 m_resolve.expand_associated_types(node.span(), exp_ret);

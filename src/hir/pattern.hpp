@@ -47,7 +47,7 @@ struct PatternBinding
     PatternBinding(bool mut, Type type, RcString name, unsigned int slot):
         m_mutable(mut),
         m_type(type),
-        m_name( mv$(name) ),
+        m_name( mv_str(name) ),
         m_slot( slot ),
         m_implicit_deref_count(0)
     {}
@@ -161,12 +161,12 @@ struct Pattern
 
     Pattern() {}
     Pattern(std::vector<PatternBinding> pbs, Data d):
-        m_bindings(mv$(pbs)),
-        m_data( mv$(d) )
+        m_bindings(mv_str(pbs)),
+        m_data( mv_str(d) )
     {
     }
     Pattern(PatternBinding pb, Data d):
-        m_data( mv$(d) )
+        m_data( mv_str(d) )
     {
         if(pb.is_valid()) {
             m_bindings.push_back(std::move(pb));

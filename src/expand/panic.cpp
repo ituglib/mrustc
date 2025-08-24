@@ -52,7 +52,7 @@ class CExpander_panic:
         }
         toks.push_back( Token(TOK_PAREN_CLOSE) );
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(edition, Ident::Hygiene::new_scope(), mv$(toks))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(edition, Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 };
 class CExpander_unreachable:
@@ -94,7 +94,7 @@ class CExpander_unreachable:
         }
         toks.push_back( Token(TOK_PAREN_CLOSE) );
 
-        return box$( TTStreamO(sp, ParseState(), TokenTree(edition, Ident::Hygiene::new_scope(), mv$(toks))) );
+        return box_str( TTStreamO(sp, ParseState(), TokenTree(edition, Ident::Hygiene::new_scope(), mv_str(toks))) );
     }
 };
 
